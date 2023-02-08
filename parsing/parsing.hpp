@@ -50,6 +50,7 @@ struct locationBlock{
     std::string answerFileForDirectory;
     bool    isOpen;
     bool    isDirectoryListingOn;
+    locationBlock();
 };
 
 struct Parsing{
@@ -121,4 +122,6 @@ void	get_path(std::vector<std::string> &vec, locationBlock &loc);
 void	server_start(std::list<Parsing> &servers);
 bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
 bool    isUriTooLong(std::string &Uri);
+bool    handlingPostRequest(postRequestStruct &postRequest);
+void	handle_get_method(std::map<std::string, std::string> &request, Parsing &server);
 #endif
