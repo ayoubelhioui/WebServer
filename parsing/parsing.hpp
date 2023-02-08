@@ -35,7 +35,7 @@
 #define SERVER_KEYWORD_MSG "Error on server keyword"
 #define ERROR_PAGE_FILE_NOT_FOUND "Error_Page file is not exist !!"
 #define SOCKET  int
-#define MAX_REQUEST_SIZE 10000
+#define MAX_REQUEST_SIZE 2000
 #define MAX_ARRAY_SIZE 40000000
 
 struct locationBlock{

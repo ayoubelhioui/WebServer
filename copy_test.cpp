@@ -13,7 +13,7 @@ client_info *get_client(int socket, std::list<client_info *> &data_list){
 
 int ret_index(char *str){
   for(int i = 0; str[i]; i++){
-    if(!strncmp(&str[i], "\r\n\r\n", 4))    
+    if(!strncmp(&str[i], "\r\n\r\n", 4))
       return i;
   }
   return -1;
@@ -243,13 +243,29 @@ void    error_413(std::list<client_info *> &clients_list, std::list<client_info 
     served.read(buffer, file_size);
     send((*client)->socket, buffer, strlen(buffer), 0);
     delete [] buffer;
-
 }
+
+void isBoundryExist(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest)
+{
+    std::map<std::string, std::string>::iterator content = requestData.find("Content-Type:");
+    if (content == requestData.end())
+        return;
+    if (content->second.find("boundary=") == std::string::npos)
+        return ;
+    std::string newString(clientRequest + bodyIndex);
+    int newContentIndex = newString.find("filename=");
+    int save = newContentIndex + 10;
+    int dotPosition = newString.find(".", newContentIndex);
+    int DoubleQuotePosition = newString.find("\"", dotPosition);
+    requestData["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());;
+}
+
 void	server_start(std::list<Parsing> &servers) {
 	std::list<Parsing>::iterator it = servers.begin();
 	int server_socket = create_socket(*it);
     std::list<client_info *> client_data;
     int max_socket = 0;
+    int prob = 0;
     while(1){
         fd_set reads;
         FD_ZERO(&reads);
@@ -260,14 +276,11 @@ void	server_start(std::list<Parsing> &servers) {
             FD_SET((*client_data_it1)->socket, &reads);
             std::max(max_socket, server_socket);
         }
-//        std::cout << "hello world" << std::endl;
-//        std::cout << "BEF SEdLECT" << std::endl;
         int ret_select = select(max_socket + 1, &reads, NULL, NULL, NULL);
-//        std::cout << "AFTER SELECT" << std::endl;
         if(FD_ISSET(server_socket, &reads)){
             client_info *client = get_client(-1, client_data);
             client->socket = accept(server_socket, (struct sockaddr*) &(client->address), &(client->address_length));
-            // fcntl(client->socket, F_SETFL, O_NONBLOCK);
+//             fcntl(client->socket, F_SETFL, O_NONBLOCK);
             FD_SET(client->socket, &reads);
             max_socket = std::max(max_socket, client->socket);
             if(client->socket < 0) std::cerr << "accept function failed\n";
@@ -289,24 +302,28 @@ void	server_start(std::list<Parsing> &servers) {
                     client_data.erase(temp_it);
                     continue;
                 }
-                int read = MAX_REQUEST_SIZE + client->received < MAX_ARRAY_SIZE ? MAX_REQUEST_SIZE : MAX_ARRAY_SIZE - client->received;
-                read = recv(client->socket,
+                int read_data = MAX_REQUEST_SIZE + client->received < MAX_ARRAY_SIZE ? MAX_REQUEST_SIZE : MAX_ARRAY_SIZE - client->received;
+//                std::cout << "i need to read : " << read_data << std::endl;
+                read_data = recv(client->socket,
                             client->request + client->received,
-                            read, 0);
-                if(read == -1) {
-
+                            read_data, 0);
+//                std::cout << "after : " << read_data << std::endl;
+                if(read_data == -1) {
+                    std::cout << "WAS ERROR\n";
                     close(client->socket);
                     std::list<client_info *>::iterator temp_it = client_data_it;
                     client_data_it++;
                     client_data.erase(temp_it);
                     continue;
                 }
-                client->received += read;
+                client->received += read_data;
                 client->request[client->received] = 0;
-//                std::cout << client->request << std::endl;
-                 if(read < MAX_REQUEST_SIZE)
+                if(read_data < MAX_REQUEST_SIZE)
                 {
-                     std::cout << client->request << std::endl;
+//                     std::cout << "-----------------------------------------------------\n";
+//                    for (int i = 0; i < client->received; i++)
+//                        std::cout << client->request[i];
+//                     std::cout << "-----------------------------------------------------\n";
                      std::map<std::string, std::string> request_data;
                       int body_index = ret_index(client->request), index = 0, i = 0;
                       std::string stock_header(client->request), line;
@@ -324,6 +341,7 @@ void	server_start(std::list<Parsing> &servers) {
                             stock_header = stock_header.substr(found + 2);
                             found = stock_header.find("\r\n");
                       }
+                      
                       if(isUriTooLong(request_data["path"])){
                         error_414(client_data, client_data_it);
                         close(client->socket);
@@ -334,53 +352,54 @@ void	server_start(std::list<Parsing> &servers) {
                       found = stock_header.find("\r\n");
                       line = stock_header.substr(0, found);
                       parsingRequest(line, request_data);
-                      std::map<std::string, std::string>::iterator method = request_data.find("method");
-                      if(method->second == "GET"){
-                            std::string path = request_data["path"];
-                            path.erase(0, 1);
-                            std::ifstream served(path, std::ios::binary);
-                            served.seekg(0, std::ios::end);
-                            int file_size = served.tellg();
-                            served.seekg(0, std::ios::beg);
-                            char *buffer = new char[1024];
-                            sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-                            send(client->socket, buffer, strlen(buffer), 0);
+                    std::map<std::string, std::string>::iterator method = request_data.find("method");
+                    if(method->second == "GET"){
+                        std::string path = request_data["path"];
+                        path.erase(0, 1);
+                        std::ifstream served(path, std::ios::binary);
+                        served.seekg(0, std::ios::end);
+                        int file_size = served.tellg();
+                        served.seekg(0, std::ios::beg);
+                        char *buffer = new char[1024];
+                        sprintf(buffer, "HTTP/1.1 200 OK\r\n");
+                        send(client->socket, buffer, strlen(buffer), 0);
 
-                            sprintf(buffer, "Connection: close\r\n");
-                            send(client->socket, buffer, strlen(buffer), 0);
+                        sprintf(buffer, "Connection: close\r\n");
+                        send(client->socket, buffer, strlen(buffer), 0);
 
-                            sprintf(buffer, "Content-Length: %d\r\n", file_size);
-                            send(client->socket, buffer, strlen(buffer), 0);
+                        sprintf(buffer, "Content-Length: %d\r\n", file_size);
+                        send(client->socket, buffer, strlen(buffer), 0);
 
-                            sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-                            send(client->socket, buffer, strlen(buffer), 0);
+                        sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
+                        send(client->socket, buffer, strlen(buffer), 0);
 
-                            sprintf(buffer, "\r\n");
-                            send(client->socket, buffer, strlen(buffer), 0);
-                            char *s = new char[1024];
-                            while (served) {
-                                  served.read(buffer, 1024);
-                                  int r = served.gcount();
-                                  send(client->socket, buffer, r, 0);
-                            }
-                            close((*client_data_it)->socket);
-                            std::list<client_info *>::iterator temp_it = client_data_it;
-                            client_data_it++;
-                            client_data.erase(temp_it);
-                            std::cout << "WAS HERE IN GET" << std::endl;
-                            continue;
+                        sprintf(buffer, "\r\n");
+                        send(client->socket, buffer, strlen(buffer), 0);
+                        char *s = new char[1024];
+                        while (served) {
+                              served.read(buffer, 1024);
+                              int r = served.gcount();
+                              send(client->socket, buffer, r, 0);
+                        }
+                        close((*client_data_it)->socket);
+                        std::list<client_info *>::iterator temp_it = client_data_it;
+                        client_data_it++;
+                        client_data.erase(temp_it);
+                        std::cout << "WAS HERE IN GET" << std::endl;
+                        continue;
                       }
                       if(method->second == "POST"){
-                          std::cout << "the client request is : " << client->request << std::endl;
-                           std::map<std::string, std::string>::iterator m = request_data.begin();
-                            std::cout << "*************************" << std::endl;
-                            while (m != request_data.end())
-                            {
-                                std::cout <<m->first << m->second  << std::endl;
-                                m++;
-                            }
+                          isBoundryExist(request_data, body_index, client->request);
                           postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it);
                           handlingPostRequest(postRequest);
+//                          std::cout << "the client request is : " << client->request << std::endl;
+//                           std::map<std::string, std::string>::iterator m = request_data.begin();
+//                            std::cout << "*************************" << std::endl;
+//                            while (m != request_data.end())
+//                            {
+//                                std::cout <<m->first << m->second  << std::endl;
+//                                m++;
+//                            }
 //                        if(isNotValidPostRequest(request_data)){
 //                            error_400(client_data, client_data_it);
 //                            close(client->socket);
@@ -410,6 +429,7 @@ void	server_start(std::list<Parsing> &servers) {
 //                            }
 //                        }
                       }
+
                       char *buffer = new char[1024]();
                       sprintf(buffer, "HTTP/1.1 200 OK\r\n");
                     send(client->socket, buffer, strlen(buffer), 0);
