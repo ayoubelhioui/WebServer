@@ -254,10 +254,14 @@ void isBoundryExist(std::map<std::string, std::string> &requestData, int &bodyIn
         return ;
     std::string newString(clientRequest + bodyIndex);
     int newContentIndex = newString.find("filename=");
-    int save = newContentIndex + 10;
     int dotPosition = newString.find(".", newContentIndex);
     int DoubleQuotePosition = newString.find("\"", dotPosition);
-    requestData["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());;
+    std::cout << "the index is : " << DoubleQuotePosition << std::endl;
+    requestData["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+    int newIndex = ret_index(clientRequest + bodyIndex + 4 + DoubleQuotePosition);
+    bodyIndex = newIndex +  bodyIndex + 4 + DoubleQuotePosition;
+//    std::cout << "the new Index is : " << newIndex +  bodyIndex + 4 + DoubleQuotePosition << std::endl;
+//    std::cout << "------------------------->"<< "the new clientBody" << clientRequest + newIndex +  bodyIndex + 4 + DoubleQuotePosition + 4  << "<------------------------"<< std::endl;
 }
 
 void	server_start(std::list<Parsing> &servers) {
@@ -324,7 +328,7 @@ void	server_start(std::list<Parsing> &servers) {
 //                    for (int i = 0; i < client->received; i++)
 //                        std::cout << client->request[i];
 //                     std::cout << "-----------------------------------------------------\n";
-                     std::map<std::string, std::string> request_data;
+                      std::map<std::string, std::string> request_data;
                       int body_index = ret_index(client->request), index = 0, i = 0;
                       std::string stock_header(client->request), line;
                       stock_header = stock_header.substr(0, body_index);
@@ -389,6 +393,7 @@ void	server_start(std::list<Parsing> &servers) {
                         continue;
                       }
                       if(method->second == "POST"){
+                          std::cout << client->request << std::endl;
                           isBoundryExist(request_data, body_index, client->request);
                           postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it);
                           handlingPostRequest(postRequest);

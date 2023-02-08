@@ -90,6 +90,7 @@ struct postRequestStruct{
                       std::map<std::string, std::string> &requestData, Parsing &configFileData) : client(client), clientDataIterator(clientDataIterator), clientData(clientData), requestData(requestData), configFileData(configFileData){};
 };
 
+const char *get_real_format(const char *mime_type);
 const char *get_mime_format(const char *type);
 bool    handlingPostRequest(postRequestStruct &postRequest);
 void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
