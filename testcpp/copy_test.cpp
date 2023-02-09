@@ -184,7 +184,6 @@ void    error_501(std::list<client_info *> &clients_list, std::list<client_info 
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
     served.seekg(0, std::ios::beg);
-    std::cout << "file_size " << file_size << std::endl;
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 501 Not Implemented\r\n");
     send((*client)->socket, buffer, strlen(buffer), 0);
