@@ -358,14 +358,14 @@ void	server_start(std::list<Parsing> &servers) {
                       parsingRequest(line, request_data);
                       std::map<std::string, std::string>::iterator method = request_data.find("method");
                       if(method->second == "GET"){
-                            std::string path = handle_get_method(request_data, *it);
-                            std::ifstream served(path, std::ios::binary);
-                            served.seekg(0, std::ios::end);
-                            int file_size = served.tellg();
-                            served.seekg(0, std::ios::beg);
-                            char *buffer = new char[1024];
-                            sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-                            send(client->socket, buffer, strlen(buffer), 0);
+                        std::string path = handle_get_method(request_data, *it);
+                        std::ifstream served(path, std::ios::binary);
+                        served.seekg(0, std::ios::end);
+                        int file_size = served.tellg();
+                        served.seekg(0, std::ios::beg);
+                        char *buffer = new char[1024];
+                        sprintf(buffer, "HTTP/1.1 200 OK\r\n");
+                        send(client->socket, buffer, strlen(buffer), 0);
 
                         sprintf(buffer, "Connection: close\r\n");
                         send(client->socket, buffer, strlen(buffer), 0);
