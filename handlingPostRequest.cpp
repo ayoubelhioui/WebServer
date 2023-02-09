@@ -44,9 +44,10 @@ bool handlingPostRequest(postRequestStruct &postRequest)
     std::stringstream ss;
     ss << nameGenerating;
     std::ofstream file;
-//    std::cout << "the content type is : " << get_mime_format(postRequest.requestData["Content-Type:"].c_str()) << std::endl;
+//    std::cout << "the content type is : " << postRequest.requestData["Content-Type:"] << std::endl;
+//    exit (1);
 //    file.open("upload/" + ss.str() + get_mime_format(postRequest.requestData["Content-Type:"].c_str()));
-    file.open("upload/" + ss.str() + );
+    file.open("upload/" + ss.str() + get_real_format(postRequest.requestData["Content-Type:"].c_str()));
     if (!file.is_open())
         errorPrinting("Couldn't Open Upload File");
     while (file << postRequest.client->request){};

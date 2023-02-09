@@ -35,7 +35,7 @@
 #define SERVER_KEYWORD_MSG "Error on server keyword"
 #define ERROR_PAGE_FILE_NOT_FOUND "Error_Page file is not exist !!"
 #define SOCKET  int
-#define MAX_REQUEST_SIZE 10000
+#define MAX_REQUEST_SIZE 2000
 #define MAX_ARRAY_SIZE 40000000
 
 struct locationBlock{
@@ -91,6 +91,7 @@ struct postRequestStruct{
                       std::map<std::string, std::string> &requestData, Parsing &configFileData) : client(client), clientDataIterator(clientDataIterator), clientData(clientData), requestData(requestData), configFileData(configFileData){};
 };
 
+const char *get_real_format(const char *mime_type);
 const char *get_mime_format(const char *type);
 bool    handlingPostRequest(postRequestStruct &postRequest);
 void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);

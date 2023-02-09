@@ -1,112 +1,45 @@
-GET /upload.html HTTP/1.1
-Host: 10.11.4.8:8080
-Connection: keep-alive
-Upgrade-Insecure-Requests: 1
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-Sec-GPC: 1
-Accept-Encoding: gzip, deflate
-Accept-Language: en-US,en;q=0.9
-
-
-the MIME TYPE IS : upload.html
-WAS HERE IN GET
-GET /favicon.ico HTTP/1.1
-Host: 10.11.4.8:8080
-Connection: keep-alive
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
-Accept: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8
-Sec-GPC: 1
-Referer: http://10.11.4.8:8080/upload.html
-Accept-Encoding: gzip, deflate
-Accept-Language: en-US,en;q=0.9
-
-
-the MIME TYPE IS : favicon.ico
-WAS HERE IN GET
 POST /testmsd.php HTTP/1.1
-Host: 10.11.4.8:8080
+Host: 10.11.3.9:8080
 Connection: keep-alive
-Content-Length: 391
+Content-Length: 782
 Cache-Control: max-age=0
 Upgrade-Insecure-Requests: 1
-Origin: http://10.11.4.8:8080
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryZVDy8qAdbrUIUZu7
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
+Origin: http://10.11.3.9:8080
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryEdddPurBSgRtmUQw
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
 Sec-GPC: 1
-Referer: http://10.11.4.8:8080/upload.html
+Referer: http://10.11.3.9:8080/upload.html
 Accept-Encoding: gzip, deflate
 Accept-Language: en-US,en;q=0.9
 
-------WebKitFormBoundaryZVDy8qAdbrUIUZu7
-Content-Disposition: form-data; name="file"; filename="file.html"
-Content-Type: text/html
+------WebKitFormBoundaryEdddPurBSgRtmUQw
+Content-Disposition: form-data; name="file"; filename="test.cpp"
+Content-Type: application/octet-stream
 
-<html><head>
-<title>Example Page</title>
-</head><body>
+#include <fstream>
+#include <vector>
 
-<h1>Example Page</h1>
+int main() {
+  // Open an input file stream in binary mode
+  std::ifstream infile("yt.mp4", std::ios::binary);
 
-<p>This page is only an example.</p>
+  infile.seekg(0, std::ios::end);
+  std::streampos file_size = infile.tellg();
+  infile.seekg(0, std::ios::beg);
 
-<img src="image.png" alt="A description of the image" width=720 height=320>
-</body>
-</html>
+  std::vector<unsigned char> binary_data(file_size);
+  infile.read(reinterpret_cast<char*>(binary_data.data()), file_size);
+  infile.close();
+  std::ofstream outfile("test.mp4", std::ios::binary);
 
-------WebKitFormBoundaryZVDy8qAdbrUIUZu7--
+  outfile.write(reinterpret_cast<const char*>(binary_data.data()), binary_data.size() / 4);
+  outfile.close();
+  return 0;
+}
+------WebKitFormBoundaryEdddPurBSgRtmUQw--
 
-the client request is : POST /testmsd.php HTTP/1.1
-Host: 10.11.4.8:8080
-Connection: keep-alive
-Content-Length: 391
-Cache-Control: max-age=0
-Upgrade-Insecure-Requests: 1
-Origin: http://10.11.4.8:8080
-Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryZVDy8qAdbrUIUZu7
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-Sec-GPC: 1
-Referer: http://10.11.4.8:8080/upload.html
-Accept-Encoding: gzip, deflate
-Accept-Language: en-US,en;q=0.9
-
-------WebKitFormBoundaryZVDy8qAdbrUIUZu7
-Content-Disposition: form-data; name="file"; filename="file.html"
-Content-Type: text/html
-
-<html><head>
-<title>Example Page</title>
-</head><body>
-
-<h1>Example Page</h1>
-
-<p>This page is only an example.</p>
-
-<img src="image.png" alt="A description of the image" width=720 height=320>
-</body>
-</html>
-
-------WebKitFormBoundaryZVDy8qAdbrUIUZu7--
-
-*************************
-Accept-Encoding:gzip, deflate
-Accept-Language:en-US,en;q=0.9
-Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-Cache-Control:max-age=0
-Connection:keep-alive
-Content-Length:391
-Content-Type:multipart/form-data; boundary=----WebKitFormBoundaryZVDy8qAdbrUIUZu7
-Host:10.11.4.8:8080
-Origin:http://10.11.4.8:8080
-Referer:http://10.11.4.8:8080/upload.html
-Sec-GPC:1
-Upgrade-Insecure-Requests:1
-User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
-httpVersionHTTP/1.1
-methodPOST
-path/testmsd.php
-bodysize 391
+the index is : 109
+bodysize 782
 client body 10000000
-Couldn't Open Upload File
+WAS HERE IN GET
