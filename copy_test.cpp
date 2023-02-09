@@ -305,6 +305,10 @@ void	server_start(std::list<Parsing> &servers) {
                 client->request[client->received] = 0;
                  if(read < MAX_REQUEST_SIZE)
                 {
+                    // std::cout << "------------------" << std::endl;
+                    // for (int i = 0; i < client->received; i++)
+                    //     std::cout << client->request[i];
+                    // std::cout << "------------------" << std::endl;
                     // std::cout << "***********" << std::endl;
                     // std::cout << "request is " << client->request << std::endl;
                     //  std::cout << "***********" << std::endl;

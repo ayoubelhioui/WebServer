@@ -18,13 +18,13 @@ void	requestFoundInRoot(std::string path, std::list<locationBlock> Locations){
 			}
 			else if (path[len] == '/' && !point) break;
 		}
-		if(res[res.length() - 1] == '/') res.erase(res.length() - 1);
-		if(path[path.length() - 1] == '/') path.erase(path.length() - 1);
-		
+		if(res[res.length() - 1] != '/') res += '/';
+		if(path[path.length() - 1] == '/') path += '/';
+		std::string full_path = path.substr(0, index_last + 1);
+		std::cout << "full is " << std::endl;
 	}
 }
 void	handle_get_method(std::map<std::string, std::string> &request, Parsing &server){
 	std::string path = request["path"];
 	requestFoundInRoot(request["path"], server.Locations);
-	exit(1);
 }
