@@ -74,7 +74,6 @@ void	location_parse(std::list<std::string>::iterator &it, locationBlock &loc)
         {
             if ((vec[0] == "#" && vec[1] == "location") || vec[0] == "#location")
                 errorPrinting("error in location keyword");
-            it++;
             continue ;
         }
         if (vec[0].compare("location") == 0)

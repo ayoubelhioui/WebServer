@@ -359,6 +359,7 @@ void	server_start(std::list<Parsing> &servers) {
                       std::map<std::string, std::string>::iterator method = request_data.find("method");
                       if(method->second == "GET"){
                             std::string path = handle_get_method(request_data, *it);
+                            std::cout << "path is " << path << std::endl;
                             std::ifstream served(path, std::ios::binary);
                             served.seekg(0, std::ios::end);
                             int file_size = served.tellg();
