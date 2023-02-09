@@ -271,21 +271,25 @@ void	server_start(std::list<Parsing> &servers) {
     int max_socket = 0;
     int prob = 0;
     while(1){
-        fd_set reads;
+        fd_set reads, writes;
         FD_ZERO(&reads);
         FD_SET(server_socket, &reads);
+        FD_ZERO(&writes);
+        FD_SET(server_socket, &writes);
         max_socket = std::max(max_socket, server_socket);
         std::list<client_info *>::iterator client_data_it1 = client_data.begin();
         for(; client_data_it1 != client_data.end(); client_data_it1++){
             FD_SET((*client_data_it1)->socket, &reads);
+            FD_SET((*client_data_it1)->socket, &writes);
             std::max(max_socket, server_socket);
         }
-        int ret_select = select(max_socket + 1, &reads, NULL, NULL, NULL);
+        int ret_select = select(max_socket + 1, &reads, &writes, NULL, NULL);
         if(FD_ISSET(server_socket, &reads)){
             client_info *client = get_client(-1, client_data);
             client->socket = accept(server_socket, (struct sockaddr*) &(client->address), &(client->address_length));
 //             fcntl(client->socket, F_SETFL, O_NONBLOCK);
             FD_SET(client->socket, &reads);
+            FD_SET(client->socket, &writes);
             max_socket = std::max(max_socket, client->socket);
             if(client->socket < 0) std::cerr << "accept function failed\n";
         }
@@ -359,6 +363,7 @@ void	server_start(std::list<Parsing> &servers) {
                       std::map<std::string, std::string>::iterator method = request_data.find("method");
                       if(method->second == "GET"){
                         std::string path = handle_get_method(request_data, *it);
+                        std::cout << "path " << path << std::endl;
                         std::ifstream served(path, std::ios::binary);
                         served.seekg(0, std::ios::end);
                         int file_size = served.tellg();
@@ -379,11 +384,10 @@ void	server_start(std::list<Parsing> &servers) {
                         sprintf(buffer, "\r\n");
                         send(client->socket, buffer, strlen(buffer), 0);
                         char *s = new char[1024];
-                        while (served) {
-                              served.read(buffer, 1024);
-                              int r = served.gcount();
-                              send(client->socket, buffer, r, 0);
-                        }
+                        served.read(buffer, 1024);
+                        int r = served.gcount();
+                        if(r == 1024)
+                        send(client->socket, buffer, r, 0);
                         close((*client_data_it)->socket);
                         std::list<client_info *>::iterator temp_it = client_data_it;
                         client_data_it++;
