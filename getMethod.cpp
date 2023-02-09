@@ -10,10 +10,10 @@ std::string	handle_get_method(std::map<std::string, std::string> &request, Parsi
 		int	index_last = len;
 		if(path[len] == '/')
 			len--;
-		bool is_file_last = 0, point = 0, is_dir = 0, is_file = 0;
+		bool is_file_last = 0, point = 0;
 		for(; len >= 0; len--){
 			if(path[len] == '.')
-				is_file = point = 1;
+				point = 1;
 			if(path[len] == '/' && point){
 				is_file_last = 1;
 				index_last = len;
@@ -41,6 +41,7 @@ std::string	handle_get_method(std::map<std::string, std::string> &request, Parsi
 		}
 		else{
 			std::string final_path = root + file;
+			if(final_path[0] == '/') final_path = '.' + final_path;
 			std::ifstream check_file(final_path, std::ios::binary);
 			if(check_file){return final_path;} 
 			else ;
