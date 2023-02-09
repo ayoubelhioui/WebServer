@@ -54,6 +54,7 @@ int create_socket(Parsing &server){
 
 const char *get_mime_format(const char *type){
         const char *last_dot = strrchr(type, '.');
+        std::cout << "last_dot " << last_dot  << std::endl;
         if(last_dot == NULL) return NULL;
         if (strcmp(last_dot, ".css") == 0) return "text/css";
         if (strcmp(last_dot, ".csv") == 0) return "text/csv";
@@ -358,8 +359,8 @@ void	server_start(std::list<Parsing> &servers) {
                       parsingRequest(line, request_data);
                       std::map<std::string, std::string>::iterator method = request_data.find("method");
                       if(method->second == "GET"){
-                            handle_get_method(request_data, *it);
-                            std::string path = request_data["path"];
+                            std::string path = handle_get_method(request_data, *it);
+                            std::cout << "path " << path << std::endl;
                             path.erase(0, 1);
                             std::ifstream served(path, std::ios::binary);
                             served.seekg(0, std::ios::end);
@@ -390,14 +391,13 @@ void	server_start(std::list<Parsing> &servers) {
                         std::list<client_info *>::iterator temp_it = client_data_it;
                         client_data_it++;
                         client_data.erase(temp_it);
-                        std::cout << "WAS HERE IN GET" << std::endl;
                         continue;
                       }
                       if(method->second == "POST"){
-                          std::cout << client->request << std::endl;
-                          isBoundryExist(request_data, body_index, client->request);
-                          postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it);
-                          handlingPostRequest(postRequest);
+                        //   std::cout << client->request << std::endl;
+                        //   isBoundryExist(request_data, body_index, client->request);
+                        //   postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it);
+                        //   handlingPostRequest(postRequest);
 //                          std::cout << "the client request is : " << client->request << std::endl;
 //                           std::map<std::string, std::string>::iterator m = request_data.begin();
 //                            std::cout << "*************************" << std::endl;
