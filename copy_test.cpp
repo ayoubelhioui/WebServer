@@ -90,6 +90,7 @@ const char *get_real_format(const char *mime_type){
         if (strcmp(mime_type, "image/svg+xml") == 0) return ".svg+xml";
         if (strcmp(mime_type, "text/plain") == 0) return ".plain";
         if (strcmp(mime_type, "video/mp4") == 0) return ".mp4";
+        if (strcmp(mime_type, "text/x-c") == 0) return ".cpp";
         return "";
 }
 
@@ -245,23 +246,35 @@ void    error_413(std::list<client_info *> &clients_list, std::list<client_info 
     delete [] buffer;
 }
 
-void isBoundryExist(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest)
+void boundaryRemoving(char *clientRequest, std::string &boundary)
 {
+    int findEqual = boundary.find("=");
+    boundary = boundary.substr(findEqual + 1, boundary.length() - findEqual);
+}
+
+void searchForBoundary(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest, int &boundarySize)
+{
+
     std::map<std::string, std::string>::iterator content = requestData.find("Content-Type:");
-    if (content == requestData.end())
+    if (content == requestData.end()) {
         return;
-    if (content->second.find("boundary=") == std::string::npos)
+    }
+    if (content->second.find("boundary=") == std::string::npos) {
         return ;
-    std::string newString(clientRequest + bodyIndex);
+    }
+    std::string boundarySavior = content->second;
+    std::string newString(clientRequest);
     int newContentIndex = newString.find("filename=");
     int dotPosition = newString.find(".", newContentIndex);
     int DoubleQuotePosition = newString.find("\"", dotPosition);
-    std::cout << "the index is : " << DoubleQuotePosition << std::endl;
     requestData["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
-    int newIndex = ret_index(clientRequest + bodyIndex + 4 + DoubleQuotePosition);
-    bodyIndex = newIndex +  bodyIndex + 4 + DoubleQuotePosition;
-//    std::cout << "the new Index is : " << newIndex +  bodyIndex + 4 + DoubleQuotePosition << std::endl;
-//    std::cout << "------------------------->"<< "the new clientBody" << clientRequest + newIndex +  bodyIndex + 4 + DoubleQuotePosition + 4  << "<------------------------"<< std::endl;
+    int newBodyIndex = newString.find("Content-Disposition:");
+    newBodyIndex += ret_index(clientRequest + newBodyIndex) + 4;
+    bodyIndex = newBodyIndex;
+//    std::cout << "**************************************************" << std::endl;
+//    std::cout << clientRequest << std::endl;
+//    std::cout << "**************************************************" << std::endl;
+    boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
 
 void	server_start(std::list<Parsing> &servers) {
@@ -324,10 +337,6 @@ void	server_start(std::list<Parsing> &servers) {
                 client->request[client->received] = 0;
                 if(read_data < MAX_REQUEST_SIZE)
                 {
-//                     std::cout << "-----------------------------------------------------\n";
-//                    for (int i = 0; i < client->received; i++)
-//                        std::cout << client->request[i];
-//                     std::cout << "-----------------------------------------------------\n";
                       std::map<std::string, std::string> request_data;
                       int body_index = ret_index(client->request), index = 0, i = 0;
                       std::string stock_header(client->request), line;
@@ -358,43 +367,48 @@ void	server_start(std::list<Parsing> &servers) {
                       parsingRequest(line, request_data);
                       std::map<std::string, std::string>::iterator method = request_data.find("method");
                       if(method->second == "GET"){
-                        std::string path = handle_get_method(request_data, *it);
-                        std::ifstream served(path, std::ios::binary);
-                        served.seekg(0, std::ios::end);
-                        int file_size = served.tellg();
-                        served.seekg(0, std::ios::beg);
-                        char *buffer = new char[1024];
-                        sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-                        send(client->socket, buffer, strlen(buffer), 0);
+                            std::string path = handle_get_method(request_data, *it);
+                            std::ifstream served(path, std::ios::binary);
+                            served.seekg(0, std::ios::end);
+                            int file_size = served.tellg();
+                            served.seekg(0, std::ios::beg);
+                            char *buffer = new char[1024];
+                            sprintf(buffer, "HTTP/1.1 200 OK\r\n");
+                            send(client->socket, buffer, strlen(buffer), 0);
 
-                        sprintf(buffer, "Connection: close\r\n");
-                        send(client->socket, buffer, strlen(buffer), 0);
+                            sprintf(buffer, "Connection: close\r\n");
+                            send(client->socket, buffer, strlen(buffer), 0);
 
-                        sprintf(buffer, "Content-Length: %d\r\n", file_size);
-                        send(client->socket, buffer, strlen(buffer), 0);
+                            sprintf(buffer, "Content-Length: %d\r\n", file_size);
+                            send(client->socket, buffer, strlen(buffer), 0);
 
-                        sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-                        send(client->socket, buffer, strlen(buffer), 0);
+                            sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
+                            send(client->socket, buffer, strlen(buffer), 0);
 
-                        sprintf(buffer, "\r\n");
-                        send(client->socket, buffer, strlen(buffer), 0);
-                        char *s = new char[1024];
-                        while (served) {
-                              served.read(buffer, 1024);
-                              int r = served.gcount();
-                              send(client->socket, buffer, r, 0);
-                        }
-                        close((*client_data_it)->socket);
-                        std::list<client_info *>::iterator temp_it = client_data_it;
-                        client_data_it++;
-                        client_data.erase(temp_it);
-                        continue;
+                            sprintf(buffer, "\r\n");
+                            send(client->socket, buffer, strlen(buffer), 0);
+                            char *s = new char[1024];
+                            while (served) {
+                                  served.read(buffer, 1024);
+                                  int r = served.gcount();
+                                  send(client->socket, buffer, r, 0);
+                            }
+                            close((*client_data_it)->socket);
+                            std::list<client_info *>::iterator temp_it = client_data_it;
+                            client_data_it++;
+                            client_data.erase(temp_it);
+                            continue;
                       }
                       if(method->second == "POST"){
-                        //   std::cout << client->request << std::endl;
-                        //   isBoundryExist(request_data, body_index, client->request);
-                        //   postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it);
-                        //   handlingPostRequest(postRequest);
+//                            std::cout << "*************************" << std::endl;
+//                            for (int i = 0; i < strlen(client->request); i++)
+//                                std::cout << client->request[i];
+//                            std::cout << std::endl;
+//                             std::cout << "*************************" << std::endl;
+                            int boundarySize = 0;
+                          searchForBoundary(request_data, body_index, client->request, boundarySize);
+                           postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it, body_index, client->received);
+                           handlingPostRequest(postRequest, boundarySize);
 //                          std::cout << "the client request is : " << client->request << std::endl;
 //                           std::map<std::string, std::string>::iterator m = request_data.begin();
 //                            std::cout << "*************************" << std::endl;

@@ -34,6 +34,8 @@ std::string	handle_get_method(std::map<std::string, std::string> &request, Parsi
 			for(std::list<std::string>::iterator index_it = loc.indexFiles.begin(); index_it != loc.indexFiles.end(); index_it++)
 			{
 				std::string final_path = root + (*index_it);
+				std::cout << "final is " << final_path << std::endl;
+				if(final_path[0] == '/') final_path = '.' + final_path;
 				std::ifstream check_file(final_path, std::ios::binary);
 				if(check_file){return final_path;}
 				else ;

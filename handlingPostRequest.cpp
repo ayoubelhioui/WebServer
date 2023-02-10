@@ -5,8 +5,13 @@ bool ifLocationSupportUpload(locationBlock &location)
     return !(location.UploadDirectoryPath.empty());
 }
 
-bool handlingPostRequest(postRequestStruct &postRequest)
+bool handlingPostRequest(postRequestStruct &postRequest, int &boundarySize)
 {
+//    std::cout << "**************************" << std::endl;
+//    for (int i = 0; i < strlen(postRequest.client->request); i++)
+//        std::cout << postRequest.client->request[i];
+//    std::cout << std::endl;
+//    std::cout << "**************************" << std::endl;
     if(isNotValidPostRequest(postRequest.requestData))
     {
         error_400(postRequest.clientData, postRequest.clientDataIterator);
@@ -41,29 +46,24 @@ bool handlingPostRequest(postRequestStruct &postRequest)
     }
     srand(time(NULL));
     int nameGenerating = rand();
-    std::stringstream ss;
+     std::stringstream ss;
     ss << nameGenerating;
-    std::ofstream file;
-//    std::cout << "the content type is : " << postRequest.requestData["Content-Type:"] << std::endl;
-//    exit (1);
-//    file.open("upload/" + ss.str() + get_mime_format(postRequest.requestData["Content-Type:"].c_str()));
-    file.open("upload/" + ss.str() + get_real_format(postRequest.requestData["Content-Type:"].c_str()));
+    std::ofstream file("uploads/" + ss.str() + get_real_format(postRequest.requestData["Content-Type:"].c_str()), std::ios::binary);
     if (!file.is_open())
         errorPrinting("Couldn't Open Upload File");
-    while (file << postRequest.client->request){};
-//    std::cout << "im here" << std::endl;
+    int readingIndex = 0;
+    int totalToWrite = postRequest.client->received - postRequest.bodyIndex - boundarySize - 4, toWrite = 0;
+    int i = 0;
+    while (1)
+    {
+        toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
+        totalToWrite -= toWrite;
+        std::cout << "i will write : " << toWrite << std::endl;
+        file.write(postRequest.client->request + readingIndex + postRequest.bodyIndex, toWrite);
+        readingIndex += toWrite;
+        if (toWrite < 1024)
+            break ;
+    }
+    file.close();
     return (true);
-//    char *buffer = new char[1024]();
-//    sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-//    send(postRequest.client->socket, buffer, strlen(buffer), 0);
-//    sprintf(buffer, "Connection: close\r\n");
-//    send(postRequest.client->socket, buffer, strlen(buffer), 0);
-//    sprintf(buffer, "\r\nREQUEST IS OK");
-//    send(postRequest.client->socket, buffer, strlen(buffer), 0);
-//    close(postRequest.client->socket);
-//    std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
-//    postRequest.clientDataIterator++;
-//    postRequest.clientData.erase(temp_it);
-//    delete [] buffer;
-//    return (true);
 }

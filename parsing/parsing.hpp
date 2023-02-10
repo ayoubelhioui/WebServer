@@ -87,13 +87,16 @@ struct postRequestStruct{
     std::list<client_info *> clientData;
     std::map<std::string, std::string> &requestData;
     Parsing &configFileData;
+    int bodyIndex;
+    int requestSize;
     postRequestStruct(client_info *client, std::list<client_info *>::iterator clientDataIterator, std::list<client_info *> clientData,
-                      std::map<std::string, std::string> &requestData, Parsing &configFileData) : client(client), clientDataIterator(clientDataIterator), clientData(clientData), requestData(requestData), configFileData(configFileData){};
+                      std::map<std::string, std::string> &requestData, Parsing &configFileData, int bodyIndex, int requestSize) : client(client),
+                      clientDataIterator(clientDataIterator), clientData(clientData), requestData(requestData), configFileData(configFileData), bodyIndex(bodyIndex), requestSize(requestSize){};
 };
 
 const char *get_real_format(const char *mime_type);
 const char *get_mime_format(const char *type);
-bool    handlingPostRequest(postRequestStruct &postRequest);
+bool    handlingPostRequest(postRequestStruct &postRequest, int &boundarySize);
 void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
 void    error_400(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
 void    error_501(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
