@@ -1,0 +1,55 @@
+AAAAAAA
+SELECT ENTER
+***********************
+received 0
+is set to write 32
+***********************
+read 485
+I AM WRITE
+AAAAAAA
+SELECT ENTER
+***********************
+received 485
+is set to write 32
+***********************
+I AM WRITE
+AAAAAAA
+SELECT ENTER
+***********************
+received 485
+is set to write 32
+***********************
+I AM WRITE
+AAAAAAA
+SELECT ENTER
+***********************
+received 485
+is set to write 32
+***********************
+I AM WRITE
+AAAAAAA
+SELECT ENTER
+***********************
+received 485
+is set to write 32
+***********************
+I AM WRITE
+AAAAAAA
+SELECT ENTER
+***********************
+received 485
+is set to write 32
+***********************
+I AM WRITE
+i'm closing socket
+AAAAAAA
+SELECT ENTER
+***********************
+received 0
+is set to write 32
+***********************
+read 402
+I AM WRITE
+i'm closing socket
+AAAAAAA
+SELECT ENTER

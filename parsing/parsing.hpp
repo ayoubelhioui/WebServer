@@ -76,6 +76,8 @@ struct client_info {
     SOCKET socket;
     char *request;
     int received;
+    std::ifstream served;
+    int served_size;
     client_info() : received(0){ request = new char[MAX_ARRAY_SIZE + 1]();}
     ~client_info(){delete [] request;}
     struct client_info *next;

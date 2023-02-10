@@ -17,7 +17,6 @@ void printingParsingData(std::list<Parsing> &parsingData)
             std::cout << (*it2).first << " " << (*it2).second << std::endl;
         for (std::list<locationBlock>::iterator it4 = it->Locations.begin(); it4 != it->Locations.end(); it4++)
         {
-            std::cout << "*********LOC BEGIN************" << std::endl;
             std::cout << "direc path " << it4->UploadDirectoryPath << std::endl;
             std::cout << "root is " << it4->Root << std::endl;
             std::cout << "redirect is " << it4->Redirection << std::endl;
@@ -41,9 +40,7 @@ void printingParsingData(std::list<Parsing> &parsingData)
                 std::cout << "first part " << it3->first << " ";
                 std::cout << "second part " << it3->second << std::endl;
             }
-            std::cout << "***********LOC END**************" << std::endl;
         }
-       std::cout << "**************END*****************" << std::endl;
     }
 }
 
