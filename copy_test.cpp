@@ -88,21 +88,12 @@ const char *get_real_format(const char *mime_type){
         if (strcmp(mime_type, "image/png") == 0) return ".png";
         if (strcmp(mime_type, "application/pdf") == 0) return ".pdf";
         if (strcmp(mime_type, "image/svg+xml") == 0) return ".svg+xml";
-        if (strcmp(mime_type, "text/plain") == 0) return ".plain";
+        if (strcmp(mime_type, "text/plain") == 0) return ".txt";
         if (strcmp(mime_type, "video/mp4") == 0) return ".mp4";
         if (strcmp(mime_type, "text/x-c") == 0) return ".cpp";
         return "";
 }
 
-//bool isValidUri(std::string &Uri)
-//{
-//
-//    std::string allowedCharacters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'@()*+,;=%";
-//    for (int i = 0; i < Uri.length(); i++)
-//        if (allowedCharacters.find(Uri[i]) == std::string::npos)
-//            return (false);
-//    return (true);
-//}
 void    error_414(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
 {
     std::string path = "error_pages/error414.html";
@@ -297,7 +288,7 @@ void	server_start(std::list<Parsing> &servers) {
         if(FD_ISSET(server_socket, &reads)){
             client_info *client = get_client(-1, client_data);
             client->socket = accept(server_socket, (struct sockaddr*) &(client->address), &(client->address_length));
-//             fcntl(client->socket, F_SETFL, O_NONBLOCK);
+             fcntl(client->socket, F_SETFL, O_NONBLOCK);
             FD_SET(client->socket, &reads);
             max_socket = std::max(max_socket, client->socket);
             if(client->socket < 0) std::cerr << "accept function failed\n";
@@ -320,11 +311,10 @@ void	server_start(std::list<Parsing> &servers) {
                     continue;
                 }
                 int read_data = MAX_REQUEST_SIZE + client->received < MAX_ARRAY_SIZE ? MAX_REQUEST_SIZE : MAX_ARRAY_SIZE - client->received;
-//                std::cout << "i need to read : " << read_data << std::endl;
                 read_data = recv(client->socket,
                             client->request + client->received,
                             read_data, 0);
-//                std::cout << "after : " << read_data << std::endl;
+                usleep(1);
                 if(read_data == -1) {
                     std::cout << "WAS ERROR\n";
                     close(client->socket);
@@ -406,9 +396,9 @@ void	server_start(std::list<Parsing> &servers) {
 //                            std::cout << std::endl;
 //                             std::cout << "*************************" << std::endl;
                             int boundarySize = 0;
-                          searchForBoundary(request_data, body_index, client->request, boundarySize);
-                           postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it, body_index, client->received);
-                           handlingPostRequest(postRequest, boundarySize);
+                            searchForBoundary(request_data, body_index, client->request, boundarySize);
+                            postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it, body_index, client->received);
+                            handlingPostRequest(postRequest, boundarySize);
 //                          std::cout << "the client request is : " << client->request << std::endl;
 //                           std::map<std::string, std::string>::iterator m = request_data.begin();
 //                            std::cout << "*************************" << std::endl;

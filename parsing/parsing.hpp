@@ -96,7 +96,7 @@ struct postRequestStruct{
 
 const char *get_real_format(const char *mime_type);
 const char *get_mime_format(const char *type);
-bool    handlingPostRequest(postRequestStruct &postRequest, int &boundarySize);
+void    handlingPostRequest(postRequestStruct &postRequest, int &boundarySize);
 void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
 void    error_400(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
 void    error_501(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
