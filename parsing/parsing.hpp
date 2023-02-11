@@ -81,22 +81,9 @@ struct client_info {
     struct client_info *next;
 };
 
-struct postRequestStruct{
-    client_info *client;
-    std::list<client_info *>::iterator clientDataIterator;
-    std::list<client_info *> clientData;
-    std::map<std::string, std::string> &requestData;
-    Parsing &configFileData;
-    int bodyIndex;
-    int requestSize;
-    postRequestStruct(client_info *client, std::list<client_info *>::iterator clientDataIterator, std::list<client_info *> clientData,
-                      std::map<std::string, std::string> &requestData, Parsing &configFileData, int bodyIndex, int requestSize) : client(client),
-                      clientDataIterator(clientDataIterator), clientData(clientData), requestData(requestData), configFileData(configFileData), bodyIndex(bodyIndex), requestSize(requestSize){};
-};
-
+void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
 const char *get_real_format(const char *mime_type);
 const char *get_mime_format(const char *type);
-void    handlingPostRequest(postRequestStruct &postRequest, int &boundarySize);
 void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
 void    error_400(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
 void    error_501(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
@@ -106,9 +93,9 @@ bool    getMatchedLocation(std::string &Uri, std::list<Parsing> &configFileData)
 bool    isLocationHaveRedirection(std::string &redirection);
 bool    isMethodAllowedInLocation(std::string &requestMethod, std::list<std::string> &allowedMethods);
 bool    isIndexExistInLocation(locationBlock &location);
-bool    isTransferEncodingNotChunked(std::map<std::string, std::string> &requestData);
-void    requestBodyTooLong(client_info *client);
-bool    isBodySizeBigger(Parsing &servers, int bodySize, client_info *client);
+//bool    isTransferEncodingNotChunked(std::map<std::string, std::string> &requestData);
+//void    requestBodyTooLong(client_info *client);
+//bool    isBodySizeBigger(Parsing &servers, int bodySize, client_info *client);
 void    printingParsingData(std::list<Parsing> &parsingData);
 bool    isValidNumber(std::string &data);
 void    errorPrinting(const char *errorMessage);
@@ -126,6 +113,6 @@ void	get_path(std::vector<std::string> &vec, locationBlock &loc);
 void	server_start(std::list<Parsing> &servers);
 bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
 bool    isUriTooLong(std::string &Uri);
-bool    handlingPostRequest(postRequestStruct &postRequest);
+//bool    handlingPostRequest(postRequestStruct &postRequest);
 std::string handle_get_method(std::map<std::string, std::string> &request, Parsing &server);
 #endif

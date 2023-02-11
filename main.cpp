@@ -1,6 +1,15 @@
 #include "parsing/parsing.hpp"
+#include "includes/postRequest.hpp"
 
-client_info *get_client(int socket, std::list<client_info *> &data_list){
+void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData)
+{
+    close(clientSocket);
+    std::list<client_info *>::iterator temp_it = clientDataIterator;
+    clientDataIterator++;
+    clientData.erase(temp_it);
+}
+client_info *get_client(int socket, std::list<client_info *> &data_list)
+{
     std::list<client_info *> copy = data_list;
     std::list<client_info *>::iterator it = copy.begin();
     for(; it != copy.end(); it++)
@@ -159,16 +168,6 @@ void requestBodyTooLong(client_info *client)
  send(client->socket, buffer, strlen(buffer), 0);
 }
 
-//bool isBodySizeBigger(Parsing &servers, int bodySize, client_info *client)
-//{
-//    if (bodySize > servers.clientBodyLimit)
-//    {
-//        requestBodyTooLong(client);
-//        return (true);
-//    }
-//    return (false);
-//}
-
 void    error_501(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
 {
     std::string path = "error_pages/error501.html";
@@ -237,36 +236,6 @@ void    error_413(std::list<client_info *> &clients_list, std::list<client_info 
     delete [] buffer;
 }
 
-void boundaryRemoving(char *clientRequest, std::string &boundary)
-{
-    int findEqual = boundary.find("=");
-    boundary = boundary.substr(findEqual + 1, boundary.length() - findEqual);
-}
-
-void searchForBoundary(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest, int &boundarySize)
-{
-
-    std::map<std::string, std::string>::iterator content = requestData.find("Content-Type:");
-    if (content == requestData.end()) {
-        return;
-    }
-    if (content->second.find("boundary=") == std::string::npos) {
-        return ;
-    }
-    std::string boundarySavior = content->second;
-    std::string newString(clientRequest);
-    int newContentIndex = newString.find("filename=");
-    int dotPosition = newString.find(".", newContentIndex);
-    int DoubleQuotePosition = newString.find("\"", dotPosition);
-    requestData["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
-    int newBodyIndex = newString.find("Content-Disposition:");
-    newBodyIndex += ret_index(clientRequest + newBodyIndex) + 4;
-    bodyIndex = newBodyIndex;
-//    std::cout << "**************************************************" << std::endl;
-//    std::cout << clientRequest << std::endl;
-//    std::cout << "**************************************************" << std::endl;
-    boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
-}
 
 void	server_start(std::list<Parsing> &servers) {
 	std::list<Parsing>::iterator it = servers.begin();
@@ -314,7 +283,7 @@ void	server_start(std::list<Parsing> &servers) {
                 read_data = recv(client->socket,
                             client->request + client->received,
                             read_data, 0);
-                usleep(1);
+                usleep(100);
                 if(read_data == -1) {
                     std::cout << "WAS ERROR\n";
                     close(client->socket);
@@ -327,6 +296,9 @@ void	server_start(std::list<Parsing> &servers) {
                 client->request[client->received] = 0;
                 if(read_data < MAX_REQUEST_SIZE)
                 {
+                    std::cout << "**************************************************" << std::endl;
+                    std::cout << client->request << std::endl;
+                    std::cout << "**************************************************" << std::endl;
                       std::map<std::string, std::string> request_data;
                       int body_index = ret_index(client->request), index = 0, i = 0;
                       std::string stock_header(client->request), line;
@@ -389,81 +361,25 @@ void	server_start(std::list<Parsing> &servers) {
                             client_data.erase(temp_it);
                             continue;
                       }
-                      if(method->second == "POST"){
-//                            std::cout << "*************************" << std::endl;
-//                            for (int i = 0; i < strlen(client->request); i++)
-//                                std::cout << client->request[i];
-//                            std::cout << std::endl;
-//                             std::cout << "*************************" << std::endl;
-                            int boundarySize = 0;
-                            searchForBoundary(request_data, body_index, client->request, boundarySize);
-                            postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it, body_index, client->received);
-                            handlingPostRequest(postRequest, boundarySize);
-//                          std::cout << "the client request is : " << client->request << std::endl;
-//                           std::map<std::string, std::string>::iterator m = request_data.begin();
-//                            std::cout << "*************************" << std::endl;
-//                            while (m != request_data.end())
-//                            {
-//                                std::cout <<m->first << m->second  << std::endl;
-//                                m++;
-//                            }
-//                        if(isNotValidPostRequest(request_data)){
-//                            error_400(client_data, client_data_it);
-//                            close(client->socket);
-//                            std::list<client_info *>::iterator temp_it = client_data_it;
-//                            client_data_it++;
-//                            client_data.erase(temp_it);
-//                            continue;
-//                        }
-//                        if(isTransferEncodingNotChunked(request_data)){
-//                            error_501(client_data, client_data_it);
-//                            close(client->socket);
-//                            std::list<client_info *>::iterator temp_it = client_data_it;
-//                            client_data_it++;
-//                            client_data.erase(temp_it);
-//                            continue;
-//                        }
-//                        std::map<std::string, std::string>::iterator content = request_data.find("Content-Length:");
-//                        if(content != request_data.end()){
-//                            body_size = std::stoi(request_data["Content-Length:"]);
-//                            if(isBodySizeBigger(*it, body_size, client)){
-//                                error_413(client_data, client_data_it);
-//                                close(client->socket);
-//                                std::list<client_info *>::iterator temp_it = client_data_it;
-//                                client_data_it++;
-//                                client_data.erase(temp_it);
-//                                continue;
-//                            }
-//                        }
+                      if(method->second == "POST")
+                      {
+                          int boundarySize = 0;
+                          searchForBoundary(request_data, body_index, client->request, boundarySize);
+                          postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it, body_index, client->received);
+                          handlingPostRequest(postRequest, boundarySize);
                       }
-
                       char *buffer = new char[1024]();
                       sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-                    send(client->socket, buffer, strlen(buffer), 0);
-                    sprintf(buffer, "Connection: close\r\n");
-                    send(client->socket, buffer, strlen(buffer), 0);
-                    sprintf(buffer, "\r\nREQUEST IS OK");
-                    send(client->socket, buffer, strlen(buffer), 0);
-                    close(client->socket);
-                    std::list<client_info *>::iterator temp_it = client_data_it;
-                    client_data_it++;
-                    client_data.erase(temp_it);
-                    delete [] buffer;
-                      // POST METHOD USAGE :
-                      // int body_size = std::stoi(request_data["Content-Length:"]);
-                      // std::vector<unsigned char> binary_data(body_size);
-                      // std::string format = "test";
-                      // format += get_real_format(request_data["Content-Type:"].c_str());
-                      // std::ofstream outfile(format, std::ios::binary);
-                      // outfile.write(client->request + body_index + 4, body_size);
-                      // outfile.close();
-                      // std::map<std::string, std::string>::iterator it = request_data.begin();
-                      // std::vector<unsigned char> binary_data(file_size);
-                      // infile.read(reinterpret_cast<char*>(binary_data.data()), file_size);
-                      // infile.close();
-                      // std::ofstream outfile("test.mp4", std::ios::binary);
-                      // outfile.write(reinterpret_cast<const char*>(binary_data.data()), binary_data.size() / 4);
-                      // outfile.close();
+                      send(client->socket, buffer, strlen(buffer), 0);
+                      sprintf(buffer, "Connection: close\r\n");
+                      send(client->socket, buffer, strlen(buffer), 0);
+                      sprintf(buffer, "\r\nREQUEST IS OK");
+                      send(client->socket, buffer, strlen(buffer), 0);
+                      close(client->socket);
+                      std::list<client_info *>::iterator temp_it = client_data_it;
+                      client_data_it++;
+                      client_data.erase(temp_it);
+                      delete [] buffer;
                 }
             }
             client_data_it++;

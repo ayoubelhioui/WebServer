@@ -14,8 +14,8 @@ add_executable(WebServer
         parsing/web_server.cpp
         public/kk.cpp
         testcpp/copy_test.cpp
-        copy_test.cpp
+        main.cpp
         getMethod.cpp
         handlingPostRequest.cpp
         locationHandling.cpp
-        sendingErrorPages.cpp)
+        sendingErrorPages.cpp includes/postRequest.hpp)

@@ -1,4 +1,27 @@
 #include "parsing/parsing.hpp"
+#include "includes/postRequest.hpp"
+
+void searchForBoundary(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest, int &boundarySize)
+{
+
+    std::map<std::string, std::string>::iterator content = requestData.find("Content-Type:");
+    if (content == requestData.end()) {
+        return;
+    }
+    if (content->second.find("boundary=") == std::string::npos) {
+        return ;
+    }
+    std::string boundarySavior = content->second;
+    std::string newString(clientRequest);
+    int newContentIndex = newString.find("filename=");
+    int dotPosition = newString.find(".", newContentIndex);
+    int DoubleQuotePosition = newString.find("\"", dotPosition);
+    requestData["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+    int newBodyIndex = newString.find("Content-Disposition:");
+    newBodyIndex += ret_index(clientRequest + newBodyIndex) + 4;
+    bodyIndex = newBodyIndex;
+    boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
+}
 
 bool ifLocationSupportUpload(locationBlock &location)
 {
@@ -29,24 +52,26 @@ void writingToUploadFile(postRequestStruct &postRequest, int &boundarySize)
     file.close();
 }
 
-bool postRequestIsValid(postRequestStruct &postRequest)
+bool isValidPostRequest(postRequestStruct &postRequest)
 {
     if(isNotValidPostRequest(postRequest.requestData))
     {
         error_400(postRequest.clientData, postRequest.clientDataIterator);
-        close(postRequest.client->socket);
-        std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
-        postRequest.clientDataIterator++;
-        postRequest.clientData.erase(temp_it);
+        dropClient(postRequest.client->socket, postRequest.clientDataIterator, postRequest.clientData);
+//        close(postRequest.client->socket);
+//        std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
+//        postRequest.clientDataIterator++;
+//        postRequest.clientData.erase(temp_it);
         return (false);
     }
     if(isTransferEncodingNotChunked(postRequest.requestData))
     {
         error_501(postRequest.clientData, postRequest.clientDataIterator);
-        close(postRequest.client->socket);
-        std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
-        postRequest.clientDataIterator++;
-        postRequest.clientData.erase(temp_it);
+        dropClient(postRequest.client->socket, postRequest.clientDataIterator, postRequest.clientData);
+//        close(postRequest.client->socket);
+//        std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
+//        postRequest.clientDataIterator++;
+//        postRequest.clientData.erase(temp_it);
         return (false);
     }
     std::map<std::string, std::string>::iterator content = postRequest.requestData.find("Content-Length:");
@@ -56,10 +81,11 @@ bool postRequestIsValid(postRequestStruct &postRequest)
         if(isBodySizeBigger(postRequest.configFileData, body_size, postRequest.client))
         {
             error_413(postRequest.clientData, postRequest.clientDataIterator);
-            close(postRequest.client->socket);
-            std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
-            postRequest.clientDataIterator++;
-            postRequest.clientData.erase(temp_it);
+            dropClient(postRequest.client->socket, postRequest.clientDataIterator, postRequest.clientData);
+//            close(postRequest.client->socket);
+//            std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
+//            postRequest.clientDataIterator++;
+//            postRequest.clientData.erase(temp_it);
             return (false);
         }
     }
@@ -68,27 +94,7 @@ bool postRequestIsValid(postRequestStruct &postRequest)
 
 void handlingPostRequest(postRequestStruct &postRequest, int &boundarySize)
 {
-     if (!postRequestIsValid(postRequest))
-        return ;
-//    srand(time(NULL));
-//    int nameGenerating = rand();
-//    std::stringstream ss;
-//    ss << nameGenerating;
-//    std::ofstream file("uploads/" + ss.str() + get_real_format(postRequest.requestData["Content-Type:"].c_str()), std::ios::binary);
-//    if (!file.is_open())
-//        errorPrinting("Couldn't Open Upload File");
-//    int readingIndex = 0;
-//    int totalToWrite = postRequest.client->received - postRequest.bodyIndex - boundarySize - 4, toWrite = 0;
-//    int i = 0;
-//    while (true)
-//    {
-//        toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
-//        totalToWrite -= toWrite;
-//        file.write(postRequest.client->request + readingIndex + postRequest.bodyIndex, toWrite);
-//        readingIndex += toWrite;
-//        if (toWrite < 1024)
-//            break ;
-//    }
-//    file.close();
-    writingToUploadFile(postRequest, boundarySize);
+     isValidPostRequest(postRequest);
+     writingToUploadFile(postRequest, boundarySize);
+//    SuccesfulPostRequest();
 }
