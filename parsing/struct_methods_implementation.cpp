@@ -2,7 +2,7 @@
 
 client_info::client_info() : received(0), isFirstRead(false)
 {
-    requestHeader = new char[2000]();
+    requestHeader = new char[2001]();
 }
 
 client_info::~client_info()

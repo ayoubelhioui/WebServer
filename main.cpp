@@ -237,6 +237,30 @@ void    error_413(std::list<client_info *> &clients_list, std::list<client_info 
     delete [] buffer;
 }
 
+void searchForBoundary(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest, int &boundarySize)
+{
+
+    std::map<std::string, std::string>::iterator content = requestData.find("Content-Type:");
+    if (content == requestData.end()) {
+        return;
+    }
+    if (content->second.find("boundary=") == std::string::npos) {
+        return ;
+    }
+
+    std::string boundarySavior = content->second;
+    std::string newString(clientRequest);
+    int newContentIndex = newString.find("filename=");
+    int dotPosition = newString.find(".", newContentIndex);
+    int DoubleQuotePosition = newString.find("\"", dotPosition);
+//    std::cout << "the string is : " << newString.substr(dotPosition, DoubleQuotePosition - dotPosition) << std::endl;
+    requestData["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+    exit (1);
+    int newBodyIndex = newString.find("Content-Disposition:");
+    newBodyIndex += ret_index(clientRequest + newBodyIndex) + 4;
+    bodyIndex = newBodyIndex;
+    boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
+}
 
 void	server_start(std::list<Parsing> &servers)
 {
@@ -262,7 +286,7 @@ void	server_start(std::list<Parsing> &servers)
         if (FD_ISSET(server_socket, &reads)) {
             client_info *client = get_client(-1, client_data);
             client->socket = accept(server_socket, (struct sockaddr *) &(client->address), &(client->address_length));
-            fcntl(client->socket, F_SETFL, O_NONBLOCK);
+//            fcntl(client->socket, F_SETFL, O_NONBLOCK);
             FD_SET(client->socket, &reads);
             FD_SET(client->socket, &writes);
             max_socket = std::max(max_socket, client->socket);
@@ -278,13 +302,14 @@ void	server_start(std::list<Parsing> &servers)
                 if (client->isFirstRead == false)
                 {
                     int receivedBytes = recv(client->socket, client->requestHeader, MAX_REQUEST_SIZE, 0);
+                    client->requestHeader[receivedBytes] = 0;
+                    std::cout << "i recieved  : " << receivedBytes << std::endl;
                     std::cout << "************************" << std::endl;
                     std::cout << client->requestHeader << std::endl;
                     std::cout << "************************" << std::endl;
-                    client->requestHeader[receivedBytes] = 0;
                     std::map<std::string, std::string> request_data;
                       int body_index = ret_index(client->requestHeader), index = 0, i = 0;
-                      std::string headerPart(client->requestHeader), line;
+                      std::string headerPart(client->requestHeader), line, bodyPart(headerPart);
                       headerPart = headerPart.substr(0, body_index);
                       std::size_t found = headerPart.find("\r\n");
                       while(found != std::string::npos)
@@ -315,13 +340,54 @@ void	server_start(std::list<Parsing> &servers)
                       std::map<std::string, std::string>::iterator headerPartIterator = request_data.begin();
                       if (request_data["method"] == "GET")
                       {
+                          std::cout << "path " << request_data["path"] << std::endl;
+                          std::string path = handle_get_method(request_data, *it);
+                            std::ifstream served(path, std::ios::binary);
+                            served.seekg(0, std::ios::end);
+                            int file_size = served.tellg();
+                            served.seekg(0, std::ios::beg);
+                            char *buffer = new char[1024];
+                            sprintf(buffer, "HTTP/1.1 200 OK\r\n");
+                            send(client->socket, buffer, strlen(buffer), 0);
+
+                            sprintf(buffer, "Connection: close\r\n");
+                            send(client->socket, buffer, strlen(buffer), 0);
+
+                            sprintf(buffer, "Content-Length: %d\r\n", file_size);
+                            send(client->socket, buffer, strlen(buffer), 0);
+
+                            sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
+                            send(client->socket, buffer, strlen(buffer), 0);
+
+                            sprintf(buffer, "\r\n");
+                            send(client->socket, buffer, strlen(buffer), 0);
+                            char *s = new char[1024];
+                            while (served)
+                            {
+                                served.read(buffer, 1024);
+                                int r = served.gcount();
+                                send(client->socket, buffer, r, 0);
+                            }
+                            close((*client_data_it)->socket);
+                            std::list<client_info *>::iterator temp_it = client_data_it;
+                            client_data_it++;
+                            client_data.erase(temp_it);
+                            continue;
+                      }
+                      else if (request_data["method"] == "DELETE")
+                      {
                           // calling get method function.
                           client_data_it++;
                           continue ;
                       }
                       else
                       {
-                          client->requestBody.open(std::to_string(client->socket), std::ios::binary);
+                          int boundarySize = 0;
+                          int bodySize = 0;
+                          client->requestBody.open("uploads/" + std::to_string(client->socket), std::ios::binary);
+//                          searchForBoundary(request_data, body_index, client->requestHeader, boundarySize);
+//                          bodySize = 2000 - body_index;
+//                          client->requestBody.write(client->requestHeader + body_index, bodySize);
                       }
 //                      while (headerPartIterator != request_data.end())
 //                      {
@@ -330,10 +396,10 @@ void	server_start(std::list<Parsing> &servers)
 //                      }
 
                 }
-                else
-                {
-
-                }
+//                else
+//                {
+//
+//                }
 
             }
             client_data_it++;

@@ -1,14 +1,52 @@
+i recieved  : 1477
 ************************
-GET /upload.html HTTP/1.1
+POST / HTTP/1.1
+User-Agent: PostmanRuntime/7.30.0
+Accept: */*
+Postman-Token: 278cc4cd-b2f2-4276-8f4b-0e7526ce037b
 Host: 10.11.6.10:8080
+Accept-Encoding: gzip, deflate, br
 Connection: keep-alive
-Cache-Control: max-age=0
-Upgrade-Insecure-Requests: 1
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-Sec-GPC: 1
-Accept-Encoding: gzip, deflate
-Accept-Language: en-US,en;q=0.9
+Content-Length: 1228
+Content-Type: text/x-c
 
+#include "parsing/parsing.hpp"
+
+bool getMatchedLocation(std::string &Uri, std::list<Parsing> &configFileData)
+{
+    std::list<Parsing>::iterator serverData = configFileData.begin();
+    while (serverData != configFileData.end())
+    {
+        std::list<locationBlock>::iterator serverLocation = serverData->Locations.begin();
+        while (serverLocation != serverData->Locations.end())
+        {
+            if (Uri == serverLocation->Location)
+            {
+                if (!isIndexExistInLocation(*serverLocation))
+                    return (false);
+                return (true);
+            }
+            serverLocation++;
+        }
+        serverData++;
+    }
+    return (false);
+}
+
+bool isLocationHaveRedirection(std::string &redirection)
+{
+    return (redirection.length() > 0);
+}
+
+bool isMethodAllowedInLocation(std::string &requestMethod, std::list<std::string> &allowedMethods)
+{
+    std::list<std::string>::iterator method = std::find(begin(allowedMethods), end(allowedMethods), requestMethod);
+    return (method != allowedMethods.end() and (*method == "POST" || *method == "GET" || *method == "DELETE"));
+}
+
+bool isIndexExistInLocation(locationBlock &location)
+{
+    return !(location.indexFiles.empty());
+}
 
 ************************
