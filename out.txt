@@ -1,0 +1,112 @@
+POST /testmsd.php HTTP/1.1
+Host: 10.11.6.10:8080
+Connection: keep-alive
+Content-Length: 3645
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
+Origin: http://10.11.6.10:8080
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundarytHRRkbgcScS5mmNc
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Sec-GPC: 1
+Referer: http://10.11.6.10:8080/upload.html
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9
+
+------WebKitFormBoundarytHRRkbgcScS5mmNc
+Content-Disposition: form-data; name="file"; filename="handlingPostRequest.cpp"
+Content-Type: application/octet-stream
+
+#include "parsing/parsing.hpp"
+#include "includes/postRequest.hpp"
+
+void searchForBoundary(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest, int &boundarySize)
+{
+
+    std::map<std::string, std::string>::iterator content = requestData.find("Content-Type:");
+    if (content == requestData.end()) {
+        return;
+    }
+    if (content->second.find("boundary=") == std::string::npos) {
+        return ;
+    }
+    std::string boundarySavior = content->second;
+    std::string newString(clientRequest);
+    int newContentIndex = newString.find("filename=");
+    int dotPosition = newString.find(".", newContentIndex);
+    int DoubleQuotePosition = newString.find("\"", dotPosition);
+    requestData["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+    int newBodyIndex = newString.find("Content-Disposition:");
+    newBodyIndex += ret_index(clientRequest + newBodyIndex) + 4;
+    bodyIndex = newBodyIndex;
+    boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
+}
+
+bool ifLocationSupportUpload(locationBlock &location)
+{
+    return !(location.UploadDirectoryPath.empty());
+}
+
+void writingToUploadFile(postRequestStruct &postRequest, int &boundarySize)
+{
+    srand(time(NULL));
+    int nameGenerating = rand();
+    std::stringstream ss;
+    ss << nameGenerating;
+    std::ofstream file("uploads/" + ss.str() + get_real_format(postRequest.requestData["Content-Type:"].c_str()), std::ios::binary);
+    if (!file.is_open())
+        errorPrinting("Couldn't Open Upload File");
+    int readingIndex = 0;
+    int totalToWrite = postRequest.client->received - postRequest.bodyIndex - boundarySize - 4, toWrite = 0;
+    int i = 0;
+    while (true)
+    {
+        toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
+        totalToWrite -= toWrite;
+        file.write(postRequest.client->request + readingIndex + postRequest.bodyIndex, toWrite);
+        readingIndex += toWrite;
+        if (toWrite < 1024)
+            break ;
+    }
+    file.close();
+}
+//bool isPostMethodAllowed(postRequestStruct &postRequest)
+//{
+//    std::list<std::string>::iterator allowedMethods = postRequest.configFileData.
+//}
+
+void isValidPostRequest(postRequestStruct &postRequest)
+{
+    if(isNotValidPostRequest(postRequest.requestData))
+    {
+        error_400(postRequest.clientData, postRequest.clientDataIterator);
+        throw postRequestExceptions("Bad Request Exception");
+    }
+    if(isTransferEncodingNotChunked(postRequest.requestData))
+    {
+        error_501(postRequest.clientData, postRequest.clientDataIterator);
+        throw postRequestExceptions("Transfer Encoding Exception");
+    }
+    std::map<std::string, std::string>::iterator content = postRequest.requestData.find("Content-Length:");
+    if(content != postRequest.requestData.end())
+    {
+        int body_size = std::stoi(postRequest.requestData["Content-Length:"]);
+        if(isBodySizeBigger(postRequest.configFileData, body_size, postRequest.client))
+        {
+            error_413(postRequest.clientData, postRequest.clientDataIterator);
+            throw postRequestExceptions("Body Size Exception");
+        }
+    }
+}
+
+//void SuccessfulPostRequest()
+//{
+//
+//}
+
+void handlingPostRequest(postRequestStruct &postRequest, int &boundarySize)
+{
+     isValidPostRequest(postRequest);
+     writingToUploadFile(postRequest, boundarySize);
+//    SuccesfulPostRequest();
+}

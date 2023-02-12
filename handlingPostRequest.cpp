@@ -51,28 +51,22 @@ void writingToUploadFile(postRequestStruct &postRequest, int &boundarySize)
     }
     file.close();
 }
+//bool isPostMethodAllowed(postRequestStruct &postRequest)
+//{
+//    std::list<std::string>::iterator allowedMethods = postRequest.configFileData.
+//}
 
-bool isValidPostRequest(postRequestStruct &postRequest)
+void isValidPostRequest(postRequestStruct &postRequest)
 {
     if(isNotValidPostRequest(postRequest.requestData))
     {
         error_400(postRequest.clientData, postRequest.clientDataIterator);
-        dropClient(postRequest.client->socket, postRequest.clientDataIterator, postRequest.clientData);
-//        close(postRequest.client->socket);
-//        std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
-//        postRequest.clientDataIterator++;
-//        postRequest.clientData.erase(temp_it);
-        return (false);
+        throw postRequestExceptions("Bad Request Exception");
     }
     if(isTransferEncodingNotChunked(postRequest.requestData))
     {
         error_501(postRequest.clientData, postRequest.clientDataIterator);
-        dropClient(postRequest.client->socket, postRequest.clientDataIterator, postRequest.clientData);
-//        close(postRequest.client->socket);
-//        std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
-//        postRequest.clientDataIterator++;
-//        postRequest.clientData.erase(temp_it);
-        return (false);
+        throw postRequestExceptions("Transfer Encoding Exception");
     }
     std::map<std::string, std::string>::iterator content = postRequest.requestData.find("Content-Length:");
     if(content != postRequest.requestData.end())
@@ -81,16 +75,15 @@ bool isValidPostRequest(postRequestStruct &postRequest)
         if(isBodySizeBigger(postRequest.configFileData, body_size, postRequest.client))
         {
             error_413(postRequest.clientData, postRequest.clientDataIterator);
-            dropClient(postRequest.client->socket, postRequest.clientDataIterator, postRequest.clientData);
-//            close(postRequest.client->socket);
-//            std::list<client_info *>::iterator temp_it = postRequest.clientDataIterator;
-//            postRequest.clientDataIterator++;
-//            postRequest.clientData.erase(temp_it);
-            return (false);
+            throw postRequestExceptions("Body Size Exception");
         }
     }
-    return (true);
 }
+
+//void SuccessfulPostRequest()
+//{
+//
+//}
 
 void handlingPostRequest(postRequestStruct &postRequest, int &boundarySize)
 {

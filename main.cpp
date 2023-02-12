@@ -8,6 +8,7 @@ void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDat
     clientDataIterator++;
     clientData.erase(temp_it);
 }
+
 client_info *get_client(int socket, std::list<client_info *> &data_list)
 {
     std::list<client_info *> copy = data_list;
@@ -249,6 +250,7 @@ void	server_start(std::list<Parsing> &servers) {
         FD_SET(server_socket, &reads);
         max_socket = std::max(max_socket, server_socket);
         std::list<client_info *>::iterator client_data_it1 = client_data.begin();
+//        std::cout << "the size of the list is : " << client_data.size() << std::endl;
         for(; client_data_it1 != client_data.end(); client_data_it1++){
             FD_SET((*client_data_it1)->socket, &reads);
             std::max(max_socket, server_socket);
@@ -296,9 +298,9 @@ void	server_start(std::list<Parsing> &servers) {
                 client->request[client->received] = 0;
                 if(read_data < MAX_REQUEST_SIZE)
                 {
-                    std::cout << "**************************************************" << std::endl;
-                    std::cout << client->request << std::endl;
-                    std::cout << "**************************************************" << std::endl;
+//                    std::cout << "**************************************************" << std::endl;
+//                    std::cout << client->request << std::endl;
+//                    std::cout << "**************************************************" << std::endl;
                       std::map<std::string, std::string> request_data;
                       int body_index = ret_index(client->request), index = 0, i = 0;
                       std::string stock_header(client->request), line;
@@ -350,10 +352,11 @@ void	server_start(std::list<Parsing> &servers) {
                             sprintf(buffer, "\r\n");
                             send(client->socket, buffer, strlen(buffer), 0);
                             char *s = new char[1024];
-                            while (served) {
-                                  served.read(buffer, 1024);
-                                  int r = served.gcount();
-                                  send(client->socket, buffer, r, 0);
+                            while (served)
+                            {
+                                served.read(buffer, 1024);
+                                int r = served.gcount();
+                                send(client->socket, buffer, r, 0);
                             }
                             close((*client_data_it)->socket);
                             std::list<client_info *>::iterator temp_it = client_data_it;
@@ -363,10 +366,19 @@ void	server_start(std::list<Parsing> &servers) {
                       }
                       if(method->second == "POST")
                       {
+                          std::cout << client->request << std::endl;
                           int boundarySize = 0;
                           searchForBoundary(request_data, body_index, client->request, boundarySize);
                           postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it, body_index, client->received);
-                          handlingPostRequest(postRequest, boundarySize);
+                          try
+                          {
+                              handlingPostRequest(postRequest, boundarySize);
+                          }
+                          catch(postRequestExceptions &e)
+                          {
+                              dropClient(client->socket, client_data_it, client_data);
+                              continue;
+                          }
                       }
                       char *buffer = new char[1024]();
                       sprintf(buffer, "HTTP/1.1 200 OK\r\n");

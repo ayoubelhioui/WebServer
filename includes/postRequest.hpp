@@ -2,6 +2,11 @@
 #define _POST_REQUEST_HPP_
 
 
+class postRequestExceptions : std::runtime_error{
+    public:
+        postRequestExceptions(const std::string &errorMessage) : std::runtime_error(errorMessage){};
+};
+
 struct postRequestStruct{
     client_info *client;
     std::list<client_info *>::iterator clientDataIterator;
