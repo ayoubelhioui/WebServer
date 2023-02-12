@@ -5,7 +5,7 @@ bool    isBodySizeBigger(Parsing &servers, int bodySize, client_info *client) //
     return (bodySize > servers.clientBodyLimit);
 }
 
-bool    isTransferEncodingNotChunked(std::map<std::string, std::string> &requestData) //STATUS CODE: 501 NOR IMPLEMENTED
+bool    isTransferEncodingNotChunked(std::map<std::string, std::string> &requestData) //STATUS CODE: 501 NOT IMPLEMENTED
 {
     std::map<std::string, std::string>::iterator Transfer_Encoding = requestData.find("Transfer-Encoding:");
     std::map<std::string, std::string>::iterator Content_length = requestData.find("Content-Length:");
@@ -16,7 +16,7 @@ bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData) /
 {
      std::map<std::string, std::string>::iterator it = requestData.find("Transfer-Encoding:");
      std::map<std::string, std::string>::iterator it1 = requestData.find("Content-Length:");
-     return it == requestData.end() and it1 == requestData.end();
+     return (it == requestData.end() and it1 == requestData.end());
 }
 
 bool isUriTooLong(std::string &Uri)

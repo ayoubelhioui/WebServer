@@ -1,5 +1,5 @@
 #include "parsing/parsing.hpp"
-
+// std::cout
 client_info *get_client(int socket, std::list<client_info *> &data_list){
     std::list<client_info *> copy = data_list;
     std::list<client_info *>::iterator it = copy.begin();
@@ -271,7 +271,6 @@ void	server_start(std::list<Parsing> &servers) {
     int max_socket = 0;
     int prob = 0;
     while(1){
-        std::cout << "AAAAAAA" << std::endl;
         fd_set reads, writes;
         FD_ZERO(&reads);
         FD_SET(server_socket, &reads);
@@ -284,7 +283,6 @@ void	server_start(std::list<Parsing> &servers) {
             FD_SET((*client_data_it1)->socket, &writes);
             std::max(max_socket, server_socket);
         }
-        std::cout << "SELECT ENTER" << std::endl;
         int ret_select = select(max_socket + 1, &reads, &writes, NULL, NULL);
         if(FD_ISSET(server_socket, &reads)){
             client_info *client = get_client(-1, client_data);
@@ -301,10 +299,6 @@ void	server_start(std::list<Parsing> &servers) {
         {
                 int body_size = 0;
                 client_info *client = *client_data_it;
-                std::cout << "***********************" << std::endl;
-                std::cout << "received " << client->received << std::endl;
-                std::cout << "is set to write " << FD_ISSET(client->socket, &writes) << std::endl;
-                std::cout << "***********************" << std::endl;
                 if(FD_ISSET(client->socket, &reads))
                 {
                     if(MAX_ARRAY_SIZE == client->received)
@@ -320,9 +314,7 @@ void	server_start(std::list<Parsing> &servers) {
                     read_data = recv(client->socket,
                                 client->request + client->received,
                                 read_data, 0);
-                    std::cout << "read " << read_data << std::endl;
                     if(read_data == -1) {
-                        std::cout << "WAS ERROR\n";
                         close(client->socket);
                         std::list<client_info *>::iterator temp_it = client_data_it;
                         client_data_it++;
@@ -385,7 +377,6 @@ void	server_start(std::list<Parsing> &servers) {
                             send(client->socket, buffer, strlen(buffer), 0);
                           }
                           if(method->second == "POST"){
-                            //   std::cout << client->request << std::endl;
                             //   isBoundryExist(request_data, body_index, client->request);
                             //   postRequestStruct postRequest(client, client_data_it, client_data, request_data, *it);
                             //   handlingPostRequest(postRequest);
@@ -457,7 +448,6 @@ void	server_start(std::list<Parsing> &servers) {
                     }
                 }
                 if(FD_ISSET(client->socket, &writes)){
-                    std::cout << "I AM WRITE" << std::endl;
                     char *s = new char[1024]();
                     client->served.read(s, 1024);
                     // if (!s) std::cout << "NOT TRUE" << std::endl;
