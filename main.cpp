@@ -301,12 +301,13 @@ void	server_start(std::list<Parsing> &servers)
             {
                 if (client->isFirstRead == false)
                 {
+//                    usleep();
                     int receivedBytes = recv(client->socket, client->requestHeader, MAX_REQUEST_SIZE, 0);
                     client->requestHeader[receivedBytes] = 0;
-                    std::cout << "i recieved  : " << receivedBytes << std::endl;
-                    std::cout << "************************" << std::endl;
-                    std::cout << client->requestHeader << std::endl;
-                    std::cout << "************************" << std::endl;
+//                    std::cout << "i recieved  : " << receivedBytes << std::endl;
+//                    std::cout << "************************" << std::endl;
+//                    std::cout << client->requestHeader << std::endl;
+//                    std::cout << "************************" << std::endl;
                     std::map<std::string, std::string> request_data;
                       int body_index = ret_index(client->requestHeader), index = 0, i = 0;
                       std::string headerPart(client->requestHeader), line, bodyPart(headerPart);
@@ -396,10 +397,18 @@ void	server_start(std::list<Parsing> &servers)
 //                      }
 
                 }
-//                else
-//                {
-//
-//                }
+                else
+                {
+                      int received = recv(client->socket, client->requestHeader, MAX_REQUEST_SIZE, 0);
+                      client->requestHeader[received] = 0;
+//                      std::cout << "I RECEIVED DATA" << std::endl;
+                    std::cout << "************************" << std::endl;
+                      std::cout << "i read " << received << std::endl;
+                    std::cout << client->requestHeader << std::endl;
+                      std::cout << "************************" << std::endl;
+//                      std::cout << "I RECEIVED DATA" << std::endl;
+                      client->requestBody.write(client->requestHeader, received);
+                }
 
             }
             client_data_it++;
