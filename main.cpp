@@ -245,22 +245,26 @@ void	server_start(std::list<Parsing> &servers) {
     int max_socket = 0;
     int prob = 0;
     while(1){
-        fd_set reads;
+        fd_set reads, writes;
         FD_ZERO(&reads);
         FD_SET(server_socket, &reads);
+        FD_ZERO(&writes);
+        FD_SET(server_socket, &writes);
         max_socket = std::max(max_socket, server_socket);
         std::list<client_info *>::iterator client_data_it1 = client_data.begin();
 //        std::cout << "the size of the list is : " << client_data.size() << std::endl;
         for(; client_data_it1 != client_data.end(); client_data_it1++){
             FD_SET((*client_data_it1)->socket, &reads);
-            std::max(max_socket, server_socket);
+            FD_SET((*client_data_it1)->socket, &writes);
+            std::max(max_socket, (*client_data_it1)->socket);
         }
-        int ret_select = select(max_socket + 1, &reads, NULL, NULL, NULL);
+        int ret_select = select(max_socket + 1, &reads, &writes, NULL, NULL);
         if(FD_ISSET(server_socket, &reads)){
             client_info *client = get_client(-1, client_data);
             client->socket = accept(server_socket, (struct sockaddr*) &(client->address), &(client->address_length));
              fcntl(client->socket, F_SETFL, O_NONBLOCK);
             FD_SET(client->socket, &reads);
+            FD_SET(client->socket, &writes);
             max_socket = std::max(max_socket, client->socket);
             if(client->socket < 0) std::cerr << "accept function failed\n";
         }
