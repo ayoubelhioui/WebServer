@@ -21,7 +21,8 @@ bool    isTransferEncodingNotChunked(std::map<std::string, std::string> &request
 void    requestBodyTooLong(client_info *client);
 bool    isBodySizeBigger(Parsing &servers, int bodySize, client_info *client);
 int     ret_index(char *str);
-void    handlingPostRequest(postRequestStruct &postRequest);
 void    searchForBoundary(client_info *client);
 void    isValidPostRequest(postRequestStruct &postRequest);
+void    succesfulPostRequest(std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData, client_info *client);
+
 #endif
