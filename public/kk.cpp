@@ -142,7 +142,7 @@ void parsingRequestFirstLine(std::string &line, std::map<std::string, std::strin
     request_data["httpVersion"] = word;
 }
 
-void parsingRequest(std::string &line, std::map<std::string, std::string> &request_data)
+void parsingRequest(std::string &line, std::map<std::string, std::string> &request_data, client_info *client)
 {
     std::stringstream str(line);
     std::string word;

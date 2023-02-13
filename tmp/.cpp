@@ -1,68 +1,4 @@
-------WebKitFormBoundarydycVX33NTCd50ntm
-Content-Disposition: form-data; name="file"; filename="testingwrite.cpp"
-Content-Type: application/octet-stream
-
-#include "parsing/parsing.hpp"
-// std::cout
-client_info *get_client(int socket, std::list<client_info *> &data_list){
-    std::list<client_info *> copy = data_list;
-    std::list<client_info *>::iterator it = copy.begin();
-    for(; it != copy.end(); it++)
-        if(socket == (*it)->socket) return *it;
-    client_info *new_node = new client_info;
-    new_node->address_length = sizeof(new_node->address);
-    data_list.push_front(new_node);
-    return new_node;
-}
-
-int ret_index(char *str){
-  for(int i = 0; str[i]; i++){
-    if(!strncmp(&str[i], "\r\n\r\n", 4))
-      return i;
-  }
-  return -1;
-}
-
-int create_socket(Parsing &server){
-	struct addrinfo server_hints;
-    memset(&server_hints, 0, sizeof(server_hints));
-    server_hints.ai_family = AF_INET;
-    server_hints.ai_socktype = SOCK_STREAM;
-    server_hints.ai_flags = AI_PASSIVE;
-
-    struct addrinfo *bind_address;
-    getaddrinfo(server.serverHost.c_str(), server.serverPort.c_str(), &server_hints, &bind_address);
-
-    SOCKET socket_listen;
-    socket_listen = socket(bind_address->ai_family,
-            bind_address->ai_socktype, bind_address->ai_protocol);
-    if (socket_listen < 0) {
-        std::cerr << "socket failed" << std::endl;
-        exit(1);
-    }
-    int optval = 1;
-    setsockopt(socket_listen, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
-    if (bind(socket_listen,
-                bind_address->ai_addr, bind_address->ai_addrlen)) {
-        std::cerr << "bind failed" << std::endl;
-        exit(1);
-    }
-    freeaddrinfo(bind_address);
-
-    if (listen(socket_listen, 10) < 0) {
-        std::cerr << "listen failed" << std::endl;
-    }
-
-    return socket_listen;
-}
-
-const char *get_mime_format(const char *type){
-        const char *last_dot = strrchr(type, '.');
-        if(last_dot == NULL) return NULL;
-        if (strcmp(last_dot, ".css") == 0) return "text/css";
-        if (strcmp(last_dot, ".csv") == 0) return "text/csv";
-        if (strcmp(last_dot, ".gif") == 0) return "image/gif";
-        if (strcmp(last_dot, ".htm") == 0) return "text/html";
+f (strcmp(last_dot, ".htm") == 0) return "text/html";
         if (strcmp(last_dot, ".html") == 0) return "text/html";
         if (strcmp(last_dot, ".ico") == 0) return "image/x-icon";
         if (strcmp(last_dot, ".jpeg") == 0) return "image/jpeg";
@@ -146,7 +82,7 @@ void parsingRequestFirstLine(std::string &line, std::map<std::string, std::strin
     request_data["httpVersion"] = word;
 }
 
-void parsingRequest(std::string &line, std::map<std::string, std::string> &request_data)
+void parsingRequest(std::string &line, std::map<std::string, std::string> &request_data, client_info *client)
 {
     std::stringstream str(line);
     std::string word;
@@ -402,36 +338,4 @@ void	server_start(std::list<Parsing> &servers) {
 //                            }
 //                            if(isTransferEncodingNotChunked(request_data)){
 //                                error_501(client_data, client_data_it);
-//                                close(client->socket);
-//                                std::list<client_info *>::iterator temp_it = client_data_it;
-//                                client_data_it++;
-//                                client_data.erase(temp_it);
-//                                continue;
-//                            }
-//                            std::map<std::string, std::string>::iterator content = request_data.find("Content-Length:");
-//                            if(content != request_data.end()){
-//                                body_size = std::stoi(request_data["Content-Length:"]);
-//                                if(isBodySizeBigger(*it, body_size, client)){
-//                                    error_413(client_data, client_data_it);
-//                                    close(client->socket);
-//                                    std::list<client_info *>::iterator temp_it = client_data_it;
-//                                    client_data_it++;
-//                                    client_data.erase(temp_it);
-//                                    continue;
-//                                }
-//                            }
-                          }
-
-                        //   char *buffer = new char[1024]();
-                        //   sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-                        // send(client->socket, buffer, strlen(buffer), 0);
-                        // sprintf(buffer, "Connection: close\r\n");
-                        // send(client->socket, buffer, strlen(buffer), 0);
-                        // sprintf(buffer, "\r\nREQUEST IS OK");
-                        // send(client->socket, buffer, strlen(buffer), 0);
-                        // close(client->socket);
-                        // std::list<client_info *>::iterator temp_it = client_data_it;
-                        // client_data_it++;
-                        // client_data.erase(temp_it);
-                        // delete [] buffer;
-   
+//                   

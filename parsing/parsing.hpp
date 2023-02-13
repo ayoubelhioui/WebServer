@@ -69,6 +69,8 @@ struct Parsing{
 };
 
 struct client_info {
+    int contentLength;
+    int bytesToReceive;
     std::string uploadFileName;
     int boundarySize;
     std::map<std::string, std::string> request_data;

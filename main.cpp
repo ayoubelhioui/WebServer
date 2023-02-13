@@ -144,7 +144,7 @@ void parsingRequestFirstLine(std::string &line, std::map<std::string, std::strin
     request_data["httpVersion"] = word;
 }
 
-void parsingRequest(std::string &line, std::map<std::string, std::string> &request_data)
+void parsingRequest(std::string &line, std::map<std::string, std::string> &request_data, client_info *client)
 {
     std::stringstream str(line);
     std::string word;
@@ -157,6 +157,8 @@ void parsingRequest(std::string &line, std::map<std::string, std::string> &reque
         last += word;
     }
     last.erase(0, 1);
+    if (save == "Content-Length:")
+        client->contentLength = atoi(last.c_str());
     request_data[save] = last;
 }
 
@@ -247,16 +249,15 @@ void searchForBoundary(client_info *client)
     if (content->second.find("boundary=") == std::string::npos) {
         return ;
     }
-
     std::string boundarySavior = content->second;
     std::string newString(client->requestHeader);
     int newContentIndex = newString.find("filename=");
     int dotPosition = newString.find(".", newContentIndex);
-    client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex + 10);
+    client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10);
     int DoubleQuotePosition = newString.find("\"", dotPosition);
     client->request_data["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
     int newBodyIndex = newString.find("Content-Disposition:");
-    newBodyIndex += ret_index(client->requestHeader + newBodyIndex) + 4;
+    newBodyIndex = ret_index(client->requestHeader) + 4;
     client->bodyIndex = newBodyIndex;
     client->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
@@ -303,11 +304,11 @@ void	server_start(std::list<Parsing> &servers)
                 if (!client->isFirstRead)
                 {
                     int receivedBytes = recv(client->socket, client->requestHeader, MAX_REQUEST_SIZE, 0);
-                    client->requestHeader[receivedBytes] = 0;
-//                    std::cout << "i recieved  : " << receivedBytes << std::endl;
-//                    std::cout << "************************" << std::endl;
+                      client->requestHeader[receivedBytes] = 0;
+//                      std::cout << "*********************************" << std::endl;
 //                    std::cout << client->requestHeader << std::endl;
-//                    std::cout << "************************" << std::endl;
+//                    std::cout << "*********************************" << std::endl;
+                      client->bytesToReceive += receivedBytes;
                       client->bodyIndex = ret_index(client->requestHeader);
                       int index = 0, i = 0;
                       std::string headerPart(client->requestHeader), line, bodyPart(headerPart);
@@ -322,7 +323,7 @@ void	server_start(std::list<Parsing> &servers)
                             i++;
                         }
                         else
-                            parsingRequest(line, client->request_data);
+                            parsingRequest(line, client->request_data, client);
                         headerPart = headerPart.substr(found + 2);
                         found = headerPart.find("\r\n");
                       }
@@ -336,7 +337,7 @@ void	server_start(std::list<Parsing> &servers)
                       headerPart = headerPart.substr(found + 1);
                       found = headerPart.find("\r\n");
                       line = headerPart.substr(0, found);
-                      parsingRequest(line, client->request_data);
+                      parsingRequest(line, client->request_data, client);
                       client->isFirstRead = true;
                       std::map<std::string, std::string>::iterator headerPartIterator = client->request_data.begin();
                       if (client->request_data["method"] == "GET")
@@ -380,30 +381,39 @@ void	server_start(std::list<Parsing> &servers)
                           client_data_it++;
                           continue ;
                       }
-//                      else
-//                      {
-//                          int bodySize = 0;
-//                          client->requestBody.open("uploads/" + std::to_string(client->socket), std::ios::binary);
-////                          searchForBoundary(client->request_data, client->bodyIndex, client->requestHeader, boundarySize);
-////                          bodySize = 2000 - client->bodyIndex;
-////                          client->requestBody.write(client->requestHeader + client->bodyIndex, bodySize);
-//                      }
                 }
                 else
                 {
-                    received = recv(client->socket, client->requestHeader, MAX_REQUEST_SIZE, 0);
-                    if (client->bodyFirstRead == false)
+                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
+                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
+                    client->received += received;
+                    client->requestHeader[received] = 0;
+                    if (!client->bodyFirstRead)
                     {
+                        postRequestStruct postRequest(client, client_data_it, client_data, *it);
+                        try
+                        {
+                            isValidPostRequest(postRequest);
+                        }
+                        catch (postRequestExceptions &e)
+                        {
+                            dropClient(client->socket, client_data_it, client_data);
+                            continue;
+                        }
                         client->bodyFirstRead = true;
                         searchForBoundary(client);
-                        client->requestBody.open("uploads/" + client->uploadFileName, std::ios::binary);
+                        client->requestBody.open("tmp/" + client->uploadFileName + get_real_format(client->request_data["Content-Type:"].c_str()), std::ios::binary);
+                        if (!client->requestBody.is_open())
+                            errorPrinting("Couldn't Open Upload File");
+                        client->requestBody.write(client->requestHeader + client->bodyIndex, received - client->bodyIndex);
                     }
-                    client->requestHeader[received] = 0;
-                    client->requestBody.write(client->requestHeader, received);
-                    if (received <= 0)
+                    else
+                        client->requestBody.write(client->requestHeader, received);
+                    if (client->received == client->contentLength)
                     {
+                        dropClient(client->socket, client_data_it, client_data);
                         client->requestBody.close();
-                        exit (1);
+                        continue ;
                     }
                 }
             }
