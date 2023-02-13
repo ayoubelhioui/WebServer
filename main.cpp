@@ -129,22 +129,22 @@ void    error_414(std::list<client_info *> &clients_list, std::list<client_info 
 
 }
 
-void parsingRequestFirstLine(std::string &line, std::map<std::string, std::string> &request_data, client_info *client)
+void parsingRequestFirstLine(std::string &line, client_info *client)
 {
     std::stringstream str(line);
     std::string word;
     str >> word;
-    request_data["method"] = word;
+    client->request_data["method"] = word;
     str >> word;
     if(isUriTooLong(word)) {
 
     }
-    request_data["path"] = word;
+    client->request_data["path"] = word;
     str >> word;
-    request_data["httpVersion"] = word;
+    client->request_data["httpVersion"] = word;
 }
 
-void parsingRequest(std::string &line, std::map<std::string, std::string> &request_data, client_info *client)
+void parsingRequest(std::string &line,  client_info *client)
 {
     std::stringstream str(line);
     std::string word;
@@ -159,7 +159,7 @@ void parsingRequest(std::string &line, std::map<std::string, std::string> &reque
     last.erase(0, 1);
     if (save == "Content-Length:")
         client->contentLength = atoi(last.c_str());
-    request_data[save] = last;
+    client->request_data[save] = last;
 }
 
 void requestBodyTooLong(client_info *client)
@@ -241,7 +241,6 @@ void    error_413(std::list<client_info *> &clients_list, std::list<client_info 
 
 void searchForBoundary(client_info *client)
 {
-
     std::map<std::string, std::string>::iterator content = client->request_data.find("Content-Type:");
     if (content == client->request_data.end()) {
         return;
@@ -253,9 +252,9 @@ void searchForBoundary(client_info *client)
     std::string newString(client->requestHeader);
     int newContentIndex = newString.find("filename=");
     int dotPosition = newString.find(".", newContentIndex);
-    client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10);
     int DoubleQuotePosition = newString.find("\"", dotPosition);
     client->request_data["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+    client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10);
     int newBodyIndex = newString.find("Content-Disposition:");
     newBodyIndex = ret_index(client->requestHeader) + 4;
     client->bodyIndex = newBodyIndex;
@@ -319,11 +318,11 @@ void	server_start(std::list<Parsing> &servers)
                         line = headerPart.substr(0, found);
                         if (i == 0)
                         {
-                            parsingRequestFirstLine(line, client->request_data, client);
+                            parsingRequestFirstLine(line, client);
                             i++;
                         }
                         else
-                            parsingRequest(line, client->request_data, client);
+                            parsingRequest(line, client);
                         headerPart = headerPart.substr(found + 2);
                         found = headerPart.find("\r\n");
                       }
@@ -337,7 +336,14 @@ void	server_start(std::list<Parsing> &servers)
                       headerPart = headerPart.substr(found + 1);
                       found = headerPart.find("\r\n");
                       line = headerPart.substr(0, found);
-                      parsingRequest(line, client->request_data, client);
+                      parsingRequest(line, client);
+//                      std::map<std::string, std::string>::iterator m = client->request_data.begin();
+//                       while (m != client->request_data.end())
+//                        {
+//                            std::cout << "the data is : " << m->first << " " << m->second << std::endl;
+//                            m++;
+//                        }
+//                       exit (1);
                       client->isFirstRead = true;
                       std::map<std::string, std::string>::iterator headerPartIterator = client->request_data.begin();
                       if (client->request_data["method"] == "GET")
@@ -388,16 +394,20 @@ void	server_start(std::list<Parsing> &servers)
                     received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
                     client->received += received;
                     client->requestHeader[received] = 0;
+                    std::cout << "*********************************" << std::endl;
+                    std::cout << client->requestHeader << std::endl;
+                    std::cout << "*********************************" << std::endl;
                     if (!client->bodyFirstRead)
                     {
-                        postRequestStruct postRequest(client, client_data_it, client_data, *it);
                         try
                         {
+                            postRequestStruct postRequest(client, client_data_it, client_data, *it);
                             isValidPostRequest(postRequest);
                         }
                         catch (postRequestExceptions &e)
                         {
                             dropClient(client->socket, client_data_it, client_data);
+                            std::cout << "Post Request Problem" << std::endl;
                             continue;
                         }
                         client->bodyFirstRead = true;
@@ -411,7 +421,6 @@ void	server_start(std::list<Parsing> &servers)
                         client->requestBody.write(client->requestHeader, received);
                     if (client->received == client->contentLength)
                     {
-                        std::cout << "hello world" << std::endl;
                         dropClient(client->socket, client_data_it, client_data);
                         client->requestBody.close();
                         continue ;
