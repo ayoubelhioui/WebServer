@@ -36,23 +36,24 @@ void writingToUploadFile(postRequestStruct &postRequest, int &boundarySize)
     int nameGenerating = rand();
     std::stringstream ss;
     ss << nameGenerating;
-    std::ofstream file("uploads/" + ss.str() + get_real_format(postRequest.requestData["Content-Type:"].c_str()), std::ios::binary);
+    std::ofstream file("uploads/" + ss.str() + get_real_format(postRequest.client->request_data["Content-Type:"].c_str()), std::ios::binary);
     if (!file.is_open())
         errorPrinting("Couldn't Open Upload File");
     int readingIndex = 0;
-    int totalToWrite = postRequest.client->received - postRequest.bodyIndex - boundarySize - 4, toWrite = 0;
+    int totalToWrite = postRequest.client->received - postRequest.client->bodyIndex - boundarySize - 4, toWrite = 0;
     int i = 0;
     while (true)
     {
         toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
         totalToWrite -= toWrite;
-        file.write(postRequest.client->requestHeader + readingIndex + postRequest.bodyIndex, toWrite);
+        file.write(postRequest.client->requestHeader + readingIndex + postRequest.client->bodyIndex, toWrite);
         readingIndex += toWrite;
         if (toWrite < 1024)
             break ;
     }
     file.close();
 }
+
 //bool isPostMethodAllowed(postRequestStruct &postRequest)
 //{
 //    std::list<std::string>::iterator allowedMethods = postRequest.configFileData.
@@ -60,20 +61,20 @@ void writingToUploadFile(postRequestStruct &postRequest, int &boundarySize)
 
 void isValidPostRequest(postRequestStruct &postRequest)
 {
-    if(isNotValidPostRequest(postRequest.requestData))
+    if(isNotValidPostRequest(postRequest.client->request_data))
     {
         error_400(postRequest.clientData, postRequest.clientDataIterator);
         throw postRequestExceptions("Bad Request Exception");
     }
-    if(isTransferEncodingNotChunked(postRequest.requestData))
+    if(isTransferEncodingNotChunked(postRequest.client->request_data))
     {
         error_501(postRequest.clientData, postRequest.clientDataIterator);
         throw postRequestExceptions("Transfer Encoding Exception");
     }
-    std::map<std::string, std::string>::iterator content = postRequest.requestData.find("Content-Length:");
-    if(content != postRequest.requestData.end())
+    std::map<std::string, std::string>::iterator content = postRequest.client->request_data.find("Content-Length:");
+    if(content != postRequest.client->request_data.end())
     {
-        int body_size = std::stoi(postRequest.requestData["Content-Length:"]);
+        int body_size = std::stoi(postRequest.client->request_data["Content-Length:"]);
         if(isBodySizeBigger(postRequest.configFileData, body_size, postRequest.client))
         {
             error_413(postRequest.clientData, postRequest.clientDataIterator);
@@ -87,9 +88,9 @@ void isValidPostRequest(postRequestStruct &postRequest)
 //
 //}
 
-void handlingPostRequest(postRequestStruct &postRequest, int &boundarySize)
+void handlingPostRequest(postRequestStruct &postRequest)
 {
      isValidPostRequest(postRequest);
-     writingToUploadFile(postRequest, boundarySize);
+//     writingToUploadFile(postRequest);
 //    SuccesfulPostRequest();
 }

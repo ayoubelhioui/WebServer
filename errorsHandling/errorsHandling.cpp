@@ -16,6 +16,9 @@ bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData) /
 {
      std::map<std::string, std::string>::iterator it = requestData.find("Transfer-Encoding:");
      std::map<std::string, std::string>::iterator it1 = requestData.find("Content-Length:");
+//     std::cout << (it == requestData.end() and it1 == requestData.end()) << std::endl;
+//     std::cout << "transfer : " << it->second << std::endl;
+//     std::cout << "content : " << it1->second << std::endl;
      return (it == requestData.end() and it1 == requestData.end());
 }
 

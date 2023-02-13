@@ -127,7 +127,7 @@ void    error_414(std::list<client_info *> &clients_list, std::list<client_info 
 
 }
 
-void parsingRequestFirstLine(std::string &line, std::map<std::string, std::string> &request_data, client_info *client)
+void parsingRequestFirstLine(std::string &line, client_info *client)
 {
     std::stringstream str(line);
     std::string word;
@@ -142,7 +142,7 @@ void parsingRequestFirstLine(std::string &line, std::map<std::string, std::strin
     request_data["httpVersion"] = word;
 }
 
-void parsingRequest(std::string &line, std::map<std::string, std::string> &request_data)
+void parsingRequest(std::string &line,  client_info *client)
 {
     std::stringstream str(line);
     std::string word;
