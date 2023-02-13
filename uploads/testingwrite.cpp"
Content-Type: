@@ -434,4 +434,44 @@ void	server_start(std::list<Parsing> &servers) {
                         // client_data_it++;
                         // client_data.erase(temp_it);
                         // delete [] buffer;
-   
+                          // POST METHOD USAGE :
+                          // int body_size = std::stoi(request_data["Content-Length:"]);
+                          // std::vector<unsigned char> binary_data(body_size);
+                          // std::string format = "test";
+                          // format += get_real_format(request_data["Content-Type:"].c_str());
+                          // std::ofstream outfile(format, std::ios::binary);
+                          // outfile.write(client->request + body_index + 4, body_size);
+                          // outfile.close();
+                          // std::map<std::string, std::string>::iterator it = request_data.begin();
+                          // std::vector<unsigned char> binary_data(file_size);
+                          // infile.read(reinterpret_cast<char*>(binary_data.data()), file_size);
+                          // infile.close();
+                          // std::ofstream outfile("test.mp4", std::ios::binary);
+                          // outfile.write(reinterpret_cast<const char*>(binary_data.data()), binary_data.size() / 4);
+                          // outfile.close();
+                    }
+                }
+                if(FD_ISSET(client->socket, &writes)){
+                    char *s = new char[1024]();
+                    client->served.read(s, 1024);
+                    int r = client->served.gcount();
+                    send(client->socket, s, r, 0);
+                    if(r < 1024){
+                        close(client->socket);
+                        std::list<client_info *>::iterator temp_it = client_data_it;
+                        client_data_it++;
+                        client_data.erase(temp_it);
+                        continue;
+                    }
+                }
+            client_data_it++;
+        }
+    }
+}
+
+int main(){
+    std::list<Parsing> parse;
+    readingData(parse);
+}
+
+------WebKitFormBoundarydycVX33NTCd50ntm--

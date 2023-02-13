@@ -69,8 +69,13 @@ struct Parsing{
 };
 
 struct client_info {
-    std::ofstream requestBody;
+    std::string uploadFileName;
+    int boundarySize;
+    std::map<std::string, std::string> request_data;
+    int bodyIndex;
     bool isFirstRead;
+    bool bodyFirstRead;
+    std::ofstream requestBody;
     socklen_t address_length;
     struct sockaddr_storage address;
     char address_buffer[128];

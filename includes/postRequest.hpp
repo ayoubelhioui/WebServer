@@ -24,6 +24,6 @@ void    requestBodyTooLong(client_info *client);
 bool    isBodySizeBigger(Parsing &servers, int bodySize, client_info *client);
 int     ret_index(char *str);
 void    handlingPostRequest(postRequestStruct &postRequest, int &boundarySize);
-void    searchForBoundary(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest, int &boundarySize);
+void    searchForBoundary(client_info *client);
 
 #endif
