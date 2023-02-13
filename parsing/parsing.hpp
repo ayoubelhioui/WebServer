@@ -36,7 +36,6 @@
 #define ERROR_PAGE_FILE_NOT_FOUND "Error_Page file is not exist !!"
 #define SOCKET  int
 #define MAX_REQUEST_SIZE 2000
-#define MAX_ARRAY_SIZE 40000000
 
 struct locationBlock{
     std::list<std::string> indexFiles;
@@ -70,16 +69,18 @@ struct Parsing{
 };
 
 struct client_info {
+    std::ofstream requestBody;
+    bool isFirstRead;
     socklen_t address_length;
     struct sockaddr_storage address;
     char address_buffer[128];
     SOCKET socket;
-    char *request;
+    char *requestHeader;
     int received;
     std::ifstream served;
     int served_size;
-    client_info() : received(0){ request = new char[MAX_ARRAY_SIZE + 1]();}
-    ~client_info(){delete [] request;}
+    client_info();
+    ~client_info();
     struct client_info *next;
 };
 

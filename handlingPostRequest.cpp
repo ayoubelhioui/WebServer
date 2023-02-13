@@ -3,7 +3,9 @@
 
 void searchForBoundary(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest, int &boundarySize)
 {
-
+    std::cout << "************************" << std::endl;
+    std::cout << clientRequest << std::endl;
+    std::cout << "************************" << std::endl;
     std::map<std::string, std::string>::iterator content = requestData.find("Content-Type:");
     if (content == requestData.end()) {
         return;
@@ -44,7 +46,7 @@ void writingToUploadFile(postRequestStruct &postRequest, int &boundarySize)
     {
         toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
         totalToWrite -= toWrite;
-        file.write(postRequest.client->request + readingIndex + postRequest.bodyIndex, toWrite);
+        file.write(postRequest.client->requestHeader + readingIndex + postRequest.bodyIndex, toWrite);
         readingIndex += toWrite;
         if (toWrite < 1024)
             break ;

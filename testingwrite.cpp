@@ -450,7 +450,6 @@ void	server_start(std::list<Parsing> &servers) {
                 if(FD_ISSET(client->socket, &writes)){
                     char *s = new char[1024]();
                     client->served.read(s, 1024);
-                    // if (!s) std::cout << "NOT TRUE" << std::endl;
                     int r = client->served.gcount();
                     send(client->socket, s, r, 0);
                     if(r < 1024){

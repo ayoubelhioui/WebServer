@@ -1,7 +1,19 @@
 #include "parsing.hpp"
 
+client_info::client_info() : received(0), isFirstRead(false)
+{
+    requestHeader = new char[2001]();
+}
+
+client_info::~client_info()
+{
+    delete [] requestHeader;
+}
+
 Parsing::Parsing() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
+
 locationBlock::locationBlock() : Root("RootFiles"), isDirectoryListingOn(0) {}
+
 void Parsing::clientBodySizeKeywordFound(std::vector<std::string> &vec){
     if (vec.size() != 2 || !isValidNumber(vec[1]))
         errorPrinting("error in client body size");
