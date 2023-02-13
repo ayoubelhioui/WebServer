@@ -53,8 +53,8 @@ void isValidPostRequest(postRequestStruct &postRequest)
 
 void moveFileToUploads(client_info *client)
 {
+    std::ifstream sourceFile("tmp/" + client->uploadFileName, std::ios::binary);
     std::ofstream destinationFile("uploads/" + client->uploadFileName, std::ios::binary);
-    std::ifstream sourceFile("/tmp/." + client->uploadFileName);
     if (!destinationFile.is_open() || !sourceFile.is_open())
     {
         std::cout << "Couldn't Open " << client->uploadFileName << std::endl;
@@ -65,13 +65,11 @@ void moveFileToUploads(client_info *client)
     while (totalToWrite > 0)
     {
         toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
-        char *buffer = new char[toWrite + 1]();
+        char buffer[toWrite + 1];
         sourceFile.read(buffer, toWrite);
         buffer[toWrite] = 0;
-        std::cout << "i have read :" << buffer << std::endl;
         destinationFile.write(buffer, toWrite);
         totalToWrite -= toWrite;
-        delete[] buffer;
     }
     sourceFile.close();
     destinationFile.close();
@@ -79,8 +77,8 @@ void moveFileToUploads(client_info *client)
 
 void succesfulPostRequest(std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData, client_info *client)
 {
-    moveFileToUploads(client);
     client->requestBody.close();
+    moveFileToUploads(client);
     std::string path = "uploadSuccess.html";
     std::ifstream served(path);
     if (!served.is_open())

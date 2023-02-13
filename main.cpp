@@ -391,7 +391,7 @@ void	server_start(std::list<Parsing> &servers)
                         }
                         client->bodyFirstRead = true;
                         searchForBoundary(client);
-                        client->requestBody.open("/tmp/." + client->uploadFileName, std::ios::binary);
+                        client->requestBody.open("tmp/" + client->uploadFileName, std::ios::binary);
                         if (!client->requestBody.is_open())
                             errorPrinting("Couldn't Open Upload File");
                         client->requestBody.write(client->requestHeader + client->bodyIndex, received - client->bodyIndex);
