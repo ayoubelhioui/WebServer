@@ -411,6 +411,7 @@ void	server_start(std::list<Parsing> &servers)
                         client->requestBody.write(client->requestHeader, received);
                     if (client->received == client->contentLength)
                     {
+                        std::cout << "hello world" << std::endl;
                         dropClient(client->socket, client_data_it, client_data);
                         client->requestBody.close();
                         continue ;
