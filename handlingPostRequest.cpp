@@ -1,28 +1,22 @@
 #include "parsing/parsing.hpp"
 #include "includes/postRequest.hpp"
 
-void searchForBoundary(std::map<std::string, std::string> &requestData, int &bodyIndex, char *clientRequest, int &boundarySize)
+void searchForBoundary(client_info *client)
 {
-    std::cout << "************************" << std::endl;
-    std::cout << clientRequest << std::endl;
-    std::cout << "************************" << std::endl;
-    std::map<std::string, std::string>::iterator content = requestData.find("Content-Type:");
-    if (content == requestData.end()) {
-        return;
-    }
-    if (content->second.find("boundary=") == std::string::npos) {
-        return ;
-    }
+    std::map<std::string, std::string>::iterator content = client->request_data.find("Content-Type:");
     std::string boundarySavior = content->second;
-    std::string newString(clientRequest);
+    std::string newString(client->requestHeader);
     int newContentIndex = newString.find("filename=");
     int dotPosition = newString.find(".", newContentIndex);
     int DoubleQuotePosition = newString.find("\"", dotPosition);
-    requestData["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+//    std::cout << "the newstring is : " << std::endl;
+    client->request_data["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+    std::cout << "*****************" << std::endl;
+    client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10) + get_real_format(client->request_data["Content-Type:"].c_str());
     int newBodyIndex = newString.find("Content-Disposition:");
-    newBodyIndex += ret_index(clientRequest + newBodyIndex) + 4;
-    bodyIndex = newBodyIndex;
-    boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
+    newBodyIndex = ret_index(client->requestHeader) + 4;
+    client->bodyIndex = newBodyIndex;
+    client->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
 
 bool ifLocationSupportUpload(locationBlock &location)
@@ -30,34 +24,19 @@ bool ifLocationSupportUpload(locationBlock &location)
     return !(location.UploadDirectoryPath.empty());
 }
 
-void writingToUploadFile(postRequestStruct &postRequest, int &boundarySize)
-{
-    srand(time(NULL));
-    int nameGenerating = rand();
-    std::stringstream ss;
-    ss << nameGenerating;
-    std::ofstream file("uploads/" + ss.str() + get_real_format(postRequest.client->request_data["Content-Type:"].c_str()), std::ios::binary);
-    if (!file.is_open())
-        errorPrinting("Couldn't Open Upload File");
-    int readingIndex = 0;
-    int totalToWrite = postRequest.client->received - postRequest.client->bodyIndex - boundarySize - 4, toWrite = 0;
-    int i = 0;
-    while (true)
-    {
-        toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
-        totalToWrite -= toWrite;
-        file.write(postRequest.client->requestHeader + readingIndex + postRequest.client->bodyIndex, toWrite);
-        readingIndex += toWrite;
-        if (toWrite < 1024)
-            break ;
-    }
-    file.close();
-}
-
 //bool isPostMethodAllowed(postRequestStruct &postRequest)
 //{
 //    std::list<std::string>::iterator allowedMethods = postRequest.configFileData.
 //}
+
+void receiveFromClient(client_info *client, int &received)
+{
+    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
+    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
+    std::cout << "i have received : " << received << " and the content length : " << client->contentLength << std::endl;
+    client->received += received;
+    client->requestHeader[received] = 0;
+}
 
 void isValidPostRequest(postRequestStruct &postRequest)
 {
@@ -83,14 +62,57 @@ void isValidPostRequest(postRequestStruct &postRequest)
     }
 }
 
-//void SuccessfulPostRequest()
-//{
-//
-//}
-
-void handlingPostRequest(postRequestStruct &postRequest)
+void moveFileToUploads(client_info *client)
 {
-     isValidPostRequest(postRequest);
-//     writingToUploadFile(postRequest);
-//    SuccesfulPostRequest();
+    std::ifstream sourceFile("/tmp/." + client->uploadFileName, std::ios::binary);
+    std::ofstream destinationFile("uploads/" + client->uploadFileName, std::ios::binary);
+    if (!destinationFile.is_open() || !sourceFile.is_open())
+    {
+        std::cout << "Couldn't Open " << client->uploadFileName << std::endl;
+        return ;
+    }
+    int totalToWrite = client->received - client->boundarySize - client->bodyIndex - 4, toWrite = 0;
+    int i = 0;
+    while (totalToWrite > 0)
+    {
+        toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
+        char buffer[toWrite + 1];
+        sourceFile.read(buffer, toWrite);
+        buffer[toWrite] = 0;
+        destinationFile.write(buffer, toWrite);
+        totalToWrite -= toWrite;
+    }
+    sourceFile.close();
+    destinationFile.close();
+}
+
+void  successfulPostRequest(std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData, client_info *client)
+{
+    client->requestBody.close();
+    moveFileToUploads(client);
+    std::string path = "uploadSuccess.html";
+    std::ifstream served(path);
+    if (!served.is_open())
+    {
+        std::cout << "Couldn't Open UploadSuccess File" << std::endl;
+        return ;
+    }
+    served.seekg(0, std::ios::end);
+    int file_size = served.tellg();
+    served.seekg(0, std::ios::beg);
+    char *buffer = new char[file_size + 1]();
+    sprintf(buffer, "HTTP/1.1 201 Created\r\n");
+    send(client->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "Connection: close\r\n");
+    send(client->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "Content-Length: %d\r\n", file_size);
+    send(client->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
+    send(client->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "\r\n");
+    send(client->socket, buffer, strlen(buffer), 0);
+    served.read(buffer, file_size);
+    send(client->socket, buffer, strlen(buffer), 0);
+    delete [] buffer;
+    dropClient(client->socket, clientDataIterator, clientData);
 }

@@ -19,6 +19,7 @@
 #include <netdb.h>
 #include <algorithm>
 #include <fcntl.h>
+#include <cstdio>
 #define PAGE_NOT_FOUND_STATUS "404"
 #define MISSING_SERVER_NAME "Provide server name"
 #define INVALID_PORT_MSG "Port must contain numbers only."
@@ -91,7 +92,7 @@ struct client_info {
     struct client_info *next;
 };
 
-void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
+void       dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
 const char *get_real_format(const char *mime_type);
 const char *get_mime_format(const char *type);
 void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
@@ -123,6 +124,5 @@ void	get_path(std::vector<std::string> &vec, locationBlock &loc);
 void	server_start(std::list<Parsing> &servers);
 bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
 bool    isUriTooLong(std::string &Uri);
-//bool    handlingPostRequest(postRequestStruct &postRequest);
 std::string handle_get_method(std::map<std::string, std::string> &request, Parsing &server);
 #endif

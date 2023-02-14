@@ -216,6 +216,7 @@ void    error_400(std::list<client_info *> &clients_list, std::list<client_info 
     send((*client)->socket, buffer, strlen(buffer), 0);
     delete [] buffer;
 }
+
 void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
 {
     std::string path = "error_pages/error413.html";
@@ -237,28 +238,6 @@ void    error_413(std::list<client_info *> &clients_list, std::list<client_info 
     served.read(buffer, file_size);
     send((*client)->socket, buffer, strlen(buffer), 0);
     delete [] buffer;
-}
-
-void searchForBoundary(client_info *client)
-{
-    std::map<std::string, std::string>::iterator content = client->request_data.find("Content-Type:");
-    if (content == client->request_data.end()) {
-        return;
-    }
-    if (content->second.find("boundary=") == std::string::npos) {
-        return ;
-    }
-    std::string boundarySavior = content->second;
-    std::string newString(client->requestHeader);
-    int newContentIndex = newString.find("filename=");
-    int dotPosition = newString.find(".", newContentIndex);
-    int DoubleQuotePosition = newString.find("\"", dotPosition);
-    client->request_data["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
-    client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10);
-    int newBodyIndex = newString.find("Content-Disposition:");
-    newBodyIndex = ret_index(client->requestHeader) + 4;
-    client->bodyIndex = newBodyIndex;
-    client->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
 
 void	server_start(std::list<Parsing> &servers)
@@ -390,39 +369,51 @@ void	server_start(std::list<Parsing> &servers)
                 }
                 else
                 {
-                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
-                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
-                    client->received += received;
-                    client->requestHeader[received] = 0;
-                    std::cout << "*********************************" << std::endl;
-                    std::cout << client->requestHeader << std::endl;
-                    std::cout << "*********************************" << std::endl;
+                    exit (1);
+//                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
+//                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
+//                    client->received += received;
+//                    client->requestHeader[received] = 0;
+//                        std::map<std::string, std::string>::iterator m = client->request_data.begin();
+//                       while (m != client->request_data.end())
+//                        {
+//                            std::cout << "the data is : " << m->first << " " << m->second << std::endl;
+//                            m++;
+//                        }
+//                       exit (1);
+                    receiveFromClient(client, received);
                     if (!client->bodyFirstRead)
                     {
                         try
                         {
                             postRequestStruct postRequest(client, client_data_it, client_data, *it);
                             isValidPostRequest(postRequest);
+                            client->bodyFirstRead = true;
+                            searchForBoundary(client);
+                            client->requestBody.open("/tmp/." + client->uploadFileName, std::ios::binary);
                         }
                         catch (postRequestExceptions &e)
                         {
+                            std::cout << "Post Request Problem : Exception caught" << std::endl;
                             dropClient(client->socket, client_data_it, client_data);
-                            std::cout << "Post Request Problem" << std::endl;
                             continue;
                         }
-                        client->bodyFirstRead = true;
-                        searchForBoundary(client);
-                        client->requestBody.open("tmp/" + client->uploadFileName + get_real_format(client->request_data["Content-Type:"].c_str()), std::ios::binary);
+//                        client->bodyFirstRead = true;
+//                        searchForBoundary(client);
+//                        client->requestBody.open("/tmp/." + client->uploadFileName, std::ios::binary);
                         if (!client->requestBody.is_open())
-                            errorPrinting("Couldn't Open Upload File");
+                        {
+                            std::cout << "Couldn't Open Upload File" << std::endl;
+                            dropClient(client->socket, client_data_it, client_data);
+                            continue ;
+                        }
                         client->requestBody.write(client->requestHeader + client->bodyIndex, received - client->bodyIndex);
                     }
                     else
                         client->requestBody.write(client->requestHeader, received);
                     if (client->received == client->contentLength)
                     {
-                        dropClient(client->socket, client_data_it, client_data);
-                        client->requestBody.close();
+                        successfulPostRequest(client_data_it, client_data, client);
                         continue ;
                     }
                 }
@@ -433,6 +424,7 @@ void	server_start(std::list<Parsing> &servers)
 }
 
 int main(){
+//    std::cout << remove("tmp/testingwrite.cpp") << std::endl;
     std::list<Parsing> parse;
     readingData(parse);
 }
