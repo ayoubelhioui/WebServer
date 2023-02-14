@@ -12,9 +12,8 @@ struct postRequestStruct{
     std::list<client_info *>::iterator clientDataIterator;
     std::list<client_info *> clientData;
     Parsing &configFileData;
-    postRequestStruct(client_info *client, std::list<client_info *>::iterator clientDataIterator, std::list<client_info *> clientData, Parsing &configFileData) :
-    client(client),
-                      clientDataIterator(clientDataIterator), clientData(clientData), configFileData(configFileData){};
+    postRequestStruct(client_info *client, std::list<client_info *>::iterator clientDataIterator, std::list<client_info *> &clientData, Parsing &configFileData) :
+    client(client), clientDataIterator(clientDataIterator), clientData(clientData), configFileData(configFileData){};
 };
 
 bool    isTransferEncodingNotChunked(std::map<std::string, std::string> &requestData);
@@ -23,6 +22,6 @@ bool    isBodySizeBigger(Parsing &servers, int bodySize, client_info *client);
 int     ret_index(char *str);
 void    searchForBoundary(client_info *client);
 void    isValidPostRequest(postRequestStruct &postRequest);
-void    succesfulPostRequest(std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData, client_info *client);
-
+void    successfulPostRequest(std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData, client_info *client);
+void    receiveFromClient(client_info *client, int &received);
 #endif

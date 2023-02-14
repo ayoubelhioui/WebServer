@@ -9,7 +9,9 @@ void searchForBoundary(client_info *client)
     int newContentIndex = newString.find("filename=");
     int dotPosition = newString.find(".", newContentIndex);
     int DoubleQuotePosition = newString.find("\"", dotPosition);
+//    std::cout << "the newstring is : " << std::endl;
     client->request_data["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+    std::cout << "*****************" << std::endl;
     client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10) + get_real_format(client->request_data["Content-Type:"].c_str());
     int newBodyIndex = newString.find("Content-Disposition:");
     newBodyIndex = ret_index(client->requestHeader) + 4;
@@ -26,6 +28,15 @@ bool ifLocationSupportUpload(locationBlock &location)
 //{
 //    std::list<std::string>::iterator allowedMethods = postRequest.configFileData.
 //}
+
+void receiveFromClient(client_info *client, int &received)
+{
+    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
+    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
+    std::cout << "i have received : " << received << " and the content length : " << client->contentLength << std::endl;
+    client->received += received;
+    client->requestHeader[received] = 0;
+}
 
 void isValidPostRequest(postRequestStruct &postRequest)
 {
@@ -53,7 +64,7 @@ void isValidPostRequest(postRequestStruct &postRequest)
 
 void moveFileToUploads(client_info *client)
 {
-    std::ifstream sourceFile("tmp/" + client->uploadFileName, std::ios::binary);
+    std::ifstream sourceFile("/tmp/." + client->uploadFileName, std::ios::binary);
     std::ofstream destinationFile("uploads/" + client->uploadFileName, std::ios::binary);
     if (!destinationFile.is_open() || !sourceFile.is_open())
     {
@@ -75,7 +86,7 @@ void moveFileToUploads(client_info *client)
     destinationFile.close();
 }
 
-void succesfulPostRequest(std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData, client_info *client)
+void  successfulPostRequest(std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData, client_info *client)
 {
     client->requestBody.close();
     moveFileToUploads(client);

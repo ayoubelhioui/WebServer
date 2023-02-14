@@ -124,6 +124,5 @@ void	get_path(std::vector<std::string> &vec, locationBlock &loc);
 void	server_start(std::list<Parsing> &servers);
 bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
 bool    isUriTooLong(std::string &Uri);
-//bool    handlingPostRequest(postRequestStruct &postRequest);
 std::string handle_get_method(std::map<std::string, std::string> &request, Parsing &server);
 #endif

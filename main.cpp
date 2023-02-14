@@ -369,38 +369,51 @@ void	server_start(std::list<Parsing> &servers)
                 }
                 else
                 {
-                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
-                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
-                    client->received += received;
-                    client->requestHeader[received] = 0;
-//                    std::cout << "*********************************" << std::endl;
-//                    std::cout << client->requestHeader << std::endl;
-//                    std::cout << "*********************************" << std::endl;
+                    exit (1);
+//                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
+//                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
+//                    client->received += received;
+//                    client->requestHeader[received] = 0;
+//                        std::map<std::string, std::string>::iterator m = client->request_data.begin();
+//                       while (m != client->request_data.end())
+//                        {
+//                            std::cout << "the data is : " << m->first << " " << m->second << std::endl;
+//                            m++;
+//                        }
+//                       exit (1);
+                    receiveFromClient(client, received);
                     if (!client->bodyFirstRead)
                     {
                         try
                         {
                             postRequestStruct postRequest(client, client_data_it, client_data, *it);
                             isValidPostRequest(postRequest);
+                            client->bodyFirstRead = true;
+                            searchForBoundary(client);
+                            client->requestBody.open("/tmp/." + client->uploadFileName, std::ios::binary);
                         }
                         catch (postRequestExceptions &e)
                         {
+                            std::cout << "Post Request Problem : Exception caught" << std::endl;
                             dropClient(client->socket, client_data_it, client_data);
-                            std::cout << "Post Request Problem" << std::endl;
                             continue;
                         }
-                        client->bodyFirstRead = true;
-                        searchForBoundary(client);
-                        client->requestBody.open("tmp/" + client->uploadFileName, std::ios::binary);
+//                        client->bodyFirstRead = true;
+//                        searchForBoundary(client);
+//                        client->requestBody.open("/tmp/." + client->uploadFileName, std::ios::binary);
                         if (!client->requestBody.is_open())
-                            errorPrinting("Couldn't Open Upload File");
+                        {
+                            std::cout << "Couldn't Open Upload File" << std::endl;
+                            dropClient(client->socket, client_data_it, client_data);
+                            continue ;
+                        }
                         client->requestBody.write(client->requestHeader + client->bodyIndex, received - client->bodyIndex);
                     }
                     else
                         client->requestBody.write(client->requestHeader, received);
                     if (client->received == client->contentLength)
                     {
-                        succesfulPostRequest(client_data_it, client_data, client);
+                        successfulPostRequest(client_data_it, client_data, client);
                         continue ;
                     }
                 }
