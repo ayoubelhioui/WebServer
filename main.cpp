@@ -369,7 +369,7 @@ void	server_start(std::list<Parsing> &servers)
                 }
                 else
                 {
-                    exit (1);
+                    // exit (1);
 //                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
 //                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
 //                    client->received += received;

@@ -1,2 +1,1 @@
-Post Request Problem : Exception caught
-Post Request Problem : Exception caught
+i have received : 0 and the content length : 0
