@@ -1,5 +1,6 @@
 #ifndef _PARSING_HPP_
 #define _PARSING_HPP_
+#include "RequestParser.hpp"
 #include <set>
 #include <iostream>
 #include <string>
@@ -20,6 +21,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <cstdio>
+#include <dirent.h>
 #define PAGE_NOT_FOUND_STATUS "404"
 #define MISSING_SERVER_NAME "Provide server name"
 #define INVALID_PORT_MSG "Port must contain numbers only."
@@ -70,12 +72,11 @@ struct Parsing{
 };
 
 struct client_info {
-    int contentLength;
-    int bytesToReceive;
+    ParsingRequest parsedRequest;
     std::string uploadFileName;
     int boundarySize;
-    std::map<std::string, std::string> request_data;
-    int bodyIndex;
+    int bytesToReceive;
+    int received;
     bool isFirstRead;
     bool bodyFirstRead;
     std::ofstream requestBody;
@@ -83,8 +84,6 @@ struct client_info {
     struct sockaddr_storage address;
     char address_buffer[128];
     SOCKET socket;
-    char *requestHeader;
-    int received;
     std::ifstream served;
     int served_size;
     client_info();
