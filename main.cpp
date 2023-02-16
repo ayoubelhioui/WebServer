@@ -1,8 +1,7 @@
 #include "parsing/parsing.hpp"
 #include "includes/postRequest.hpp"
-#include "RequestParser.hpp"
-#include "getMethod.hpp"
-
+#include "Interfaces/RequestParser.hpp"
+#include "Interfaces/getMethod.hpp"
 void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData)
 {
     close(clientSocket);
@@ -254,8 +253,8 @@ void	server_start(std::list<Parsing> &servers)
                     client->isFirstRead = true;
                     std::map<std::string, std::string>::iterator headerPartIterator = client->parsedRequest.request_data.begin();
                     if (client->parsedRequest.request_data["method"] == "GET"){
-                          GetMethod getRequest;
-                          getRequest.callGet(client);
+                          GETMethod getRequest;
+                          getRequest.callGET(client);
                     }
                     else if (client->parsedRequest.request_data["method"] == "DELETE")
                     {

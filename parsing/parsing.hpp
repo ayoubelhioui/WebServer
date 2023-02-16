@@ -1,6 +1,5 @@
 #ifndef _PARSING_HPP_
 #define _PARSING_HPP_
-#include "RequestParser.hpp"
 #include <set>
 #include <iostream>
 #include <string>
@@ -70,6 +69,7 @@ struct Parsing{
     void errorPageKeywordFound(std::vector<std::string> &vec);
     void clientBodySizeKeywordFound(std::vector<std::string> &vec);
 };
+#include "../Interfaces/RequestParser.hpp"
 
 struct client_info {
     ParsingRequest parsedRequest;
