@@ -20,8 +20,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <cstdio>
-//#include "locationBlockParse.hpp"
-#define PAGE_NOT_FOUND_STATUS "404"
+#include "locationBlockParse.hpp"
 #define MISSING_SERVER_NAME "Provide server name"
 #define INVALID_PORT_MSG "Port must contain numbers only."
 #define LISTEN_ERROR_MSG "Error on listen keyword"
@@ -60,26 +59,6 @@ class configFileParse{
         static void     printingParsingData(std::list<configFileParse> &parsingData);
 };
 
-
-//struct client_info {
-//    ParsingRequest parsedRequest;
-//    std::string uploadFileName;
-//    int boundarySize;
-//    int bytesToReceive;
-//    int received;
-//    bool isFirstRead;
-//    bool bodyFirstRead;
-//    std::ofstream requestBody;
-//    socklen_t address_length;
-//    struct sockaddr_storage address;
-//    char address_buffer[128];
-//    SOCKET socket;
-//    std::ifstream served;
-//    int served_size;
-//    client_info();
-//    ~client_info();
-//    struct client_info *next;
-//};
 
 bool    isValidNumber(std::string &data);
 void    errorPrinting(const char *errorMessage);

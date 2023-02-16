@@ -3,7 +3,10 @@
 
 #include <iostream>
 #include <list>
-//#inclu
+#include <vector>
+#include <sstream>
+
+
 class locationBlockParse{
     public:
         locationBlockParse();
@@ -20,7 +23,7 @@ class locationBlockParse{
         void	locationParse(std::list<std::string>::iterator &it);
         void	getPath(std::vector<std::string> &vec);
         void	findAllowMethods(std::vector<std::string> &vec);
-        void	fillRedirectionirection(std::vector<std::string> &vec);
+        void	fillRedirection(std::vector<std::string> &vec);
         void	setDirlisting(std::vector<std::string> &vec);
         void	setRoot(std::vector<std::string> &vec);
         void	setIndexes(std::vector<std::string> &vec);
@@ -28,4 +31,6 @@ class locationBlockParse{
         void	setUploadFolder(std::vector<std::string> &vec);
 };
 
+bool    isValidNumber(std::string &data);
+void    errorPrinting(const char *errorMessage);
 #endif

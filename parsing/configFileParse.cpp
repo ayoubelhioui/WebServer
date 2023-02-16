@@ -4,15 +4,12 @@ configFileParse::configFileParse() : serverHost("0.0.0.0"), serverPort("80"), cl
 
 locationBlockParse::locationBlockParse() : Root("RootFiles"), isDirectoryListingOn(0) {}
 
-//client_info::client_info() : received(0), isFirstRead(false), bodyFirstRead(false), boundarySize(0), bytesToReceive(0) {}
-//
-//client_info::~client_info() {}
-
 void configFileParse::clientBodySizeKeywordFound(std::vector<std::string> &vec){
     if (vec.size() != 2 || !isValidNumber(vec[1]))
         errorPrinting("error in client body size");
     this->clientBodyLimit = atoi(vec[1].c_str());
 };
+
 void configFileParse::fillingDataFirstPart(std::string &data){
     if (data.length() == 0)
         return ;
@@ -124,7 +121,6 @@ void configFileParse::startParsingFile(std::list<std::string> &configFileInfo, s
     while (*it == "\n") it++;
     while (it != configFileInfo.end())
     {
-        std::cout << "im here" << std::endl;
         configFileParse newParseNode;
         while ((*it).find("location") == std::string::npos)
             newParseNode.fillingDataFirstPart(*it++);
@@ -132,17 +128,22 @@ void configFileParse::startParsingFile(std::list<std::string> &configFileInfo, s
         {
             locationBlockParse newLocationNode;
             newLocationNode.locationParse(it);
-            if((*it).find("location") == std::string::npos
-            && *it != "}") {
+            if((*it).find("location") == std::string::npos && *it != "}")
                 errorPrinting("error : You didn't close the server or may have other problems");
-            }
             newParseNode.Locations.push_back(newLocationNode);
         }
         configFileList.push_back(newParseNode);
         if (*it == "}")
             it++;
+        if (it == configFileInfo.end())
+            return ;
         while (*it == "")
+        {
+            std::cout << "hello world" << std::endl;
             it++;
+            if (it == configFileInfo.end())
+                return ;
+        }
     }
 }
 

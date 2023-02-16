@@ -15,7 +15,7 @@ void	locationBlockParse::findAllowMethods(std::vector<std::string> &vec)
         this->allowedMethods.push_back(vec[i]);
 }
 
-void	locationBlockParse::fillRedirectionirection(std::vector<std::string> &vec)
+void	locationBlockParse::fillRedirection(std::vector<std::string> &vec)
 {
     if(vec.size() > 2) errorPrinting("error : only one redirection allowed");
     this->Redirection = vec[1];
@@ -90,7 +90,7 @@ void	locationBlockParse::locationParse(std::list<std::string>::iterator &it)
         else if (vec[0].compare("allow_methods") == 0)
             findAllowMethods(vec);
         else if (vec[0].compare("return") == 0)
-            fillRedirectionirection(vec);
+            fillRedirection(vec);
         else if (vec[0].compare("autoindex") == 0)
             setDirlisting(vec);
         else if (vec[0].compare("root") == 0)
