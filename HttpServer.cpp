@@ -55,7 +55,13 @@ void	HttpServer::_setUpListeningSocket( void )
 	std::cout << "Set Up for LISTENING Successfully" << std::endl;
 }
 
+void	HttpServer::_setUpMultiplexing ( void )
+{
+	
+}
+
 void	HttpServer::setUpHttpServer( void )
 {
 	this->_setUpListeningSocket();
+	this->_setUpMultiplexing();
 }

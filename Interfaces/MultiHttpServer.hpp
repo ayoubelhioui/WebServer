@@ -14,5 +14,4 @@ class MultiHttpServer {
 		std::list <HttpServer>	listOfServers;
 };
 
-
 #endif
