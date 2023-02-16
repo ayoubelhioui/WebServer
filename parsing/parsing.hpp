@@ -69,27 +69,6 @@ struct Parsing{
     void errorPageKeywordFound(std::vector<std::string> &vec);
     void clientBodySizeKeywordFound(std::vector<std::string> &vec);
 };
-#include "../Interfaces/RequestParser.hpp"
-
-struct client_info {
-    ParsingRequest parsedRequest;
-    std::string uploadFileName;
-    int boundarySize;
-    int bytesToReceive;
-    int received;
-    bool isFirstRead;
-    bool bodyFirstRead;
-    std::ofstream requestBody;
-    socklen_t address_length;
-    struct sockaddr_storage address;
-    char address_buffer[128];
-    SOCKET socket;
-    std::ifstream served;
-    int served_size;
-    client_info();
-    ~client_info();
-    struct client_info *next;
-};
 
 void       dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
 const char *get_real_format(const char *mime_type);
