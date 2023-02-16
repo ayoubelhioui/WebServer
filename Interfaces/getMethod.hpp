@@ -5,5 +5,7 @@
 		public:
 			void		callGet(client_info *);
 			std::string	handleGetMethod(std::map<std::string, std::string> &, Parsing &);
+			void		redirectToWebsite(void);
+			void		directoryListing(void);
 	};
 #endif

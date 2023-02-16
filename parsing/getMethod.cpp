@@ -68,3 +68,18 @@ void	GetMethod::callGet(client_info *client){
 	sprintf(buffer, "\r\n");
 	send(client->socket, buffer, strlen(buffer), 0);
 }
+
+void	GetMethod::directoryListing(void){
+	DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir ("/Users/ijmari/Desktop/")) != NULL) {
+    /* print all the files and directories within directory */
+    while ((ent = readdir (dir)) != NULL) {
+    	printf ("dir : %s\n", ent->d_name);
+    }
+    closedir (dir);
+    } else {
+     perror ("");
+      return EXIT_FAILURE;
+    }
+}

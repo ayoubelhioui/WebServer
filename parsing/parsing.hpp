@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <cstdio>
+#include <dirent.h>
 #define PAGE_NOT_FOUND_STATUS "404"
 #define MISSING_SERVER_NAME "Provide server name"
 #define INVALID_PORT_MSG "Port must contain numbers only."
