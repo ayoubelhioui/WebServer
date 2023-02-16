@@ -38,36 +38,70 @@
 #define SOCKET  int
 #define MAX_REQUEST_SIZE 2000
 
-struct locationBlock{
-    std::list<std::string> indexFiles;
-    std::list<std::pair<std::string, std::string> > CGI;
-    std::list<std::string> allowedMethods;
-    std::string Location;
-    std::string Redirection;
-    std::string Root;
-    std::string UploadDirectoryPath;
-    std::string Path_Info;
-    std::string answerFileForDirectory;
-    bool    isOpen;
-    bool    isDirectoryListingOn;
-    locationBlock();
+class locationBlockParse{
+    public:
+        locationBlockParse();
+        std::list<std::string> indexFiles;
+        std::list<std::pair<std::string, std::string> > CGI;
+        std::list<std::string> allowedMethods;
+        std::string Location;
+        std::string Redirection;
+        std::string Root;
+        std::string UploadDirectoryPath;
+        std::string Path_Info;
+        std::string answerFileForDirectory;
+        bool    isOpen;
+        bool    isDirectoryListingOn;
 };
 
-struct Parsing{
-    std::string serverHost;
-    std::string serverPort;
-    unsigned int clientBodyLimit;
-    bool isClosed;
-    std::list<std::string> serverName;
-    std::list<std::pair<int, std::string> > errorInfo;
-    std::list<locationBlock> Locations;
-    Parsing();
-    void fillingDataFirstPart(std::string &data);
-    void listenKeywordFound(std::vector<std::string> &vec);
-    void serverNameKeywordFound(std::vector<std::string> &vec);
-    void errorPageKeywordFound(std::vector<std::string> &vec);
-    void clientBodySizeKeywordFound(std::vector<std::string> &vec);
+class configFileParse{
+    public:
+        configFileParse();
+        std::string serverHost;
+        std::string serverPort;
+        unsigned int clientBodyLimit;
+        bool isClosed;
+        std::list<std::string> serverName;
+        std::list<std::pair<int, std::string> > errorInfo;
+        std::list<locationBlockParse> Locations;
+        void fillingDataFirstPart(std::string &enteredData);
+        void listenKeywordFound(std::vector<std::string> &vec);
+        void serverNameKeywordFound(std::vector<std::string> &vec);
+        void errorPageKeywordFound(std::vector<std::string> &vec);
+        void clientBodySizeKeywordFound(std::vector<std::string> &vec);
+        static void startParsingFile(std::list<std::string> &configFileInfo, std::list<configFileParse> &configFileList);
 };
+
+//class locationBlock{
+//    std::list<std::string> indexFiles;
+//    std::list<std::pair<std::string, std::string> > CGI;
+//    std::list<std::string> allowedMethods;
+//    std::string Location;
+//    std::string Redirection;
+//    std::string Root;
+//    std::string UploadDirectoryPath;
+//    std::string Path_Info;
+//    std::string answerFileForDirectory;
+//    bool    isOpen;
+//    bool    isDirectoryListingOn;
+//    locationBlock();
+//};
+
+//struct Parsing{
+//    std::string serverHost;
+//    std::string serverPort;
+//    unsigned int clientBodyLimit;
+//    bool isClosed;
+//    std::list<std::string> serverName;
+//    std::list<std::pair<int, std::string> > errorInfo;
+//    std::list<locationBlock> Locations;
+//    Parsing();
+//    void fillingDataFirstPart(std::string &data);
+//    void listenKeywordFound(std::vector<std::string> &vec);
+//    void serverNameKeywordFound(std::vector<std::string> &vec);
+//    void errorPageKeywordFound(std::vector<std::string> &vec);
+//    void clientBodySizeKeywordFound(std::vector<std::string> &vec);
+//};
 
 struct client_info {
     int contentLength;
@@ -100,29 +134,39 @@ void    error_400(std::list<client_info *> &clients_list, std::list<client_info 
 void    error_501(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
 bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
 const char *get_mime_format(const char *type);
-bool    getMatchedLocation(std::string &Uri, std::list<Parsing> &configFileData);
+bool    getMatchedLocation(std::string &Uri, std::list<configFileParse> &configFileData);
 bool    isLocationHaveRedirection(std::string &redirection);
 bool    isMethodAllowedInLocation(std::string &requestMethod, std::list<std::string> &allowedMethods);
-bool    isIndexExistInLocation(locationBlock &location);
+bool    isIndexExistInLocation(locationBlockParse &location);
 //bool    isTransferEncodingNotChunked(std::map<std::string, std::string> &requestData);
 //void    requestBodyTooLong(client_info *client);
 //bool    isBodySizeBigger(Parsing &servers, int bodySize, client_info *client);
-void    printingParsingData(std::list<Parsing> &parsingData);
+void    printingParsingData(std::list<configFileParse> &parsingData);
 bool    isValidNumber(std::string &data);
 void    errorPrinting(const char *errorMessage);
-void    readingData(std::list<Parsing> &parsingData);
-void	location_parse(std::list<std::string>::iterator &it, locationBlock &loc);
+void    readingDataFromFile(std::list<configFileParse> &configFileParsing);
+//void    readingData(std::list<configFileParse> &parsingData);
+void	location_parse(std::list<std::string>::iterator &it, locationBlockParse &loc);
 bool    all_empty(std::string str);
-void	set_upload_file(std::vector<std::string> &vec, locationBlock &loc);
-void	set_cgi(std::vector<std::string> &vec, locationBlock &loc);
-void	set_indexes(std::vector<std::string> &vec, locationBlock &loc);
-void	set_root(std::vector<std::string> &vec, locationBlock &loc);
-void	set_dirlisting(std::vector<std::string> &vec, locationBlock &loc);
-void	fill_redirection(std::vector<std::string> &vec, locationBlock &loc);
-void	fill_allow_methods(std::vector<std::string> &vec, locationBlock &loc);
-void	get_path(std::vector<std::string> &vec, locationBlock &loc);
-void	server_start(std::list<Parsing> &servers);
+void	set_upload_file(std::vector<std::string> &vec, locationBlockParse &loc);
+void	set_cgi(std::vector<std::string> &vec, locationBlockParse &loc);
+void	set_indexes(std::vector<std::string> &vec, locationBlockParse &loc);
+void	set_root(std::vector<std::string> &vec, locationBlockParse &loc);
+void	set_dirlisting(std::vector<std::string> &vec, locationBlockParse &loc);
+void	fill_redirection(std::vector<std::string> &vec, locationBlockParse &loc);
+void	fill_allow_methods(std::vector<std::string> &vec, locationBlockParse &loc);
+void	get_path(std::vector<std::string> &vec, locationBlockParse &loc);
+void	server_start(std::list<configFileParse> &servers);
 bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
 bool    isUriTooLong(std::string &Uri);
 std::string handle_get_method(std::map<std::string, std::string> &request, Parsing &server);
 #endif
+
+/*
+  Parsing ourParing('asdfjl');
+
+
+  HttpServer OUrserver(ourParsingg);
+  start_sercer
+
+ */

@@ -283,9 +283,6 @@ void	server_start(std::list<Parsing> &servers)
                 {
                     int receivedBytes = recv(client->socket, client->requestHeader, MAX_REQUEST_SIZE, 0);
                       client->requestHeader[receivedBytes] = 0;
-//                      std::cout << "*********************************" << std::endl;
-//                    std::cout << client->requestHeader << std::endl;
-//                    std::cout << "*********************************" << std::endl;
                       client->bytesToReceive += receivedBytes;
                       client->bodyIndex = ret_index(client->requestHeader);
                       int index = 0, i = 0;
@@ -316,13 +313,6 @@ void	server_start(std::list<Parsing> &servers)
                       found = headerPart.find("\r\n");
                       line = headerPart.substr(0, found);
                       parsingRequest(line, client);
-//                      std::map<std::string, std::string>::iterator m = client->request_data.begin();
-//                       while (m != client->request_data.end())
-//                        {
-//                            std::cout << "the data is : " << m->first << " " << m->second << std::endl;
-//                            m++;
-//                        }
-//                       exit (1);
                       client->isFirstRead = true;
                       std::map<std::string, std::string>::iterator headerPartIterator = client->request_data.begin();
                       if (client->request_data["method"] == "GET")
@@ -369,18 +359,6 @@ void	server_start(std::list<Parsing> &servers)
                 }
                 else
                 {
-                    exit (1);
-//                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
-//                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
-//                    client->received += received;
-//                    client->requestHeader[received] = 0;
-//                        std::map<std::string, std::string>::iterator m = client->request_data.begin();
-//                       while (m != client->request_data.end())
-//                        {
-//                            std::cout << "the data is : " << m->first << " " << m->second << std::endl;
-//                            m++;
-//                        }
-//                       exit (1);
                     receiveFromClient(client, received);
                     if (!client->bodyFirstRead)
                     {
@@ -398,9 +376,6 @@ void	server_start(std::list<Parsing> &servers)
                             dropClient(client->socket, client_data_it, client_data);
                             continue;
                         }
-//                        client->bodyFirstRead = true;
-//                        searchForBoundary(client);
-//                        client->requestBody.open("/tmp/." + client->uploadFileName, std::ios::binary);
                         if (!client->requestBody.is_open())
                         {
                             std::cout << "Couldn't Open Upload File" << std::endl;
@@ -424,7 +399,7 @@ void	server_start(std::list<Parsing> &servers)
 }
 
 int main(){
-//    std::cout << remove("tmp/testingwrite.cpp") << std::endl;
-    std::list<Parsing> parse;
+    std::list<configFileParse> configParse;
+//    std::list<Parsing> parse;
     readingData(parse);
 }

@@ -10,16 +10,16 @@ client_info::~client_info()
     delete [] requestHeader;
 }
 
-Parsing::Parsing() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
+configFileParse::configFileParse() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
 
-locationBlock::locationBlock() : Root("RootFiles"), isDirectoryListingOn(0) {}
+locationBlockParse::locationBlockParse() : Root("RootFiles"), isDirectoryListingOn(0) {}
 
-void Parsing::clientBodySizeKeywordFound(std::vector<std::string> &vec){
+void configFileParse::clientBodySizeKeywordFound(std::vector<std::string> &vec){
     if (vec.size() != 2 || !isValidNumber(vec[1]))
         errorPrinting("error in client body size");
     this->clientBodyLimit = atoi(vec[1].c_str());
 };
-void Parsing::fillingDataFirstPart(std::string &data){
+void configFileParse::fillingDataFirstPart(std::string &data){
     if (data.length() == 0)
         return ;
     std::stringstream str(data);
@@ -50,7 +50,7 @@ void Parsing::fillingDataFirstPart(std::string &data){
         std::cout << vec[0], errorPrinting(INVALID_KEYWORD);
 }
 
-void Parsing::listenKeywordFound(std::vector<std::string> &vec){
+void configFileParse::listenKeywordFound(std::vector<std::string> &vec){
     std::string port;
     if (vec.size() != 2)
         errorPrinting(LISTEN_ERROR_MSG);
@@ -64,14 +64,14 @@ void Parsing::listenKeywordFound(std::vector<std::string> &vec){
     this->serverPort = port.c_str();
 }
 
-void Parsing::serverNameKeywordFound(std::vector<std::string> &vec){
+void configFileParse::serverNameKeywordFound(std::vector<std::string> &vec){
     if (vec.size() < 1)
         errorPrinting(MISSING_SERVER_NAME);
     for (size_t i = 1; i < vec.size(); i++)
         this->serverName.push_back(vec[i]);
 }
 
-void Parsing::errorPageKeywordFound(std::vector<std::string> &vec){
+void configFileParse::errorPageKeywordFound(std::vector<std::string> &vec){
     if (vec.size() != 3 || !isValidNumber(vec[1]))
         errorPrinting(ERROR_PAGE_ERROR_MSG);
     std::ifstream errorPageFile(vec[2]);
