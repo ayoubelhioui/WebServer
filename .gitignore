@@ -8,6 +8,6 @@ file.html
 image.png
 a.out
 nginx.conf
-README.md
+# README.md
 cmake-build-debug/
 .idea/

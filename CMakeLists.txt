@@ -7,10 +7,9 @@ include_directories(parsing)
 
 add_executable(WebServer
         errorsHandling/errorsHandling.cpp
-        parsing/locationparse.cpp
-        parsing/parsing.cpp
-        parsing/parsing.hpp
-        parsing/struct_methods_implementation.cpp
+        parsing/locationBlockParse.cpp
+        Interfaces/configFileParse.hpp
+        parsing/configFileParse.cpp
         parsing/web_server.cpp
         public/kk.cpp
         testcpp/copy_test.cpp
@@ -18,4 +17,4 @@ add_executable(WebServer
         getMethod.cpp
         handlingPostRequest.cpp
         locationHandling.cpp
-        sendingErrorPages.cpp includes/postRequest.hpp)
+        sendingErrorPages.cpp includes/postRequest.hpp Interfaces/locationBlockParse.hpp parsing/getMethod.cpp parsing/parsingUtils.cpp)
