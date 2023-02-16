@@ -3,9 +3,18 @@
 	#include "parsing.hpp"
 	class ParsingRequest{
 		public :
-			
-			void	parse(client_info *);
-			void	parsingRequestFirstLine(std::string, client_info *);
-			void	parsingRequest(std::string, client_info *);
+			int	receivedBytes;
+			int bytesToReceive;
+			char *requestHeader;
+			int contentLength;
+			int bodyIndex;
+			std::map<std::string, std::string> request_data;
+			void	parse();
+			void	parsingRequestFirstLine(std::string);
+			void	parsingRequest(std::string);
+			void	receiveFirstTime(int socket);
+			int		retIndex();
+			ParsingRequest();
+			~ParsingRequest();
 	};
 #endif

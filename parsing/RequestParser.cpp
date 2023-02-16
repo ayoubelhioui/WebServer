@@ -1,19 +1,29 @@
 #include "RequestParser.hpp"
 
-void	ParsingRequest::parsingRequestFirstLine(std::string line, client_info *client){
+ParsingRequest::ParsingRequest() : bodyIndex(0), bytesToReceive(0), contentLength(0), receivedBytes(0)
+{
+    requestHeader = new char[2001]();
+}
+
+ParsingRequest::~ParsingRequest()
+{
+    delete [] requestHeader;
+}
+
+void	ParsingRequest::parsingRequestFirstLine(std::string line){
 	std::stringstream str(line);
     std::string word;
     str >> word;
-    client->request_data["method"] = word;
+    request_data["method"] = word;
     str >> word;
     if(isUriTooLong(word)) {
 
     }
-    client->request_data["path"] = word;
+    request_data["path"] = word;
     str >> word;
-    client->request_data["httpVersion"] = word;
+    request_data["httpVersion"] = word;
 }
-void	ParsingRequest::parsingRequest(std::string line, client_info *client){
+void	ParsingRequest::parsingRequest(std::string line){
 	std::stringstream str(line);
     std::string word;
     str >> word;
@@ -26,29 +36,44 @@ void	ParsingRequest::parsingRequest(std::string line, client_info *client){
     }
     last.erase(0, 1);
     if (save == "Content-Length:")
-        client->contentLength = atoi(last.c_str());
-    client->request_data[save] = last;
+        contentLength = atoi(last.c_str());
+    request_data[save] = last;
 }
-void	ParsingRequest::parse(client_info *client){
+void	ParsingRequest::parse(){
 	int	i = 0;
-	std::string	headerPart(client->requestHeader), line, bodyPart(headerPart);
-    headerPart = headerPart.substr(0, client->bodyIndex);
+	std::string	headerPart(requestHeader), line, bodyPart(headerPart);
+    headerPart = headerPart.substr(0, bodyIndex);
     std::size_t found = headerPart.find("\r\n");
     while(found != std::string::npos)
     {
       line = headerPart.substr(0, found);
       if (i == 0)
       {
-          parsingRequestFirstLine(line, client);
+          parsingRequestFirstLine(line);
           i++;
       }
       else
-          parsingRequest(line, client);
+          parsingRequest(line);
       headerPart = headerPart.substr(found + 2);
       found = headerPart.find("\r\n");
     }
 	headerPart = headerPart.substr(found + 1);
     found = headerPart.find("\r\n");
     line = headerPart.substr(0, found);
-    parsingRequest(line, client);
+    parsingRequest(line);
+}
+
+void    ParsingRequest::receiveFirstTime(int socket){
+    receivedBytes = recv(socket, requestHeader, MAX_REQUEST_SIZE, 0);
+    requestHeader[receivedBytes] = 0;
+    bytesToReceive += receivedBytes;
+    bodyIndex = retIndex();
+}
+
+int     ParsingRequest::retIndex(){
+    for(int i = 0; requestHeader[i]; i++){
+      if(!strncmp(&requestHeader[i], "\r\n\r\n", 4))
+          return i;
+    }
+    return -1;
 }

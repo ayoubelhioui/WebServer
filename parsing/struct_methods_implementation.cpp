@@ -1,13 +1,11 @@
 #include "parsing.hpp"
 
-client_info::client_info() : received(0), isFirstRead(false), bodyFirstRead(false), bodyIndex(0), boundarySize(0), bytesToReceive(0), contentLength(0)
+client_info::client_info() : received(0), isFirstRead(false), bodyFirstRead(false), boundarySize(0), bytesToReceive(0)
 {
-    requestHeader = new char[2001]();
 }
 
 client_info::~client_info()
 {
-    delete [] requestHeader;
 }
 
 Parsing::Parsing() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
