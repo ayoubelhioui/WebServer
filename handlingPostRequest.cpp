@@ -3,19 +3,19 @@
 
 void searchForBoundary(client_info *client)
 {
-    std::map<std::string, std::string>::iterator content = client->request_data.find("Content-Type:");
+    std::map<std::string, std::string>::iterator content = client->parsedRequest.request_data.find("Content-Type:");
     std::string boundarySavior = content->second;
-    std::string newString(client->requestHeader);
+    std::string newString(client->parsedRequest.requestHeader);
     int newContentIndex = newString.find("filename=");
     int dotPosition = newString.find(".", newContentIndex);
     int DoubleQuotePosition = newString.find("\"", dotPosition);
 //    std::cout << "the newstring is : " << std::endl;
-    client->request_data["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+    client->parsedRequest.request_data["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
     std::cout << "*****************" << std::endl;
-    client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10) + get_real_format(client->request_data["Content-Type:"].c_str());
+    client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10) + get_real_format(client->parsedRequest.request_data["Content-Type:"].c_str());
     int newBodyIndex = newString.find("Content-Disposition:");
-    newBodyIndex = ret_index(client->requestHeader) + 4;
-    client->bodyIndex = newBodyIndex;
+    newBodyIndex = ret_index(client->parsedRequest.requestHeader) + 4;
+    client->parsedRequest.bodyIndex = newBodyIndex;
     client->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
 
@@ -31,29 +31,29 @@ bool ifLocationSupportUpload(locationBlock &location)
 
 void receiveFromClient(client_info *client, int &received)
 {
-    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
-    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
-    std::cout << "i have received : " << received << " and the content length : " << client->contentLength << std::endl;
+    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->parsedRequest.contentLength) ? MAX_REQUEST_SIZE : client->parsedRequest.contentLength - client->received;
+    received = recv(client->socket, client->parsedRequest.requestHeader, client->bytesToReceive, 0);
+    // std::cout << "i have received : " << received << " and the content length : " << client->contentLength << std::endl;
     client->received += received;
-    client->requestHeader[received] = 0;
+    client->parsedRequest.requestHeader[received] = 0;
 }
 
 void isValidPostRequest(postRequestStruct &postRequest)
 {
-    if(isNotValidPostRequest(postRequest.client->request_data))
+    if(isNotValidPostRequest(postRequest.client->parsedRequest.request_data))
     {
         error_400(postRequest.clientData, postRequest.clientDataIterator);
         throw postRequestExceptions("Bad Request Exception");
     }
-    if(isTransferEncodingNotChunked(postRequest.client->request_data))
+    if(isTransferEncodingNotChunked(postRequest.client->parsedRequest.request_data))
     {
         error_501(postRequest.clientData, postRequest.clientDataIterator);
         throw postRequestExceptions("Transfer Encoding Exception");
     }
-    std::map<std::string, std::string>::iterator content = postRequest.client->request_data.find("Content-Length:");
-    if(content != postRequest.client->request_data.end())
+    std::map<std::string, std::string>::iterator content = postRequest.client->parsedRequest.request_data.find("Content-Length:");
+    if(content != postRequest.client->parsedRequest.request_data.end())
     {
-        int body_size = std::stoi(postRequest.client->request_data["Content-Length:"]);
+        int body_size = std::stoi(postRequest.client->parsedRequest.request_data["Content-Length:"]);
         if(isBodySizeBigger(postRequest.configFileData, body_size, postRequest.client))
         {
             error_413(postRequest.clientData, postRequest.clientDataIterator);
@@ -71,7 +71,7 @@ void moveFileToUploads(client_info *client)
         std::cout << "Couldn't Open " << client->uploadFileName << std::endl;
         return ;
     }
-    int totalToWrite = client->received - client->boundarySize - client->bodyIndex - 4, toWrite = 0;
+    int totalToWrite = client->received - client->boundarySize - client->parsedRequest.bodyIndex - 4, toWrite = 0;
     int i = 0;
     while (totalToWrite > 0)
     {
