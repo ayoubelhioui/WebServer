@@ -2,9 +2,9 @@
 # define __SERVERCONFIGURATION_H__
 
 # include "locationBlockParse.hpp"
-class serverConfiguration {
+class ServerConfiguration {
     public:
-        serverConfiguration();
+        ServerConfiguration();
         std::string serverHost;
         std::string serverPort;
         unsigned int clientBodyLimit;
@@ -17,9 +17,9 @@ class serverConfiguration {
         void serverNameKeywordFound(std::vector<std::string> &);
         void errorPageKeywordFound(std::vector<std::string> &);
         void clientBodySizeKeywordFound(std::vector<std::string> &);
-        static void     startParsingFile(std::list<std::string> &, std::list<serverConfiguration> &);
+        static void     startParsingFile(std::list<std::string> &, std::list<ServerConfiguration> &);
         static void     readingDataFromFile(std::list<std::string> &, std::string &);
-        static void     printingParsingData(std::list<serverConfiguration> &);
+        static void     printingParsingData(std::list<ServerConfiguration> &);
 };
 
 #endif

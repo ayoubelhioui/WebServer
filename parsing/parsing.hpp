@@ -73,9 +73,10 @@ struct Parsing{
 void       dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
 const char *get_real_format(const char *mime_type);
 const char *get_mime_format(const char *type);
-void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
-void    error_400(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
-void    error_501(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client);
+void    error_414(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt);
+void    error_413(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt);
+void    error_400(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt);
+void    error_501(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt);
 bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
 const char *get_mime_format(const char *type);
 bool    getMatchedLocation(std::string &Uri, std::list<Parsing> &configFileData);

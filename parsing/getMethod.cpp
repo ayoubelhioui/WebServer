@@ -55,23 +55,24 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 	return "";
 }
 
-void	GETMethod::callGET(client_info *client){
-	std::string path = handle_get_method(client->parsedRequest.request_data, *it);
-	client->served.open(path, std::ios::binary);
-	client->served.seekg(0, std::ios::end);
-	client->served_size = client->served.tellg();
-	client->served.seekg(0, std::ios::beg);
+void	GETMethod::callGET(ClientInfo &client){
+	std::string path = handle_get_method(client.parsedRequest.requestDataMap, *it);
+	
+	client.served.open(path, std::ios::binary);
+	client.served.seekg(0, std::ios::end);
+	client.served_size = client.served.tellg();
+	client.served.seekg(0, std::ios::beg);
 	char *buffer = new char[1024];
 	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-	send(client->socket, buffer, strlen(buffer), 0);
+	send(client.socket, buffer, strlen(buffer), 0);
 	sprintf(buffer, "Connection: close\r\n");
-	send(client->socket, buffer, strlen(buffer), 0);
-	sprintf(buffer, "Content-Length: %d\r\n", client->served_size);
-	send(client->socket, buffer, strlen(buffer), 0);
+	send(client.socket, buffer, strlen(buffer), 0);
+	sprintf(buffer, "Content-Length: %d\r\n", client.served_size);
+	send(client.socket, buffer, strlen(buffer), 0);
 	sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-	send(client->socket, buffer, strlen(buffer), 0);
+	send(client.socket, buffer, strlen(buffer), 0);
 	sprintf(buffer, "\r\n");
-	send(client->socket, buffer, strlen(buffer), 0);
+	send(client.socket, buffer, strlen(buffer), 0);
 }
 
 int	GETMethod::directoryListing(char *rootDirectory, int socket){

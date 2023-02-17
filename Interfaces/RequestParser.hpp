@@ -13,7 +13,7 @@
 			char *requestHeader;
 			int contentLength;
 			int bodyIndex;
-			std::map<std::string, std::string> request_data;
+			std::map<std::string, std::string> requestDataMap;
 			void	parse();
 			void	parsingRequestFirstLine(std::string);
 			void	parsingRequest(std::string);

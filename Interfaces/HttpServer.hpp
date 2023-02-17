@@ -9,6 +9,7 @@
 # include <list>
 # include "Client.hpp"
 # include "configFileParser.hpp"
+# include "GETMethod.hpp"
 
 # define SOCKET int
 # define MAXQUEUESIZE 10
@@ -24,6 +25,9 @@ class HttpServer {
 		void	setUpHttpServer( std::list<ClientInfo> & );
 		void	setUpMultiplexing ( void );
 		void	setClientInfoList ( std::list<ClientInfo> & );
+		void	dropClient ( SOCKET &, std::list<ClientInfo &>::iterator & );
+		std::list<ServerConfiguration &>	listOfServersConfiguration;
+		
 	private:
 		SOCKET						_listeningSocket;
 		struct addrinfo 			_serverHints;
@@ -36,7 +40,7 @@ class HttpServer {
 		void	_selectClients ( void );
 		void	_acceptNewConnection ( void );
 		void	_serveClients ( void );
-		const ServerConfiguration	_serverConfiguration;
+		// const ServerConfiguration	_serverConfiguration;
 
 };
 /*

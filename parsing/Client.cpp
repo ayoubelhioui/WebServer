@@ -54,11 +54,3 @@ client_info *client_info::get_client(int socket, std::list<client_info *> &data_
     data_list.push_front(new_node);
     return new_node;
 }
-
-void client_info::dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData)
-{
-    close(clientSocket);
-    std::list<client_info *>::iterator temp_it = clientDataIterator;
-    clientDataIterator++;
-    clientData.erase(temp_it);
-}

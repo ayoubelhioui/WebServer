@@ -3,7 +3,7 @@
 #include "Interfaces/RequestParser.hpp"
 #include "Interfaces/getMethod.hpp"
 #include "Interfaces/Client.hpp"
-// void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData)
+// void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientInfoItDataIterator, std::list<client_info *> &clientData)
 // {
 //     close(clientSocket);
 //     std::list<client_info *>::iterator temp_it = clientDataIterator;
@@ -86,7 +86,7 @@ const char *get_real_format(const char *mime_type){
         return "";
 }
 
-void    error_414(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
+void    error_414(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt)
 {
     std::string path = "error_pages/error414.html";
     std::ifstream served(path);
@@ -95,18 +95,18 @@ void    error_414(std::list<client_info *> &clients_list, std::list<client_info 
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 414 Request-URI Too Long\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
-    close((*client)->socket);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
+    close(clientInfoIt->socket);
     clients_list.erase(client);
 
 }
@@ -120,7 +120,7 @@ void requestBodyTooLong(client_info *client)
  send(client->socket, buffer, strlen(buffer), 0);
 }
 
-void    error_501(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
+void    error_501(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt)
 {
     std::string path = "error_pages/error501.html";
     std::ifstream served(path);
@@ -129,21 +129,22 @@ void    error_501(std::list<client_info *> &clients_list, std::list<client_info 
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 501 Not Implemented\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
+    close(clientInfoIt->socket);
     delete [] buffer;
 }
 
-void    error_400(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
+void    error_400(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt)
 {
     std::string path = "error_pages/error400.html";
     std::ifstream served(path);
@@ -152,21 +153,22 @@ void    error_400(std::list<client_info *> &clients_list, std::list<client_info 
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 400 Bad Request\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
+    close(clientInfoIt->socket);
     delete [] buffer;
 }
 
-void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
+void    error_413(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt)
 {
     std::string path = "error_pages/error413.html";
     std::ifstream served(path);
@@ -175,17 +177,18 @@ void    error_413(std::list<client_info *> &clients_list, std::list<client_info 
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 413 Request Entity Too Large\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send(clientInfoIt->socket, buffer, strlen(buffer), 0);
+    close(clientInfoIt->socket);
     delete [] buffer;
 }
 

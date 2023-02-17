@@ -1,4 +1,5 @@
 # include "Interfaces/HttpServer.hpp"
+# include "parsing/parsing.hpp"
 
 /* ----------------------------------------------------- */
 /* ------------------ CANONICAL FORM ------------------- */
@@ -103,18 +104,61 @@ void	HttpServer::_acceptNewConnection( void )
     }
 }
 
+void HttpServer::dropClient( SOCKET &clientSocket, std::list<ClientInfo &>::iterator &ClientInfoIt)
+{
+    close(clientSocket);
+    std::list<ClientInfo &>::iterator tempIterator = ClientInfoIt;
+    ClientInfoIt++;
+    this->_clientsList.erase(tempIterator);
+}
+
+
 void	HttpServer::_serveClients( void )
 {
 	std::list<ClientInfo &>::iterator	ClientInfoIt;
 
 	ClientInfoIt = this->_clientsList.begin();
-	while (ClientInfoIt != this->_clientList.end())
+	while (ClientInfoIt != this->_clientsList.end())
 	{
-		if (ClientInfoIt->isFirstRead)
-			ClientInfo->GETRequest.foo();
-		else
-			hand;
-		
+		if (FD_ISSET(ClientInfoIt->socket, &(this->_readFds)))
+		{
+			if (ClientInfoIt->isFirstRead)
+			{
+				ClientInfoIt->parsedRequest.receiveFirstTime(ClientInfoIt->socket);
+				ClientInfoIt->parsedRequest.parse();
+				if(isUriTooLong(ClientInfoIt->parsedRequest.request_data["path"]))
+				{
+					error_414(this->_clientsList, ClientInfoIt);
+					this->dropClient(ClientInfoIt->socket, ClientInfoIt);
+					continue ;
+				}
+				if (ClientInfoIt->parsedRequest.requestDataMap["method"] == "GET")
+				{
+					GETMethod getRequest;
+					getRequest.callGET(ClientInfoIt);
+				}
+				else if (ClientInfoIt->parsedRequest.requestDataMap["method"] == "DELETE")
+				{
+					// calling get method function.
+					client_data_it++;
+					continue ;
+				}
+				else if (ClientInfoIt->parsedRequest.requestDataMap["method"] == "POST")
+				{
+						parsingMiniHeader(ClientInfoIt);
+						postRequestStruct postRequest(ClientInfoIt, client_data_it, client_data, *it);
+						ClientInfoIt->requestBody.open("uploads/" + ClientInfoIt->uploadFileName, std::ios::binary);
+						ClientInfoIt->requestBody.write(ClientInfoIt->requestHeader + ClientInfoIt->bodyIndex, receivedBytes - ClientInfoIt->bodyIndex);
+						ClientInfoIt->requestBody.close();
+						exit (1);
+				}
+				ClientInfoIt->isFirstRead = false;
+			}
+			else
+			{
+				
+			}
+		}
 	}
 }
 
@@ -124,8 +168,7 @@ void	HttpServer::setUpMultiplexing ( void )
 	this->_serverNewConnection();
 }
 
-
-void	HttpServer::setUpHttpServer( std::list<ClientInfo> &clientList )
+void	HttpServer::setUpHttpServer( std::list<ClientInfoIt> &clientList )
 {
 
 	this->_setUpListeningSocket();
