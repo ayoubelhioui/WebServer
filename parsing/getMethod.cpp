@@ -49,10 +49,7 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 			std::ifstream check_file(final_path, std::ios::binary);
 			if(check_file){return final_path;}
 			else ;
-<<<<<<< HEAD
-=======
 		}	
->>>>>>> 1d17ba138f0b6fd4bcb922df98b3c17c74d3e1db
 		}
 	}
 	return "";

@@ -1,15 +1,17 @@
 #include "../Interfaces/Client.hpp"
 
-client_info::client_info() : received(0), isFirstRead(false), bodyFirstRead(false), boundarySize(0), bytesToReceive(0), _maxSocket(0)
+	
+client_info::client_info() : received(0), isFirstRead(true), bodyFirstRead(false), boundarySize(0), bytesToReceive(0), _maxSocket(0)
 {
+	 this->address_length = sizeof(this->address);
 }
 
 client_info::~client_info()
 {
 }
 
-void	client_info::clients_Setup(int server_socket, std::list<client_info *> client_data
-, fd_set &reads, fd_set &writes){
+void	client_info::clients_Setup()
+{
 	client_info::_maxSocket = 0;
 	FD_ZERO(&reads);
     FD_SET(server_socket, &reads);
@@ -21,7 +23,7 @@ void	client_info::clients_Setup(int server_socket, std::list<client_info *> clie
     {
         FD_SET((*client_data_it1)->socket, &reads);
         FD_SET((*client_data_it1)->socket, &writes);
-        std::max(_maxSocket, (*client_data_it1)->socket);
+        std::max(_maxSocket, (*client_data_it1)->socket); // ????
     }
     if( select(_maxSocket + 1, &reads, &writes, NULL, NULL) == -1){
 		errorPrinting("select has failed");
@@ -49,7 +51,6 @@ client_info *client_info::get_client(int socket, std::list<client_info *> &data_
     for(; it != copy.end(); it++)
         if(socket == (*it)->socket) return *it;
     client_info *new_node = new client_info;
-    new_node->address_length = sizeof(new_node->address);
     data_list.push_front(new_node);
     return new_node;
 }

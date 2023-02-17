@@ -38,7 +38,30 @@ void	MultiHttpServer::setUpServers ( void )
 	std::list<HttpServer &>::iterator		httpServerIt;
 
 	httpServerIt = this->_listOfServers.begin();
+
 	while (httpServerIt != this->_listOfServers.end())
+	{
 		httpServerIt->setUpHttpServer();
+		httpServerIt++;
+	}
 	std::cout << "--Servers SetUP Successfully--" << std::endl;
+}
+
+
+void MultiHttpServer::startServers(void)
+{
+	std::list<HttpServer &>::iterator	HttpServerIt;
+
+
+	while (1)
+	{
+		HttpServerIt = this->_listOfServers.begin();
+		while (HttpServerIt != this->_listOfServers.end())
+		{
+			HttpServerIt->setUpMultiplexing();
+			HttpServerIt++;
+		}
+
+	}
+	
 }

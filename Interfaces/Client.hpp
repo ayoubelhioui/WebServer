@@ -6,8 +6,6 @@
 #include "../parsing/parsing.hpp"
 
 class ClientInfo {
-	private:
-		static int _maxSocket;
     public:
         ParsingRequest parsedRequest;
         std::string uploadFileName;
@@ -17,7 +15,7 @@ class ClientInfo {
         bool isFirstRead;
         bool bodyFirstRead;
         std::ofstream requestBody;
-        socklen_t address_length;
+        socklen_t addressLength;
         struct sockaddr_storage address;
         char address_buffer[128];
         SOCKET socket;

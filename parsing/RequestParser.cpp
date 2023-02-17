@@ -36,6 +36,7 @@ void	ParsingRequest::parsingRequest(std::string line){
         contentLength = atoi(last.c_str());
     request_data[save] = last;
 }
+
 void	ParsingRequest::parse(){
 	int	i = 0;
 	std::string	headerPart(requestHeader), line, bodyPart(headerPart);

@@ -37,28 +37,23 @@
 #define ERROR_PAGE_FILE_NOT_FOUND "Error_Page file is not exist !!"
 #define SOCKET  int
 #define MAX_REQUEST_SIZE 2000
+# include "ServerConfiguration.hpp"
 
 
-class configFileParse{
-    public:
-        configFileParse();
-        std::string serverHost;
-        std::string serverPort;
-        unsigned int clientBodyLimit;
-        bool isClosed;
-        std::list<std::string> serverName;
-        std::list<std::pair<int, std::string> > errorInfo;
-        std::list<locationBlockParse> Locations;
-        void fillingDataFirstPart(std::string &);
-        void listenKeywordFound(std::vector<std::string> &);
-        void serverNameKeywordFound(std::vector<std::string> &);
-        void errorPageKeywordFound(std::vector<std::string> &);
-        void clientBodySizeKeywordFound(std::vector<std::string> &);
-        static void     startParsingFile(std::list<std::string> &, std::list<configFileParse> &);
-        static void     readingDataFromFile(std::list<std::string> &, std::string &);
-        static void     printingParsingData(std::list<configFileParse> &);
+
+
+class ConfigFileParser {
+	public:
+		ConfigFileParser ( void );
+		~ConfigFileParser ( void );
+		void parseConfigFile ( void );
+		std::list<serverConfiguration &>	listOfServersConfiguration;
 };
 
+
+// ConfigFileParser.parseConfigFile();
+
+// serverConfiguration->se
 
 bool    isValidNumber(std::string &);
 void    errorPrinting(const char *);

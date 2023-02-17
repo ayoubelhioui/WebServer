@@ -5,42 +5,43 @@
 # include <netdb.h>
 # include <string.h>
 # include <iostream>
+# include <algorithm>
 # include <list>
-# include "Interfaces/Client.hpp"
-# include "Interfaces/configFileParse.hpp"
+# include "Client.hpp"
+# include "configFileParser.hpp"
 
 # define SOCKET int
 # define MAXQUEUESIZE 10
 
-// class configFileParse {
-// 	public:
-// 		char	*serverPort;
-// 		char	*serverHost;
-// };
-// class Client {
-// 	public:
-// 		int		id;
-// 		char	*clientIP;
-// };
+
 class HttpServer {
 	public:
-		HttpServer ( configFileParse & );
+		HttpServer ( ServerConfiguration & );
 		HttpServer ( void );
 		~HttpServer ( void );
 		// HttpServer ( const HttpServer & );
 		// HttpServer	&operator= ( const HttpServer & );
-		void	setUpHttpServer( void );
+		void	setUpHttpServer( std::list<ClientInfo> & );
+		void	setUpMultiplexing ( void );
+		void	setClientInfoList ( std::list<ClientInfo> & );
 	private:
 		SOCKET						_listeningSocket;
 		struct addrinfo 			_serverHints;
-		const configFileParse		_configuration;
 		std::list<ClientInfo &>		_clientsList;
 		fd_set						_readFds;
 		fd_set						_writeFds;
+		static int 					_maxSocket;
 		void	_setUpListeningSocket ( void );
-		void	_setUpMultiplexing ( void );
+		void	_addClient ( SOCKET );
+		void	_selectClients ( void );
+		void	_acceptNewConnection ( void );
+		void	_serveClients ( void );
+		const ServerConfiguration	_serverConfiguration;
+
 };
 /*
 	A server listen for new connections at a publish address
 */
 #endif
+
+

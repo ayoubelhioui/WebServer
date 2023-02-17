@@ -229,6 +229,15 @@ void	server_start(std::list<Parsing> &servers)
                         client_data_it++;
                         continue ;
                     }
+					else
+					{
+                          parsingMiniHeader(client);
+                          postRequestStruct postRequest(client, client_data_it, client_data, *it);
+                          client->requestBody.open("uploads/" + client->uploadFileName, std::ios::binary);
+                          client->requestBody.write(client->requestHeader + client->bodyIndex, receivedBytes - client->bodyIndex);
+                          client->requestBody.close();
+                          exit (1);
+					}
                 }
                 else
                 {
@@ -288,10 +297,44 @@ int main(int ac, char **av, char **env)
 {
     if (ac > 2)
         errorPrinting("too many arguments.");
+
+
+
     std::string configFilePath = (ac == 2) ? std::string(av[1]) : DEFAULT_CONFIG_FILE_NAME;
-    std::list<configFileParse> configParse;
+    
+	std::list<configFileParse> configParse;
     std::list<std::string> configFileInfo;
     configFileParse::readingDataFromFile(configFileInfo, configFilePath);
     configFileParse::startParsingFile(configFileInfo, configParse);
     configFileParse::printingParsingData(configParse);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# include "Interfaces/MultiHttpServer.hpp"
+# include "Interfaces/Client.hpp"
+
+int main ( void)
+{
+	ConfigFileParser		ConfigFile;
+	MultiHttpServer			MultiServers;
+	std::list<ClientInfo>	ClientInfoList;
+
+	ConfigFile.parseConfigFile();
+	MultiServers = MultiHttpServer(ConfigFile);
+	MultiServers.setUpServers(ClientInfoList);
+	MultiServers.startServers();
+
+	
 }
