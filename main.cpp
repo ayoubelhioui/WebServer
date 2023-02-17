@@ -1,4 +1,4 @@
-#include "parsing/parsing.hpp"
+#include "Interfaces/configFileParse.hpp"
 #include "includes/postRequest.hpp"
 #include "Interfaces/RequestParser.hpp"
 #include "Interfaces/getMethod.hpp"
@@ -231,18 +231,6 @@ void	server_start(std::list<Parsing> &servers)
                 }
                 else
                 {
-                    // exit (1);
-//                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
-//                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
-//                    client->received += received;
-//                    client->requestHeader[received] = 0;
-//                        std::map<std::string, std::string>::iterator m = client->request_data.begin();
-//                       while (m != client->request_data.end())
-//                        {
-//                            std::cout << "the data is : " << m->first << " " << m->second << std::endl;
-//                            m++;
-//                        }
-//                       exit (1);
                     receiveFromClient(client, received);
                     if (!client->bodyFirstRead)
                     {
@@ -260,9 +248,6 @@ void	server_start(std::list<Parsing> &servers)
                             dropClient(client->socket, client_data_it, client_data);
                             continue;
                         }
-//                        client->bodyFirstRead = true;
-//                        searchForBoundary(client);
-//                        client->requestBody.open("/tmp/." + client->uploadFileName, std::ios::binary);
                         if (!client->requestBody.is_open())
                         {
                             std::cout << "Couldn't Open Upload File" << std::endl;
@@ -298,8 +283,14 @@ void	server_start(std::list<Parsing> &servers)
     }
 }
 
-int main(){
-//    std::cout << remove("tmp/testingwrite.cpp") << std::endl;
-    std::list<Parsing> parse;
-    readingData(parse);
+int main(int ac, char **av, char **env)
+{
+    if (ac > 2)
+        errorPrinting("too many arguments.");
+    std::string configFilePath = (ac == 2) ? std::string(av[1]) : DEFAULT_CONFIG_FILE_NAME;
+    std::list<configFileParse> configParse;
+    std::list<std::string> configFileInfo;
+    configFileParse::readingDataFromFile(configFileInfo, configFilePath);
+    configFileParse::startParsingFile(configFileInfo, configParse);
+    configFileParse::printingParsingData(configParse);
 }
