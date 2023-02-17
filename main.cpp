@@ -1,7 +1,7 @@
 #include "Interfaces/configFileParse.hpp"
-//#include "includes/postRequest.hpp"
-//#include "parsing/RequestParser.hpp"
-//#include "parsing/getMethod.hpp"
+#include "includes/postRequest.hpp"
+#include "Interfaces/RequestParser.hpp"
+#include "Interfaces/getMethod.hpp"
 
 void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData)
 {
@@ -254,8 +254,8 @@ void	server_start(std::list<Parsing> &servers)
                     client->isFirstRead = true;
                     std::map<std::string, std::string>::iterator headerPartIterator = client->parsedRequest.request_data.begin();
                     if (client->parsedRequest.request_data["method"] == "GET"){
-                          GetMethod getRequest;
-                          getRequest.callGet(client);
+                          GETMethod getRequest;
+                          getRequest.callGET(client);
                     }
                     else if (client->parsedRequest.request_data["method"] == "DELETE")
                     {
@@ -266,18 +266,6 @@ void	server_start(std::list<Parsing> &servers)
                 }
                 else
                 {
-                    // exit (1);
-//                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
-//                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
-//                    client->received += received;
-//                    client->requestHeader[received] = 0;
-//                        std::map<std::string, std::string>::iterator m = client->request_data.begin();
-//                       while (m != client->request_data.end())
-//                        {
-//                            std::cout << "the data is : " << m->first << " " << m->second << std::endl;
-//                            m++;
-//                        }
-//                       exit (1);
                     receiveFromClient(client, received);
                     if (!client->bodyFirstRead)
                     {

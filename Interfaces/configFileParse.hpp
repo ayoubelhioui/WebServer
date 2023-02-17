@@ -49,17 +49,17 @@ class configFileParse{
         std::list<std::string> serverName;
         std::list<std::pair<int, std::string> > errorInfo;
         std::list<locationBlockParse> Locations;
-        void fillingDataFirstPart(std::string &enteredData);
-        void listenKeywordFound(std::vector<std::string> &vec);
-        void serverNameKeywordFound(std::vector<std::string> &vec);
-        void errorPageKeywordFound(std::vector<std::string> &vec);
-        void clientBodySizeKeywordFound(std::vector<std::string> &vec);
-        static void     startParsingFile(std::list<std::string> &configFileInfo, std::list<configFileParse> &configFileList);
-        static void     readingDataFromFile(std::list<std::string> &configFileInfo, std::string &configFilePath);
-        static void     printingParsingData(std::list<configFileParse> &parsingData);
+        void fillingDataFirstPart(std::string &);
+        void listenKeywordFound(std::vector<std::string> &);
+        void serverNameKeywordFound(std::vector<std::string> &);
+        void errorPageKeywordFound(std::vector<std::string> &);
+        void clientBodySizeKeywordFound(std::vector<std::string> &);
+        static void     startParsingFile(std::list<std::string> &, std::list<configFileParse> &);
+        static void     readingDataFromFile(std::list<std::string> &, std::string &);
+        static void     printingParsingData(std::list<configFileParse> &);
 };
 
 
-bool    isValidNumber(std::string &data);
-void    errorPrinting(const char *errorMessage);
+bool    isValidNumber(std::string &);
+void    errorPrinting(const char *);
 #endif

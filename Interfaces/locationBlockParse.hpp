@@ -20,17 +20,17 @@ class locationBlockParse{
         std::string Path_Info;
         std::string answerFileForDirectory;
         bool    isDirectoryListingOn;
-        void	locationParse(std::list<std::string>::iterator &it);
-        void	getPath(std::vector<std::string> &vec);
-        void	findAllowMethods(std::vector<std::string> &vec);
-        void	fillRedirection(std::vector<std::string> &vec);
-        void	setDirlisting(std::vector<std::string> &vec);
-        void	setRoot(std::vector<std::string> &vec);
-        void	setIndexes(std::vector<std::string> &vec);
-        void	setCgi(std::vector<std::string> &vec);
-        void	setUploadFolder(std::vector<std::string> &vec);
+        void	locationParse(std::list<std::string>::iterator &);
+        void	getPath(std::vector<std::string> &);
+        void	findAllowMethods(std::vector<std::string> &);
+        void	fillRedirection(std::vector<std::string> &);
+        void	setDirlisting(std::vector<std::string> &);
+        void	setRoot(std::vector<std::string> &);
+        void	setIndexes(std::vector<std::string> &);
+        void	setCgi(std::vector<std::string> &);
+        void	setUploadFolder(std::vector<std::string> &);
 };
 
-bool    isValidNumber(std::string &data);
-void    errorPrinting(const char *errorMessage);
+bool    isValidNumber(std::string &);
+void    errorPrinting(const char *);
 #endif

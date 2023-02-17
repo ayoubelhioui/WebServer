@@ -14,7 +14,7 @@ void searchForBoundary(client_info *client)
     std::cout << "*****************" << std::endl;
     client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10) + get_real_format(client->parsedRequest.request_data["Content-Type:"].c_str());
     int newBodyIndex = newString.find("Content-Disposition:");
-    newBodyIndex = ret_index(client->parsedRequest.requestHeader) + 4;
+    newBodyIndex = client->parsedRequest.retIndex(client->parsedRequest.requestHeader) + 4;
     client->parsedRequest.bodyIndex = newBodyIndex;
     client->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }

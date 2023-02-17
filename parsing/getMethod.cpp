@@ -1,6 +1,6 @@
-#include "getMethod.hpp"
+#include "../Interfaces/getMethod.hpp"
 
-std::string	GetMethod::handleGetMethod(std::map<std::string, std::string> &request, Parsing &server){
+std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &request, Parsing &server){
 	std::string path = request["path"];
 	for (std::list<locationBlock>::iterator beg = server.Locations.begin(); beg != server.Locations.end(); beg++){
 		locationBlock loc = *beg;
@@ -24,6 +24,10 @@ std::string	GetMethod::handleGetMethod(std::map<std::string, std::string> &reque
 		std::string full_path = path.substr(0, index_last + 1);
 		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
 		if(full_path != res) continue;
+		if(loc.Redirection.length() != 0){
+			
+		}
+		else{
 		std::string file = path.substr(index_last + 1);
 		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
 		if(is_file_last && file[file.length() - 1] == '/') file.erase(file.length() - 1);
@@ -45,13 +49,17 @@ std::string	GetMethod::handleGetMethod(std::map<std::string, std::string> &reque
 			std::ifstream check_file(final_path, std::ios::binary);
 			if(check_file){return final_path;}
 			else ;
+<<<<<<< HEAD
+=======
+		}	
+>>>>>>> 1d17ba138f0b6fd4bcb922df98b3c17c74d3e1db
 		}
 	}
 	return "";
 }
 
-void	GetMethod::callGet(client_info *client){
-	std::string path = handle_get_method(client->request_data, *it);
+void	GETMethod::callGET(client_info *client){
+	std::string path = handle_get_method(client->parsedRequest.request_data, *it);
 	client->served.open(path, std::ios::binary);
 	client->served.seekg(0, std::ios::end);
 	client->served_size = client->served.tellg();
@@ -67,4 +75,37 @@ void	GetMethod::callGet(client_info *client){
 	send(client->socket, buffer, strlen(buffer), 0);
 	sprintf(buffer, "\r\n");
 	send(client->socket, buffer, strlen(buffer), 0);
+}
+
+int	GETMethod::directoryListing(char *rootDirectory, int socket){
+	char *buffer = new char[1024]();
+	sprintf(buffer, "Content-type: text/html\r\n");
+    send(socket, buffer, sizeof(buffer), 0);
+	sprintf(buffer, "<html><head><title>Directory Listing</title></head><body>\r\n");
+	send(socket, buffer, sizeof(buffer), 0);
+    DIR *dir = opendir(rootDirectory);
+    if (dir == NULL) {
+		sprintf(buffer, "<h1>Could not open directory</h1>\r\n");
+		send(socket, buffer, sizeof(buffer), 0);
+    } else {
+		sprintf(buffer, "<h1>Directory Listing</h1>\r\n");
+		send(socket, buffer, sizeof(buffer), 0);
+        sprintf(buffer, "<ul>\r\n");
+		send(socket, buffer, sizeof(buffer), 0);
+
+        struct dirent *entry;
+        while ((entry = readdir(dir)) != NULL) {
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+                continue;
+            }
+            sprintf(buffer, "<li> %s <li>\r\n", entry->d_name);
+			send(socket, buffer, sizeof(buffer), 0);
+        }
+        sprintf(buffer, "<ul>\r\n");
+		send(socket, buffer, sizeof(buffer), 0);
+        closedir(dir);
+    }
+	sprintf(buffer, "</body></html>\r\n");
+	send(socket, buffer, sizeof(buffer), 0);
+	delete [] buffer;
 }

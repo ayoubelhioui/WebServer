@@ -11,7 +11,7 @@ client_info *get_client(int socket, std::list<client_info *> &data_list){
     return new_node;
 }
 
-int ret_index(char *str){
+int client->parsedRequest.retIndex(char *str){
   for(int i = 0; str[i]; i++){
     if(!strncmp(&str[i], "\r\n\r\n", 4))    
       return i;
@@ -298,7 +298,7 @@ void	server_start(std::list<Parsing> &servers) {
                 client->request[client->received] = 0;
                 if(read < MAX_REQUEST_SIZE) {
                       std::map<std::string, std::string> request_data;
-                      int body_index = ret_index(client->request), index = 0, i = 0;
+                      int body_index = client->parsedRequest.retIndex(client->request), index = 0, i = 0;
                       std::string stock_header(client->request), line;
                       stock_header = stock_header.substr(0, body_index);
                       std::size_t found = stock_header.find("\r\n");
