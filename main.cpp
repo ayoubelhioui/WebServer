@@ -2,6 +2,7 @@
 #include "includes/postRequest.hpp"
 #include "Interfaces/RequestParser.hpp"
 #include "Interfaces/getMethod.hpp"
+#include "Interfaces/Client.hpp"
 // void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData)
 // {
 //     close(clientSocket);
