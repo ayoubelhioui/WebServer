@@ -11,3 +11,8 @@ nginx.conf
 # README.md
 cmake-build-debug/
 .idea/
+*.mp4
+*.png
+*.jpeg
+*.jpg
+*.php
