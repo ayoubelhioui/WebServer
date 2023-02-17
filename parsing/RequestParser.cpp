@@ -1,4 +1,4 @@
-#include "RequestParser.hpp"
+#include "../Interfaces/RequestParser.hpp"
 
 ParsingRequest::ParsingRequest() : bodyIndex(0), bytesToReceive(0), contentLength(0), receivedBytes(0)
 {
@@ -16,9 +16,6 @@ void	ParsingRequest::parsingRequestFirstLine(std::string line){
     str >> word;
     request_data["method"] = word;
     str >> word;
-    if(isUriTooLong(word)) {
-
-    }
     request_data["path"] = word;
     str >> word;
     request_data["httpVersion"] = word;
@@ -67,10 +64,10 @@ void    ParsingRequest::receiveFirstTime(int socket){
     receivedBytes = recv(socket, requestHeader, MAX_REQUEST_SIZE, 0);
     requestHeader[receivedBytes] = 0;
     bytesToReceive += receivedBytes;
-    bodyIndex = retIndex();
+    bodyIndex = retIndex(requestHeader);
 }
 
-int     ParsingRequest::retIndex(){
+int     ParsingRequest::retIndex(char *header){
     for(int i = 0; requestHeader[i]; i++){
       if(!strncmp(&requestHeader[i], "\r\n\r\n", 4))
           return i;

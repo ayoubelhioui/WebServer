@@ -1,11 +1,12 @@
 #ifndef GET_METHOD
 #define GET_METHOD
-	#include "parsing.hpp"
-	class GetMethod{
-		public:
-			void		callGet(client_info *);
-			std::string	handleGetMethod(std::map<std::string, std::string> &, Parsing &);
-			void		redirectToWebsite(void);
-			void		directoryListing(void);
-	};
+#include "../parsing/parsing.hpp"
+
+class GETMethod{
+	public:
+		void		callGET(client_info *);
+		std::string	handleGETMethod(std::map<std::string, std::string> &, Parsing &);
+		void		redirectToWebsite(void);
+		int			directoryListing(char *);
+};
 #endif

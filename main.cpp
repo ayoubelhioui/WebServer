@@ -1,27 +1,14 @@
-#include "parsing/parsing.hpp"
+#include "Interfaces/configFileParse.hpp"
 #include "includes/postRequest.hpp"
-#include "RequestParser.hpp"
-#include "getMethod.hpp"
-
-void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData)
-{
-    close(clientSocket);
-    std::list<client_info *>::iterator temp_it = clientDataIterator;
-    clientDataIterator++;
-    clientData.erase(temp_it);
-}
-
-client_info *get_client(int socket, std::list<client_info *> &data_list)
-{
-    std::list<client_info *> copy = data_list;
-    std::list<client_info *>::iterator it = copy.begin();
-    for(; it != copy.end(); it++)
-        if(socket == (*it)->socket) return *it;
-    client_info *new_node = new client_info;
-    new_node->address_length = sizeof(new_node->address);
-    data_list.push_front(new_node);
-    return new_node;
-}
+#include "Interfaces/RequestParser.hpp"
+#include "Interfaces/getMethod.hpp"
+// void dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData)
+// {
+//     close(clientSocket);
+//     std::list<client_info *>::iterator temp_it = clientDataIterator;
+//     clientDataIterator++;
+//     clientData.erase(temp_it);
+// }
 
 int create_socket(Parsing &server){
 	struct addrinfo server_hints;
@@ -207,32 +194,10 @@ void	server_start(std::list<Parsing> &servers)
 	int server_socket = create_socket(*it);
     std::list<client_info *> client_data;
     int max_socket = 0,received = 0;
-    int prob = 0;
     while(1) {
         fd_set reads, writes;
-        FD_ZERO(&reads);
-        FD_SET(server_socket, &reads);
-        FD_ZERO(&writes);
-        FD_SET(server_socket, &writes);
-        max_socket = std::max(max_socket, server_socket);
-        std::list<client_info *>::iterator client_data_it1 = client_data.begin();
-        for (; client_data_it1 != client_data.end(); client_data_it1++)
-        {
-            FD_SET((*client_data_it1)->socket, &reads);
-            FD_SET((*client_data_it1)->socket, &writes);
-            std::max(max_socket, (*client_data_it1)->socket);
-        }
-        int ret_select = select(max_socket + 1, &reads, &writes, NULL, NULL);
-        if (FD_ISSET(server_socket, &reads))
-        {
-            client_info *client = get_client(-1, client_data);
-            client->socket = accept(server_socket, (struct sockaddr *) &(client->address), &(client->address_length));
-//            fcntl(client->socket, F_SETFL, O_NONBLOCK);
-            FD_SET(client->socket, &reads);
-            FD_SET(client->socket, &writes);
-            max_socket = std::max(max_socket, client->socket);
-            if (client->socket < 0) std::cerr << "accept function failed\n";
-        }
+        client_info::clients_Setup(server_socket, client_data, reads, writes);
+        client_info::checkingClientListenning(server_socket, client_data, reads, writes);
         std::list<client_info *>::iterator client_data_it = client_data.begin();
         int size = client_data.size();
         while (client_data_it != client_data.end())
@@ -254,8 +219,8 @@ void	server_start(std::list<Parsing> &servers)
                     client->isFirstRead = true;
                     std::map<std::string, std::string>::iterator headerPartIterator = client->parsedRequest.request_data.begin();
                     if (client->parsedRequest.request_data["method"] == "GET"){
-                          GetMethod getRequest;
-                          getRequest.callGet(client);
+                          GETMethod getRequest;
+                          getRequest.callGET(client);
                     }
                     else if (client->parsedRequest.request_data["method"] == "DELETE")
                     {
@@ -266,18 +231,6 @@ void	server_start(std::list<Parsing> &servers)
                 }
                 else
                 {
-                    // exit (1);
-//                    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
-//                    received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
-//                    client->received += received;
-//                    client->requestHeader[received] = 0;
-//                        std::map<std::string, std::string>::iterator m = client->request_data.begin();
-//                       while (m != client->request_data.end())
-//                        {
-//                            std::cout << "the data is : " << m->first << " " << m->second << std::endl;
-//                            m++;
-//                        }
-//                       exit (1);
                     receiveFromClient(client, received);
                     if (!client->bodyFirstRead)
                     {
@@ -295,9 +248,6 @@ void	server_start(std::list<Parsing> &servers)
                             dropClient(client->socket, client_data_it, client_data);
                             continue;
                         }
-//                        client->bodyFirstRead = true;
-//                        searchForBoundary(client);
-//                        client->requestBody.open("/tmp/." + client->uploadFileName, std::ios::binary);
                         if (!client->requestBody.is_open())
                         {
                             std::cout << "Couldn't Open Upload File" << std::endl;
@@ -333,8 +283,14 @@ void	server_start(std::list<Parsing> &servers)
     }
 }
 
-int main(){
-//    std::cout << remove("tmp/testingwrite.cpp") << std::endl;
-    std::list<Parsing> parse;
-    readingData(parse);
+int main(int ac, char **av, char **env)
+{
+    if (ac > 2)
+        errorPrinting("too many arguments.");
+    std::string configFilePath = (ac == 2) ? std::string(av[1]) : DEFAULT_CONFIG_FILE_NAME;
+    std::list<configFileParse> configParse;
+    std::list<std::string> configFileInfo;
+    configFileParse::readingDataFromFile(configFileInfo, configFilePath);
+    configFileParse::startParsingFile(configFileInfo, configParse);
+    configFileParse::printingParsingData(configParse);
 }
