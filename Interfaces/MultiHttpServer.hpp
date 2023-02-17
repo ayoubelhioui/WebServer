@@ -8,10 +8,11 @@ class MultiHttpServer {
 		// MultiHttpServer ( ARGS );
 		MultiHttpServer ( void );
 		~MultiHttpServer ( void );
-		MultiHttpServer ( const MultiHttpServer & );
-		MultiHttpServer	&operator= ( const MultiHttpServer & );
+		// MultiHttpServer ( const MultiHttpServer & );
+		// MultiHttpServer	&operator= ( const MultiHttpServer & );
 		void	setUpServers( void );
-		std::list <HttpServer>	listOfServers;
+	private:
+		std::list <HttpServer &>	_listOfServers;
 };
 
 #endif

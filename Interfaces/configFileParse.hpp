@@ -1,5 +1,5 @@
-#ifndef _PARSING_HPP_
-#define _PARSING_HPP_
+#ifndef _CONFIGFILEPARSE_H__
+#define _CONFIGFILEPARSE_H__
 #include <set>
 #include <iostream>
 #include <string>

@@ -1,10 +1,11 @@
 
-#ifndef Client
-#define Client
+#ifndef _CLIENT_H__
+#define _CLIENT_H__
 
 #include "../Interfaces/RequestParser.hpp"
 #include "../parsing/parsing.hpp"
-class client_info {
+
+class ClientInfo {
 	private:
 		static int _maxSocket;
     public:
@@ -22,11 +23,11 @@ class client_info {
         SOCKET socket;
         std::ifstream served;
         int served_size;
-		static void	clients_Setup(int , std::list<client_info *>, fd_set &reads, fd_set &writes);
-		static void	checkingClientListenning(int, std::list<client_info *> &, fd_set &, fd_set &);
-		static client_info *get_client(int socket, std::list<client_info *> &data_list);
-		static void dropClient(int &, std::list<client_info *>::iterator &, std::list<client_info *> &);
-		// void       dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
+		static void	clients_Setup(int , std::list<ClientInfo *>, fd_set &reads, fd_set &writes);
+		static void	checkingClientListenning(int, std::list<ClientInfo *> &, fd_set &, fd_set &);
+		static ClientInfo *get_client(int socket, std::list<ClientInfo *> &data_list);
+		static void dropClient(int &, std::list<ClientInfo *>::iterator &, std::list<ClientInfo *> &);
+		// void       dropClient(int &clientSocket, std::list<ClientInfo *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
 		// void    printingParsingData(std::list<Parsing> &parsingData);
 		// bool    isValidNumber(std::string &data);
 		// void    errorPrinting(const char *errorMessage);
@@ -45,8 +46,8 @@ class client_info {
 		// bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
 		// bool    isUriTooLong(std::string &Uri);
 		// std::string handle_get_method(std::map<std::string, std::string> &request, Parsing &server);
-		client_info();
-		~client_info();
+		ClientInfo();
+		~ClientInfo();
 };
 
 #endif
