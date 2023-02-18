@@ -1,5 +1,3 @@
-
-
 // # include "webserver.hpp"
 # include "Interfaces/ConfigFileParser.hpp"
 # include "Interfaces/MultiHttpServer.hpp"
@@ -26,20 +24,18 @@ int main ( int ac, char **av, char **env )
 	if (ac > 2)
         errorPrinting("too many arguments.");
 	
-    std::string configFilePath = (ac == 2) ? std::string(av[1]) : DEFAULT_CONFIG_FILE_NAME;
+    std::string configFilePath;
+	
+	configFilePath = (ac == 2) ? std::string(av[1]) : DEFAULT_CONFIG_FILE_NAME;
 	ConfigFileParser		ConfigFile(configFilePath);
  
 	// MultiHttpServer			MultiServers; 
 	// std::list<ClientInfo>	ClientInfoList;
-
-
-
 	ConfigFile.parseConfigFile();
 
 	
 	MultiHttpServer MultiServers(ConfigFile.listOfServersConfiguration);
 	MultiServers.setUpServers();
 	MultiServers.startServers();
-
-	
+	return (1);
 }

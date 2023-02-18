@@ -15,7 +15,9 @@ SOURCES = _main.cpp \
 		Implementations/Client.cpp \
 		Implementations/HttpServer.cpp \
 		Implementations/RequestParser.cpp \
+		Implementations/GETMethod.cpp \
 		parsing/parsingUtils.cpp \
+		errorsHandling/errorsHandling.cpp \
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

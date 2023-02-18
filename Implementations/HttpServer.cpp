@@ -65,7 +65,7 @@ void	HttpServer::_setUpListeningSocket( void )
 void	HttpServer::_selectClients ( void )
 {
 	_maxSocket = _listeningSocket;
-	std::list<ClientInfo >::iterator	ClientInfoIt;
+	std::list<ClientInfo *>::iterator	ClientInfoIt;
 		
 	ClientInfoIt = this->_clientsList.begin();
 	FD_ZERO(&_readFds);
@@ -75,9 +75,9 @@ void	HttpServer::_selectClients ( void )
 	for (; ClientInfoIt != this->_clientsList.end(); ClientInfoIt++)
 	{
 		std::cout << "Till Here" << std::endl;
-		FD_SET(ClientInfoIt->socket, &_readFds);
-        FD_SET(ClientInfoIt->socket, &_writeFds);
-		_maxSocket = std::max(_maxSocket, ClientInfoIt->socket);
+		FD_SET((*ClientInfoIt)->socket, &_readFds);
+        FD_SET((*ClientInfoIt)->socket, &_writeFds);
+		_maxSocket = std::max(_maxSocket, (*ClientInfoIt)->socket);
 	}
 	std::cout << _maxSocket << std::endl;
 	if (select(_maxSocket + 1, &_readFds, &_writeFds, NULL, NULL) == -1)
@@ -93,7 +93,7 @@ void	HttpServer::setClientInfoList ( std::list<ClientInfo> & )
 
 // void	HttpServer::_addClient ( SOCKET	clientSocket )
 // {
-// 	ClientInfo	client;
+// 	ClientInfo	(*ClientInfoIt);
 
 // 	this->_cli
 // }
@@ -113,12 +113,11 @@ void	HttpServer::_acceptNewConnection( void )
         if (newClient->socket < 0)
 			std::cerr << "accept function failed\n";
 		this->_clientsList.push_front(newClient);
-		for (std::list<ClientInfo *>::iterator	ClientInfoIt = this->_clientsList.begin()
-			; ClientInfoIt != this->_clientsList.end(); ClientInfoIt++)
-		{
-			std::cout << (*ClientInfoIt)->socket << std::endl;
-		}
-		
+		// for (std::list<ClientInfo *>::iterator	ClientInfoIt = this->_clientsList.begin()
+		// 	; ClientInfoIt != this->_clientsList.end(); ClientInfoIt++)
+		// {
+		// 	std::cout << (*ClientInfoIt)->socket << std::endl;
+		// }
     }
 }
 
@@ -133,52 +132,63 @@ void	HttpServer::_acceptNewConnection( void )
 
 void	HttpServer::_serveClients( void )
 {
-	// std::list<ClientInfo >::iterator	ClientInfoIt;
+	std::list<ClientInfo *>::iterator	ClientInfoIt;
 
-	// ClientInfoIt = this->_clientsList.begin();
-	// while (ClientInfoIt != this->_clientsList.end())
-	// {
-	// 	if (FD_ISSET(ClientInfoIt->socket, &(this->(this->_readFds))))
-	// 	{
-	// 		if (ClientInfoIt->isFirstRead)
-	// 		{
-	// 			ClientInfoIt->parsedRequest.receiveFirstTime(ClientInfoIt->socket);
-	// 			ClientInfoIt->parsedRequest.parse();
-
-	// 			if(isUriTooLong(ClientInfoIt->parsedRequest.requestDataMap["path"]))
-	// 			{
-	// 				error_414(this->_clientsList, ClientInfoIt);
-	// 				this->dropClient(ClientInfoIt->socket, ClientInfoIt);
-	// 				continue ;
-	// 			}
-	// 			if (ClientInfoIt->parsedRequest.requestDataMap["method"] == "GET")
-	// 			{
-	// 				GETMethod getRequest;
-	// 				getRequest.callGET(ClientInfoIt);
-	// 			}
-	// 			else if (ClientInfoIt->parsedRequest.requestDataMap["method"] == "DELETE")
-	// 			{
-	// 				// calling get method function.
-	// 				client_data_it++;
-	// 				continue ;
-	// 			}
-	// 			else if (ClientInfoIt->parsedRequest.requestDataMap["method"] == "POST")
-	// 			{
-	// 					parsingMiniHeader(ClientInfoIt);
-	// 					postRequestStruct postRequest(ClientInfoIt, client_data_it, client_data, *it);
-	// 					ClientInfoIt->requestBody.open("uploads/" + ClientInfoIt->uploadFileName, std::ios::binary);
-	// 					ClientInfoIt->requestBody.write(ClientInfoIt->requestHeader + ClientInfoIt->bodyIndex, receivedBytes - ClientInfoIt->bodyIndex);
-	// 					ClientInfoIt->requestBody.close();
-	// 					exit (1);
-	// 			}
-	// 			ClientInfoIt->isFirstRead = false;
-	// 		}
-	// 		else
-	// 		{
+	ClientInfoIt = this->_clientsList.begin();
+	while (ClientInfoIt != this->_clientsList.end())
+	{
+		if (FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)))
+		{
+			if ((*ClientInfoIt)->isFirstRead)
+			{
+				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
+				(*ClientInfoIt)->parsedRequest.parse();
+				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
+				{
+					error_414(this->_clientsList, ClientInfoIt);
+					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+					continue ;
+				}
+				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
+				{
+					GETMethod getRequest;
+					getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
+				}
+				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
+				// {
+				// 	ClientInfoIt++;
+				// 	continue ;
+				// }
+				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
+				// {
+				// 		parsingMiniHeader(ClientInfoIt);
+				// 		postRequestStruct postRequest(ClientInfoIt, client_data_it, client_data, *it);
+				// 		(*ClientInfoIt)->requestBody.open("uploads/" + (*ClientInfoIt)->uploadFileName, std::ios::binary);
+				// 		(*ClientInfoIt)->requestBody.write((*ClientInfoIt)->requestHeader + (*ClientInfoIt)->bodyIndex, receivedBytes - (*ClientInfoIt)->bodyIndex);
+				// 		(*ClientInfoIt)->requestBody.close();
+				// 		exit (1);
+				// }
+				(*ClientInfoIt)->isFirstRead = false;
+			}
+			else
+			{
 				
-	// 		}
-	// 	}
-	// }
+			}
+		}
+		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))){
+                char *s = new char[1024]();
+                (*ClientInfoIt)->served.read(s, 1024);
+                int r = (*ClientInfoIt)->served.gcount();
+                send((*ClientInfoIt)->socket, s, r, 0);
+                if(r < 1024){
+                    close((*ClientInfoIt)->socket);
+                    std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
+                    ClientInfoIt++;
+                    this->_clientsList.erase(temp_it);
+                    continue;
+                }
+            }
+	}
 }
 
 void	HttpServer::setUpMultiplexing ( void )
@@ -186,6 +196,7 @@ void	HttpServer::setUpMultiplexing ( void )
 	std::cout << "Set Up multiplexing for server with socket " << this->_listeningSocket << std::endl;
 	this->_selectClients();
 	this->_acceptNewConnection();
+	this->_serveClients();
 }
 
 void	HttpServer::setUpHttpServer( void )
