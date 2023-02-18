@@ -1,4 +1,4 @@
-#include "Interfaces/ConfigFileParser.hpp"
+#include "../In"
 
 bool getMatchedLocation(std::string &Uri, std::list<Parsing> &configFileData)
 {

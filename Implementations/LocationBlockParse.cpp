@@ -1,6 +1,11 @@
-#include "../Interfaces/locationBlockParse.hpp"
+#include "../Interfaces/LocationBlockParse.hpp"
 
-void	locationBlockParse::getPath(std::vector<std::string> &vec)
+LocationBlockParse::LocationBlockParse( void ) 
+	: Root("RootFiles"), 
+	  isDirectoryListingOn(false) 
+{}
+
+void	LocationBlockParse::getPath(std::vector<std::string> &vec)
 {
     if(vec.size() > 3) errorPrinting("error : unknown words at location declaration");
     if(vec[2] != "{")
@@ -8,42 +13,42 @@ void	locationBlockParse::getPath(std::vector<std::string> &vec)
     this->Location = vec[1];
 }
 
-void	locationBlockParse::findAllowMethods(std::vector<std::string> &vec)
+void	LocationBlockParse::findAllowMethods(std::vector<std::string> &vec)
 {
     if(vec.size() > 4) errorPrinting("error : too many methods");
     for(size_t i = 1; i < vec.size(); i++)
         this->allowedMethods.push_back(vec[i]);
 }
 
-void	locationBlockParse::fillRedirection(std::vector<std::string> &vec)
+void	LocationBlockParse::fillRedirection(std::vector<std::string> &vec)
 {
     if(vec.size() > 2) errorPrinting("error : only one redirection allowed");
     this->Redirection = vec[1];
 }
 
-void	locationBlockParse::setDirlisting(std::vector<std::string> &vec){
+void	LocationBlockParse::setDirlisting(std::vector<std::string> &vec){
     if(vec.size() > 2) errorPrinting("error : only one argument allowed; on or off");
     if(vec[1] == "on") this->isDirectoryListingOn = 1;
     else if (vec[1] == "off") this->isDirectoryListingOn = 0;
     else errorPrinting("error : you must enter on or off when choosing directory listing");
 }
 
-void	locationBlockParse::setRoot(std::vector<std::string> &vec){
+void	LocationBlockParse::setRoot(std::vector<std::string> &vec){
     if(vec.size() > 2) errorPrinting("error : too many roots for this location block");
     this->Root = vec[1];
 }
 
-void	locationBlockParse::setIndexes(std::vector<std::string> &vec){
+void	LocationBlockParse::setIndexes(std::vector<std::string> &vec){
     for(size_t i = 1; i < vec.size(); i++)
         this->indexFiles.push_back(vec[i]);
 }
 
-void	locationBlockParse::setCgi(std::vector<std::string> &vec){
+void	LocationBlockParse::setCgi(std::vector<std::string> &vec){
     if(vec.size() > 3) errorPrinting("too many arguments for the CGI");
     this->CGI.push_back(make_pair(vec[1], vec[2]));
 }
 
-void	locationBlockParse::setUploadFolder(std::vector<std::string> &vec){
+void	LocationBlockParse::setUploadFolder(std::vector<std::string> &vec){
     if(vec.size() > 2) errorPrinting("only the upload file is allowed as argument");
     this->UploadDirectoryPath = vec[1];
 }
@@ -65,7 +70,7 @@ bool    all_empty(std::string str)
     return 1;
 }
 
-void	locationBlockParse::locationParse(std::list<std::string>::iterator &it)
+void	LocationBlockParse::locationParse( std::list<std::string>::iterator &it)
 {
 	while(white_spacenumber(*it).compare("}"))
     {

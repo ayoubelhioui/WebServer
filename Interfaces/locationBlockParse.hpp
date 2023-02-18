@@ -7,9 +7,9 @@
 #include <sstream>
 
 
-class locationBlockParse{
+class LocationBlockParse{
     public:
-        locationBlockParse();
+        LocationBlockParse( void );
         std::list<std::string> indexFiles;
         std::list<std::pair<std::string, std::string> > CGI;
         std::list<std::string> allowedMethods;

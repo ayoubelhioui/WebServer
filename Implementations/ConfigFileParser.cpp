@@ -1,7 +1,8 @@
 # include "../Interfaces/ConfigFileParser.hpp"
 
 ConfigFileParser::ConfigFileParser ( std::string &configFilePath )
-	: _configFilePath(configFilePath) {}
+	: _configFilePath(configFilePath)
+{}
 
 ConfigFileParser::ConfigFileParser ( void )
 {
@@ -24,7 +25,7 @@ ConfigFileParser::~ConfigFileParser ( void )
 // {
 // 	*this = obj;
 // }
-void ConfigFileParser::readingDataFromFile( void )
+void ConfigFileParser::_readingDataFromFile( void )
 {
     std::ifstream configFile(_configFilePath);
     std::string enteredData;
@@ -32,46 +33,47 @@ void ConfigFileParser::readingDataFromFile( void )
     if (!configFile.is_open())
         errorPrinting(CONFIG_FILE_COULDNT_OPEN_MSG);
     while (std::getline(configFile, enteredData))
-        configFileLines.push_back(enteredData);
+        _configFileLines.push_back(enteredData);
 }
 
 
-void ServerConfiguration::startParsingFile( void )
+void	ConfigFileParser::_startParsingFile( void )
 {
-    std::list<std::string>::iterator it = configFileInfo.begin();
-    while (*it == "\n") it++;
-    while (it != configFileInfo.end())
+    std::list<std::string>::iterator configFileLinesIt;
+
+	configFileLinesIt = this->_configFileLines.begin();
+    while (*configFileLinesIt == "\n") configFileLinesIt++;
+    while (configFileLinesIt != _configFileLines.end())
     {
         ServerConfiguration newParseNode;
-        while ((*it).find("location") == std::string::npos)
-            newParseNode.fillingDataFirstPart(*it++);
-        while((*it).find("location") != std::string::npos)
+        while ((*configFileLinesIt).find("location") == std::string::npos)
+            newParseNode.fillingDataFirstPart(*configFileLinesIt++);
+        while((*configFileLinesIt).find("location") != std::string::npos)
         {
-            locationBlockParse newLocationNode;
-            newLocationNode.locationParse(it);
-            if((*it).find("location") == std::string::npos && *it != "}")
+            LocationBlockParse newLocationNode;
+            newLocationNode.locationParse(configFileLinesIt);
+            if((*configFileLinesIt).find("location") == std::string::npos && *configFileLinesIt != "}")
                 errorPrinting("error : You didn't close the server or may have other problems");
             newParseNode.Locations.push_back(newLocationNode);
         }
-        configFileList.push_back(newParseNode);
-        if (*it == "}")
-            it++;
-        if (it == configFileInfo.end())
+        this->listOfServersConfiguration.push_back(newParseNode);
+        if (*configFileLinesIt == "}")
+            configFileLinesIt++;
+        if (configFileLinesIt == _configFileLines.end())
             return ;
-        while (*it == "")
+        while (*configFileLinesIt == "")
         {
-            std::cout << "hello world" << std::endl;
-            it++;
-            if (it == configFileInfo.end())
+            configFileLinesIt++;
+            if (configFileLinesIt == _configFileLines.end())
                 return ;
         }
     }
 }
 
 
-void ServerConfiguration::printingParsingData(std::list<ServerConfiguration> &parsingData)
+void ConfigFileParser::printingParsingData( void )
 {
-    for(std::list<ServerConfiguration>::iterator it = parsingData.begin(); it != parsingData.end(); it++)
+    for(std::list<ServerConfiguration>::iterator it = listOfServersConfiguration.begin(); it != listOfServersConfiguration.end(); it++)
     {
         std::cout << "***********************************  CONFIG FILE DATA FOR EVERY SERVER *******************************" << std::endl;
         std::cout << "SERVER HOST : " <<  it->serverHost << std::endl;
@@ -84,7 +86,7 @@ void ServerConfiguration::printingParsingData(std::list<ServerConfiguration> &pa
         std::cout << "SERVER ERROR PAGES : ";
         for (std::list<std::pair<int, std::string > >::iterator it2 = it->errorInfo.begin(); it2 != it->errorInfo.end(); it2++)
             std::cout << (*it2).first << " " << (*it2).second << std::endl;
-        for (std::list<locationBlockParse>::iterator it4 = it->Locations.begin(); it4 != it->Locations.end(); it4++)
+        for (std::list<LocationBlockParse>::iterator it4 = it->Locations.begin(); it4 != it->Locations.end(); it4++)
         {
             std::cout << "direc path " << it4->UploadDirectoryPath << std::endl;
             std::cout << "root is " << it4->Root << std::endl;
@@ -116,7 +118,6 @@ void ServerConfiguration::printingParsingData(std::list<ServerConfiguration> &pa
 
 void	ConfigFileParser::parseConfigFile ( void )
 {
-	ConfigFileParser::readingDataFromFile();
-    ConfigFileParser::startParsingFile();
-    ConfigFileParser::printingParsingData();
+	this->_readingDataFromFile();
+    this->_startParsingFile();
 }

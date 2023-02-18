@@ -7,7 +7,7 @@
 
 class MultiHttpServer {
 	public:
-		MultiHttpServer ( std::list <ServerConfiguration &>  );
+		MultiHttpServer ( std::list <ServerConfiguration>  );
 		MultiHttpServer ( void );
 		~MultiHttpServer ( void );
 		// MultiHttpServer ( const MultiHttpServer & );
@@ -16,8 +16,8 @@ class MultiHttpServer {
 		void	startServers( void );
 	private:
 
-		std::vector<HttpServer &>	_vectorOfServers;
-		std::list <ServerConfiguration &> _listOfServerConfig;
+		std::list <ServerConfiguration> _listOfServerConfig;
+		std::vector<HttpServer>	_vectorOfServers;
 };
 
 #endif

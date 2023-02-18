@@ -19,26 +19,27 @@
 class HttpServer {
 	public:
 		HttpServer ( ServerConfiguration & );
+		HttpServer ( void ) ;
 		~HttpServer ( void );
 		HttpServer ( const HttpServer & );
 		HttpServer	&operator= ( const HttpServer & );
 		void	setUpHttpServer( void );
 		void	setUpMultiplexing ( void );
 		void	setClientInfoList ( std::list<ClientInfo> & );
-		void	dropClient ( SOCKET &, std::list<ClientInfo &>::iterator & );
+		// void	dropClient ( SOCKET &, std::list<ClientInfo >::iterator & );
+		 ServerConfiguration	_serverConfiguration;
 	private:
 		SOCKET						_listeningSocket;
 		struct addrinfo 			_serverHints;
-		std::list<ClientInfo &>		_clientsList;
-		fd_set						_readFds;
-		fd_set						_writeFds;
-		static int 					_maxSocket;
+		std::list<ClientInfo >		_clientsList;
+		// fd_set						_readFds;
+		// fd_set						_writeFds;
 		void	_setUpListeningSocket ( void );
+		int 					_maxSocket;
 		void	_addClient ( SOCKET );
 		void	_selectClients ( void );
 		void	_acceptNewConnection ( void );
 		void	_serveClients ( void );
-		const ServerConfiguration	_serverConfiguration;
 
 };
 /*

@@ -1,29 +1,30 @@
 #ifndef PARSING_REQUEST
 #define PARSING_REQUEST
-	#include <map>
-	#include <string>
-	#include <sstream>
-	#include <sys/socket.h>
-	#define MAX_REQUEST_SIZE 2000
+#include <map>
+#include <string>
+#include <sstream>
+#include <sys/socket.h>
+#define MAX_REQUEST_SIZE 2000
+# define SOCKET int
 
-	class ParsingRequest{
-		public :
-			int	receivedBytes;
-			int bytesToReceive;
-			char *requestHeader;
-			int contentLength;
-			int bodyIndex;
-			std::map<std::string, std::string> requestDataMap;
-			void	parse();
-			void	parsingRequestFirstLine(std::string);
-			void	parsingRequest(std::string);
-			void	receiveFirstTime ( SOCKET );
-			void	parsingMiniHeader( ); 
+class ParsingRequest{
+	public :
+		int bodyIndex;
+		int bytesToReceive;
+		int contentLength;
+		int	receivedBytes;
+		char *requestHeader;
+		std::map<std::string, std::string> requestDataMap;
+		void	parse();
+		void	parsingRequestFirstLine(std::string);
+		void	parsingRequest(std::string);
+		void	receiveFirstTime ( SOCKET );
+		void	parsingMiniHeader( ); 
 
-			int		retIndex(char *);
-			ParsingRequest();
-			~ParsingRequest();
-	};
+		int		retIndex(char *);
+		ParsingRequest();
+		~ParsingRequest();
+};
 #endif
 
 /*

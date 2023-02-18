@@ -1,7 +1,7 @@
 #include "../Interfaces/ServerConfiguration.hpp"
+
 ServerConfiguration::ServerConfiguration() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
 
-locationBlockParse::locationBlockParse() : Root("RootFiles"), isDirectoryListingOn(0) {}
 
 void ServerConfiguration::clientBodySizeKeywordFound(std::vector<std::string> &vec){
     if (vec.size() != 2 || !isValidNumber(vec[1]))
@@ -69,3 +69,20 @@ void ServerConfiguration::errorPageKeywordFound(std::vector<std::string> &vec){
         errorPrinting(ERROR_PAGE_FILE_NOT_FOUND);
     this->errorInfo.push_back(std::make_pair(atoi(vec[1].c_str()), vec[2].c_str()));
 }
+
+// ServerConfiguration	&ServerConfiguration::operator= ( const ServerConfiguration &obj )
+// {
+// 	if (this == &obj)
+// 		return (*this);
+// 	this->serverHost = obj.serverHost;
+// 	this->serverPort = obj.serverPort;
+// 	this->clientBodyLimit = obj.clientBodyLimit;
+
+// 	return (*this);
+// }
+
+// ServerConfiguration::ServerConfiguration ( const ServerConfiguration &obj )
+// {
+// 	*this = obj;
+// }
+

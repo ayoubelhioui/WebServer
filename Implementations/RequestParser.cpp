@@ -14,11 +14,11 @@ void	ParsingRequest::parsingRequestFirstLine(std::string line){
 	std::stringstream str(line);
     std::string word;
     str >> word;
-    request_data["method"] = word;
+    requestDataMap["method"] = word;
     str >> word;
-    request_data["path"] = word;
+    requestDataMap["path"] = word;
     str >> word;
-    request_data["httpVersion"] = word;
+    requestDataMap["httpVersion"] = word;
 }
 void	ParsingRequest::parsingRequest(std::string line){
 	std::stringstream str(line);
@@ -34,7 +34,7 @@ void	ParsingRequest::parsingRequest(std::string line){
     last.erase(0, 1);
     if (save == "Content-Length:")
         contentLength = atoi(last.c_str());
-    request_data[save] = last;
+    requestDataMap[save] = last;
 }
 
 void	ParsingRequest::parse(){
@@ -68,7 +68,7 @@ void    ParsingRequest::receiveFirstTime(int socket){
     bodyIndex = retIndex(requestHeader);
 }
 
-int     ParsingRequest::retIndex(char *header){
+int     ParsingRequest::retIndex(char *requestHeader){
     for(int i = 0; requestHeader[i]; i++){
       if(!strncmp(&requestHeader[i], "\r\n\r\n", 4))
           return i;

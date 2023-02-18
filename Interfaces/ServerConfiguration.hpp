@@ -18,18 +18,19 @@
 #define ERROR_PAGE_FILE_NOT_FOUND "Error_Page file is not exist !!"
 #define SOCKET  int
 #define MAX_REQUEST_SIZE 2000
-
+# include <fstream>
 # include "LocationBlockParse.hpp"
 class ServerConfiguration {
     public:
         ServerConfiguration();
+		// ServerConfiguration	&operator= ( const ServerConfiguration & );
         std::string serverHost;
         std::string serverPort;
         unsigned int clientBodyLimit;
         bool isClosed;
         std::list<std::string> serverName;
         std::list<std::pair<int, std::string> > errorInfo;
-        std::list<locationBlockParse> Locations;
+        std::list<LocationBlockParse> Locations;
         void fillingDataFirstPart(std::string &);
         void listenKeywordFound(std::vector<std::string> &);
         void serverNameKeywordFound(std::vector<std::string> &);

@@ -86,7 +86,7 @@ const char *get_real_format(const char *mime_type){
         return "";
 }
 
-void    error_414(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt)
+void    error_414(std::list<ClientInfo > clientsList , std::list<ClientInfo >::iterator &clientInfoIt)
 {
     std::string path = "error_pages/error414.html";
     std::ifstream served(path);
@@ -120,7 +120,7 @@ void requestBodyTooLong(client_info *client)
  send(client->socket, buffer, strlen(buffer), 0);
 }
 
-void    error_501(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt)
+void    error_501(std::list<ClientInfo > clientsList , std::list<ClientInfo >::iterator &clientInfoIt)
 {
     std::string path = "error_pages/error501.html";
     std::ifstream served(path);
@@ -144,7 +144,7 @@ void    error_501(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>:
     delete [] buffer;
 }
 
-void    error_400(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt)
+void    error_400(std::list<ClientInfo > clientsList , std::list<ClientInfo >::iterator &clientInfoIt)
 {
     std::string path = "error_pages/error400.html";
     std::ifstream served(path);
@@ -168,7 +168,7 @@ void    error_400(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>:
     delete [] buffer;
 }
 
-void    error_413(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt)
+void    error_413(std::list<ClientInfo > clientsList , std::list<ClientInfo >::iterator &clientInfoIt)
 {
     std::string path = "error_pages/error413.html";
     std::ifstream served(path);

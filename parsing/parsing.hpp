@@ -38,6 +38,7 @@
 #define ERROR_PAGE_FILE_NOT_FOUND "Error_Page file is not exist !!"
 #define SOCKET  int
 #define MAX_REQUEST_SIZE 2000
+# include "../Interfaces/Client.hpp"
 
 struct locationBlock{
     std::list<std::string> indexFiles;
@@ -70,13 +71,13 @@ struct Parsing{
     void clientBodySizeKeywordFound(std::vector<std::string> &vec);
 };
 
-void       dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
+// void       dropClient(int &clientSocket, std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
 const char *get_real_format(const char *mime_type);
 const char *get_mime_format(const char *type);
-void    error_414(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt);
-void    error_413(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt);
-void    error_400(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt);
-void    error_501(std::list<ClientInfo &> clientsList , std::list<ClientInfo &>::iterator &clientInfoIt);
+void    error_414(std::list<ClientInfo > clientsList , std::list<ClientInfo >::iterator &clientInfoIt);
+void    error_413(std::list<ClientInfo > clientsList , std::list<ClientInfo >::iterator &clientInfoIt);
+void    error_400(std::list<ClientInfo > clientsList , std::list<ClientInfo >::iterator &clientInfoIt);
+void    error_501(std::list<ClientInfo > clientsList , std::list<ClientInfo >::iterator &clientInfoIt);
 bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
 const char *get_mime_format(const char *type);
 bool    getMatchedLocation(std::string &Uri, std::list<Parsing> &configFileData);
