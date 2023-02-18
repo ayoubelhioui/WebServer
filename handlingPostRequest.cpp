@@ -1,4 +1,4 @@
-#include "Interfaces/configFileParse.hpp"
+#include "Interfaces/ConfigFileParser.hpp"
 #include "includes/postRequest.hpp"
 
 void searchForBoundary(client_info *client)

@@ -8,8 +8,8 @@ include_directories(parsing)
 add_executable(WebServer
         errorsHandling/errorsHandling.cpp
         parsing/locationBlockParse.cpp
-        Interfaces/configFileParse.hpp
-        parsing/configFileParse.cpp
+        Interfaces/ConfigFileParser.hpp
+        parsing/ConfigFileParser.cpp
         parsing/web_server.cpp
         public/kk.cpp
         testcpp/copy_test.cpp

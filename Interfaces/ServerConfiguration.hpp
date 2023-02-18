@@ -1,7 +1,7 @@
 #ifndef __SERVERCONFIGURATION_H__
 # define __SERVERCONFIGURATION_H__
 
-# include "locationBlockParse.hpp"
+# include "LocationBlockParse.hpp"
 class ServerConfiguration {
     public:
         ServerConfiguration();

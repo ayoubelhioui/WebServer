@@ -1,5 +1,5 @@
-#ifndef _CONFIGFILEPARSE_H__
-#define _CONFIGFILEPARSE_H__
+#ifndef _ConfigFileParser_H__
+#define _ConfigFileParser_H__
 #include <set>
 #include <iostream>
 #include <string>
@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <fcntl.h>
 #include <cstdio>
-#include "locationBlockParse.hpp"
+#include "LocationBlockParse.hpp"
 #define MISSING_SERVER_NAME "Provide server name"
 #define INVALID_PORT_MSG "Port must contain numbers only."
 #define LISTEN_ERROR_MSG "Error on listen keyword"
@@ -47,7 +47,7 @@ class ConfigFileParser {
 		ConfigFileParser ( void );
 		~ConfigFileParser ( void );
 		void parseConfigFile ( void );
-		std::list<serverConfiguration &>	listOfServersConfiguration;
+		std::list<ServerConfiguration &>	listOfServersConfiguration;
 };
 
 

@@ -1,4 +1,4 @@
-#include "../Interfaces/configFileParse.hpp"
+#include "../Interfaces/ConfigFileParser.hpp"
 
 void errorPrinting(const char *errorMessage){
     std::cout << errorMessage << std::endl;

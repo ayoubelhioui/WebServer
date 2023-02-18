@@ -1,12 +1,13 @@
 #ifndef __MultiHttpServer_H__
 # define __MultiHttpServer_H__
-# include <list>
+# include <vector>
+# include <iostream>
 # include "HttpServer.hpp"
-# include "configFileParse.hpp"
+# include "ConfigFileParser.hpp"
 
 class MultiHttpServer {
 	public:
-		// MultiHttpServer ( ConfigFileParser & confi  );
+		MultiHttpServer ( std::list <ServerConfiguration &>  );
 		MultiHttpServer ( void );
 		~MultiHttpServer ( void );
 		// MultiHttpServer ( const MultiHttpServer & );
@@ -14,8 +15,9 @@ class MultiHttpServer {
 		void	setUpServers( void );
 		void	startServers( void );
 	private:
-		std::list <HttpServer &>	_listOfServers;
-		ConfigFileParser			_configuration;
+
+		std::vector<HttpServer &>	_vectorOfServers;
+		std::list <ServerConfiguration &> _listOfServerConfig;
 };
 
 #endif

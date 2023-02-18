@@ -5,9 +5,8 @@
 /* ------------------ CANONICAL FORM ------------------- */
 /* ----------------------------------------------------- */
 
-HttpServer::HttpServer ( configFileParse &config ) : _serverConfiguration(config) { }
-
-HttpServer::HttpServer ( void ) : _serverConfiguration(configFileParse()) { }
+HttpServer::HttpServer ( ServerConfiguration &serverConfig )
+	: _serverConfiguration(serverConfig) { }
 
 HttpServer::~HttpServer ( void ) { }
 
@@ -100,7 +99,8 @@ void	HttpServer::_acceptNewConnection( void )
         FD_SET(newClient->socket, &(this->_readFds));
         FD_SET(newClient->socket, &(this->_writeFds));
         _maxSocket = std::max(_maxSocket, newClient->socket);
-        if (newClient->socket < 0) std::cerr << "accept function failed\n";
+        if (newClient->socket < 0)
+			std::cerr << "accept function failed\n";
     }
 }
 
@@ -126,6 +126,7 @@ void	HttpServer::_serveClients( void )
 			{
 				ClientInfoIt->parsedRequest.receiveFirstTime(ClientInfoIt->socket);
 				ClientInfoIt->parsedRequest.parse();
+
 				if(isUriTooLong(ClientInfoIt->parsedRequest.request_data["path"]))
 				{
 					error_414(this->_clientsList, ClientInfoIt);
@@ -165,7 +166,8 @@ void	HttpServer::_serveClients( void )
 void	HttpServer::setUpMultiplexing ( void )
 {
 	this->_selectClient();
-	this->_serverNewConnection();
+	this->_acceptNewConnection();
+	this->serve
 }
 
 void	HttpServer::setUpHttpServer( std::list<ClientInfoIt> &clientList )

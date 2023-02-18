@@ -1,4 +1,4 @@
-#include "Interfaces/configFileParse.hpp"
+#include "Interfaces/ConfigFileParser.hpp"
 #include "includes/postRequest.hpp"
 #include "Interfaces/RequestParser.hpp"
 #include "Interfaces/getMethod.hpp"
@@ -211,8 +211,9 @@ void	server_start(std::list<Parsing> &servers)
             {
                 if (!client->isFirstRead)
                 {
-                    client->parsedRequest.receiveFirstTime(client->socket);
+                    client->parsedRequ	est.receiveFirstTime(client->socket);
                     client->parsedRequest.parse();
+					
                     if(isUriTooLong(client->parsedRequest.request_data["path"]))
                     {
                         error_414(client_data, client_data_it);
@@ -305,39 +306,9 @@ int main(int ac, char **av, char **env)
 
     std::string configFilePath = (ac == 2) ? std::string(av[1]) : DEFAULT_CONFIG_FILE_NAME;
     
-	std::list<configFileParse> configParse;
+	std::list<ConfigFileParser> configParse;
     std::list<std::string> configFileInfo;
-    configFileParse::readingDataFromFile(configFileInfo, configFilePath);
-    configFileParse::startParsingFile(configFileInfo, configParse);
-    configFileParse::printingParsingData(configParse);
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# include "Interfaces/MultiHttpServer.hpp"
-# include "Interfaces/Client.hpp"
-
-int main ( void)
-{
-	ConfigFileParser		ConfigFile;
-	MultiHttpServer			MultiServers;
-	std::list<ClientInfo>	ClientInfoList;
-
-	ConfigFile.parseConfigFile();
-	MultiServers = MultiHttpServer(ConfigFile);
-	MultiServers.setUpServers(ClientInfoList);
-	MultiServers.startServers();
-
-	
+    ConfigFileParser::readingDataFromFile(configFileInfo, configFilePath);
+    ConfigFileParser::startParsingFile(configFileInfo, configParse);
+    ConfigFileParser::printingParsingData(configParse);
 }

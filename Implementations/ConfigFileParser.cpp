@@ -1,16 +1,16 @@
-#include "../Interfaces/configFileParse.hpp"
+#include "../Interfaces/ConfigFileParser.hpp"
 
-configFileParse::configFileParse() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
+ConfigFileParser::ConfigFileParser() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
 
 locationBlockParse::locationBlockParse() : Root("RootFiles"), isDirectoryListingOn(0) {}
 
-void configFileParse::clientBodySizeKeywordFound(std::vector<std::string> &vec){
+void ConfigFileParser::clientBodySizeKeywordFound(std::vector<std::string> &vec){
     if (vec.size() != 2 || !isValidNumber(vec[1]))
         errorPrinting("error in client body size");
     this->clientBodyLimit = atoi(vec[1].c_str());
 };
 
-void configFileParse::fillingDataFirstPart(std::string &data){
+void ConfigFileParser::fillingDataFirstPart(std::string &data){
     if (data.length() == 0)
         return ;
     std::stringstream str(data);
@@ -41,7 +41,7 @@ void configFileParse::fillingDataFirstPart(std::string &data){
         std::cout << vec[0], errorPrinting(INVALID_KEYWORD);
 }
 
-void configFileParse::listenKeywordFound(std::vector<std::string> &vec){
+void ConfigFileParser::listenKeywordFound(std::vector<std::string> &vec){
     std::string port;
     if (vec.size() != 2)
         errorPrinting(LISTEN_ERROR_MSG);
@@ -55,14 +55,14 @@ void configFileParse::listenKeywordFound(std::vector<std::string> &vec){
     this->serverPort = port.c_str();
 }
 
-void configFileParse::serverNameKeywordFound(std::vector<std::string> &vec){
+void ConfigFileParser::serverNameKeywordFound(std::vector<std::string> &vec){
     if (vec.size() < 1)
         errorPrinting(MISSING_SERVER_NAME);
     for (size_t i = 1; i < vec.size(); i++)
         this->serverName.push_back(vec[i]);
 }
 
-void configFileParse::errorPageKeywordFound(std::vector<std::string> &vec){
+void ConfigFileParser::errorPageKeywordFound(std::vector<std::string> &vec){
     if (vec.size() != 3 || !isValidNumber(vec[1]))
         errorPrinting(ERROR_PAGE_ERROR_MSG);
     std::ifstream errorPageFile(vec[2]);
@@ -71,9 +71,9 @@ void configFileParse::errorPageKeywordFound(std::vector<std::string> &vec){
     this->errorInfo.push_back(std::make_pair(atoi(vec[1].c_str()), vec[2].c_str()));
 }
 
-void configFileParse::printingParsingData(std::list<configFileParse> &parsingData)
+void ConfigFileParser::printingParsingData(std::list<ConfigFileParser> &parsingData)
 {
-    for(std::list<configFileParse>::iterator it = parsingData.begin(); it != parsingData.end(); it++)
+    for(std::list<ConfigFileParser>::iterator it = parsingData.begin(); it != parsingData.end(); it++)
     {
         std::cout << "***********************************  CONFIG FILE DATA FOR EVERY SERVER *******************************" << std::endl;
         std::cout << "SERVER HOST : " <<  it->serverHost << std::endl;
@@ -115,13 +115,13 @@ void configFileParse::printingParsingData(std::list<configFileParse> &parsingDat
     }
 }
 
-void configFileParse::startParsingFile(std::list<std::string> &configFileInfo, std::list<configFileParse> &configFileList)
+void ConfigFileParser::startParsingFile(std::list<std::string> &configFileInfo, std::list<ConfigFileParser> &configFileList)
 {
     std::list<std::string>::iterator it = configFileInfo.begin();
     while (*it == "\n") it++;
     while (it != configFileInfo.end())
     {
-        configFileParse newParseNode;
+        ConfigFileParser newParseNode;
         while ((*it).find("location") == std::string::npos)
             newParseNode.fillingDataFirstPart(*it++);
         while((*it).find("location") != std::string::npos)
@@ -147,7 +147,7 @@ void configFileParse::startParsingFile(std::list<std::string> &configFileInfo, s
     }
 }
 
-void configFileParse::readingDataFromFile(std::list<std::string> &configFileInfo, std::string &configFilePath){
+void ConfigFileParser::readingDataFromFile(std::list<std::string> &configFileInfo, std::string &configFilePath){
     std::ifstream configFile(configFilePath);
     std::string enteredData;
     if (!configFile.is_open())

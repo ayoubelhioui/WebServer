@@ -1,6 +1,6 @@
 #ifndef PARSING_REQUEST
 #define PARSING_REQUEST
-	#include "../Interfaces/configFileParse.hpp"
+	#include "../Interfaces/ConfigFileParser.hpp"
 	class ParsingRequest{
 		public :
 			int	receivedBytes;

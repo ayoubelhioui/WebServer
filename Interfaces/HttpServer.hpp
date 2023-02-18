@@ -8,7 +8,8 @@
 # include <algorithm>
 # include <list>
 # include "Client.hpp"
-# include "configFileParser.hpp"
+# include "ConfigFileParser.hpp"
+# include "ServerConfiguration.hpp"
 # include "GETMethod.hpp"
 
 # define SOCKET int
@@ -18,16 +19,13 @@
 class HttpServer {
 	public:
 		HttpServer ( ServerConfiguration & );
-		HttpServer ( void );
 		~HttpServer ( void );
-		// HttpServer ( const HttpServer & );
-		// HttpServer	&operator= ( const HttpServer & );
-		void	setUpHttpServer( std::list<ClientInfo> & );
+		HttpServer ( const HttpServer & );
+		HttpServer	&operator= ( const HttpServer & );
+		void	setUpHttpServer( void );
 		void	setUpMultiplexing ( void );
 		void	setClientInfoList ( std::list<ClientInfo> & );
 		void	dropClient ( SOCKET &, std::list<ClientInfo &>::iterator & );
-		std::list<ServerConfiguration &>	listOfServersConfiguration;
-		
 	private:
 		SOCKET						_listeningSocket;
 		struct addrinfo 			_serverHints;
@@ -40,7 +38,7 @@ class HttpServer {
 		void	_selectClients ( void );
 		void	_acceptNewConnection ( void );
 		void	_serveClients ( void );
-		// const ServerConfiguration	_serverConfiguration;
+		const ServerConfiguration	_serverConfiguration;
 
 };
 /*

@@ -1,6 +1,6 @@
 #ifndef GET_METHOD
 #define GET_METHOD
-	#include "../Interfaces/configFileParse.hpp"
+	#include "../Interfaces/ConfigFileParser.hpp"
 	class GetMethod{
 		public:
 			void		callGet(client_info *);

@@ -55,7 +55,7 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 	return "";
 }
 
-void	GETMethod::callGET(ClientInfo &client){
+void	GETMethod::callGET(ClientInfo &client, ){
 	std::string path = handle_get_method(client.parsedRequest.requestDataMap, *it);
 	
 	client.served.open(path, std::ios::binary);

@@ -1,4 +1,4 @@
-#include "Interfaces/configFileParse.hpp"
+#include "Interfaces/ConfigFileParser.hpp"
 
 void    error_405(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
 {

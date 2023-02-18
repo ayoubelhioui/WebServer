@@ -1,4 +1,4 @@
-#include "../Interfaces/configFileParse.hpp"
+#include "../Interfaces/ConfigFileParser.hpp"
 
 bool    isBodySizeBigger(Parsing &servers, int bodySize, client_info *client) // STATUS CODE : 403 REQUEST ENTITY TOO LARGE
 {
