@@ -38,18 +38,16 @@ void	MultiHttpServer::setUpServers ( void )
 
 void MultiHttpServer::startServers(void)
 {
-	// std::list<HttpServer>::iterator	HttpServerIt;
+	std::list<ServerConfiguration>::iterator	serverConfigListIt;
+	size_t								vecIdx;
 
-
-	// while (1)
-	// {
-	// 	HttpServerIt = this->_listOfServerConfig.begin();
-	// 	while (HttpServerIt != this->_listOfServerConfig.end())
-	// 	{
-	// 		// HttpServerIt->setUpMultiplexing();
-	// 		HttpServerIt++;
-	// 	}
-
-	// }
-	
+	while (1)
+	{
+		vecIdx = 0;
+		while (vecIdx < _vectorOfServers.size())
+		{
+			this->_vectorOfServers[vecIdx].setUpMultiplexing();
+			vecIdx++;
+		}
+	}
 }

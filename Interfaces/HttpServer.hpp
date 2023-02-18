@@ -31,9 +31,9 @@ class HttpServer {
 	private:
 		SOCKET						_listeningSocket;
 		struct addrinfo 			_serverHints;
-		std::list<ClientInfo >		_clientsList;
-		// fd_set						_readFds;
-		// fd_set						_writeFds;
+		std::list<ClientInfo *>		_clientsList;
+		fd_set						_readFds;
+		fd_set						_writeFds; // * May ruin code
 		void	_setUpListeningSocket ( void );
 		int 					_maxSocket;
 		void	_addClient ( SOCKET );

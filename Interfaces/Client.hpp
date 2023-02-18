@@ -1,6 +1,7 @@
 
 #ifndef _CLIENT_H__
 #define _CLIENT_H__
+#include <iostream>
 # include <fstream>
 # include <list>
 #include "../Interfaces/RequestParser.hpp"
@@ -9,6 +10,8 @@ class ClientInfo {
     public:
 		ClientInfo ( void );
 		~ClientInfo ( void );
+		ClientInfo ( const ClientInfo & );
+		ClientInfo	&operator= ( const ClientInfo & );
         ParsingRequest parsedRequest;
         std::string uploadFileName;
         int received;
@@ -23,10 +26,10 @@ class ClientInfo {
         SOCKET socket;
         std::ifstream served;
         int served_size;
-		static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
-		static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
-		static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);
-		static void dropClient(int &, std::list<ClientInfo>::iterator &, std::list<ClientInfo> &);
+		// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
+		// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
+		// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);
+		// static void dropClient(int &, std::list<ClientInfo>::iterator &, std::list<ClientInfo> &);
 		// void       dropClient(int &clientSocket, std::list<ClientInfo *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
 		// void    printingParsingData(std::list<Parsing> &parsingData);
 		// bool    isValidNumber(std::string &data);

@@ -1,13 +1,31 @@
 #include "../Interfaces/Client.hpp"
-
 	
-ClientInfo::ClientInfo() : received(0), isFirstRead(true), bodyFirstRead(false), boundarySize(0), bytesToReceive(0), addressLength(sizeof(this->address))
+ClientInfo::ClientInfo( void ) : received(0), isFirstRead(true), bodyFirstRead(false), boundarySize(0), bytesToReceive(0), addressLength(sizeof(this->address))
 {
 }
 
-ClientInfo::~ClientInfo()
+ClientInfo::~ClientInfo( void )
 {
+}		
+
+
+ClientInfo	&ClientInfo::operator= ( const ClientInfo &obj )
+{
+	(void)obj;
+	// if (this == &obj)
+	// 	return (*this);
+	// return (*this);
+	return (*this);
 }
+
+ClientInfo::ClientInfo ( const ClientInfo &obj )
+{
+	(void)obj;
+	// std::cout << " Yes i got called\n";
+	// *this = obj;
+}
+
+
 
 // void	ClientInfo::clients_Setup()
 // {

@@ -39,7 +39,7 @@ int main ( int ac, char **av, char **env )
 	
 	MultiHttpServer MultiServers(ConfigFile.listOfServersConfiguration);
 	MultiServers.setUpServers();
-	// MultiServers.startServers();
+	MultiServers.startServers();
 
 	
 }
