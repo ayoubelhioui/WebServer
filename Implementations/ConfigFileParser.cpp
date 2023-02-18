@@ -1,79 +1,77 @@
-#include "../Interfaces/ConfigFileParser.hpp"
+# include "../Interfaces/ConfigFileParser.hpp"
 
-ConfigFileParser::ConfigFileParser() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
+ConfigFileParser::ConfigFileParser ( std::string &configFilePath )
+	: _configFilePath(configFilePath) {}
 
-locationBlockParse::locationBlockParse() : Root("RootFiles"), isDirectoryListingOn(0) {}
+ConfigFileParser::ConfigFileParser ( void )
+{
+	
+}
 
-void ConfigFileParser::clientBodySizeKeywordFound(std::vector<std::string> &vec){
-    if (vec.size() != 2 || !isValidNumber(vec[1]))
-        errorPrinting("error in client body size");
-    this->clientBodyLimit = atoi(vec[1].c_str());
-};
+ConfigFileParser::~ConfigFileParser ( void )
+{
+	
+}
 
-void ConfigFileParser::fillingDataFirstPart(std::string &data){
-    if (data.length() == 0)
-        return ;
-    std::stringstream str(data);
-    std::string word;
-    std::vector<std::string> vec;
-    while (str >> word)
-        vec.push_back(word);
-    if (vec[0] == "#" || vec[0][0] == '#')
+// ConfigFileParser	&ConfigFileParser::operator= ( const ConfigFileParser &obj )
+// {
+// 	if (this == &obj)
+// 		return (*this);
+// 	return (*this);
+// }
+
+// ConfigFileParser::ConfigFileParser ( const ConfigFileParser &obj )
+// {
+// 	*this = obj;
+// }
+void ConfigFileParser::readingDataFromFile( void )
+{
+    std::ifstream configFile(_configFilePath);
+    std::string enteredData;
+
+    if (!configFile.is_open())
+        errorPrinting(CONFIG_FILE_COULDNT_OPEN_MSG);
+    while (std::getline(configFile, enteredData))
+        configFileLines.push_back(enteredData);
+}
+
+
+void ServerConfiguration::startParsingFile( void )
+{
+    std::list<std::string>::iterator it = configFileInfo.begin();
+    while (*it == "\n") it++;
+    while (it != configFileInfo.end())
     {
-        if ((vec[0] == "#" && vec[1] == SERVER_KEYWORD) || vec[0] == "#server")
-            errorPrinting(LISTEN_ERROR_MSG);
-        return ;
-    }
-    if (vec[0] == LISTEN_KEYWORD)
-        listenKeywordFound(vec);
-    else if (vec[0] == SERVER_KEYWORD){
-        if (vec.size() != 2 || vec[0] != SERVER_KEYWORD || vec[1] != "{") {
-            errorPrinting(SERVER_KEYWORD_MSG);
+        ServerConfiguration newParseNode;
+        while ((*it).find("location") == std::string::npos)
+            newParseNode.fillingDataFirstPart(*it++);
+        while((*it).find("location") != std::string::npos)
+        {
+            locationBlockParse newLocationNode;
+            newLocationNode.locationParse(it);
+            if((*it).find("location") == std::string::npos && *it != "}")
+                errorPrinting("error : You didn't close the server or may have other problems");
+            newParseNode.Locations.push_back(newLocationNode);
+        }
+        configFileList.push_back(newParseNode);
+        if (*it == "}")
+            it++;
+        if (it == configFileInfo.end())
+            return ;
+        while (*it == "")
+        {
+            std::cout << "hello world" << std::endl;
+            it++;
+            if (it == configFileInfo.end())
+                return ;
         }
     }
-    else if (vec[0] == SERVER_NAME_KEYWORD)
-        serverNameKeywordFound(vec);
-    else if (vec[0] == ERROR_PAGE_KEYWORD)
-        errorPageKeywordFound(vec);
-    else if (vec[0] == MAX_CLIENT_BODY_SIZE_KEYWORD)
-        clientBodySizeKeywordFound(vec);
-    else
-        std::cout << vec[0], errorPrinting(INVALID_KEYWORD);
 }
 
-void ConfigFileParser::listenKeywordFound(std::vector<std::string> &vec){
-    std::string port;
-    if (vec.size() != 2)
-        errorPrinting(LISTEN_ERROR_MSG);
-    int index = vec[1].find(':');
-    if (index == 0)
-        errorPrinting(LISTEN_ERROR_MSG);
-    port = vec[1].substr(index + 1, vec[1].length());
-    this->serverHost = vec[1].substr(0, index);
-    if (!isValidNumber(port))
-        errorPrinting(INVALID_PORT_MSG);
-    this->serverPort = port.c_str();
-}
 
-void ConfigFileParser::serverNameKeywordFound(std::vector<std::string> &vec){
-    if (vec.size() < 1)
-        errorPrinting(MISSING_SERVER_NAME);
-    for (size_t i = 1; i < vec.size(); i++)
-        this->serverName.push_back(vec[i]);
-}
-
-void ConfigFileParser::errorPageKeywordFound(std::vector<std::string> &vec){
-    if (vec.size() != 3 || !isValidNumber(vec[1]))
-        errorPrinting(ERROR_PAGE_ERROR_MSG);
-    std::ifstream errorPageFile(vec[2]);
-    if (!errorPageFile.is_open())
-        errorPrinting(ERROR_PAGE_FILE_NOT_FOUND);
-    this->errorInfo.push_back(std::make_pair(atoi(vec[1].c_str()), vec[2].c_str()));
-}
-
-void ConfigFileParser::printingParsingData(std::list<ConfigFileParser> &parsingData)
+void ServerConfiguration::printingParsingData(std::list<ServerConfiguration> &parsingData)
 {
-    for(std::list<ConfigFileParser>::iterator it = parsingData.begin(); it != parsingData.end(); it++)
+    for(std::list<ServerConfiguration>::iterator it = parsingData.begin(); it != parsingData.end(); it++)
     {
         std::cout << "***********************************  CONFIG FILE DATA FOR EVERY SERVER *******************************" << std::endl;
         std::cout << "SERVER HOST : " <<  it->serverHost << std::endl;
@@ -115,43 +113,10 @@ void ConfigFileParser::printingParsingData(std::list<ConfigFileParser> &parsingD
     }
 }
 
-void ConfigFileParser::startParsingFile(std::list<std::string> &configFileInfo, std::list<ConfigFileParser> &configFileList)
-{
-    std::list<std::string>::iterator it = configFileInfo.begin();
-    while (*it == "\n") it++;
-    while (it != configFileInfo.end())
-    {
-        ConfigFileParser newParseNode;
-        while ((*it).find("location") == std::string::npos)
-            newParseNode.fillingDataFirstPart(*it++);
-        while((*it).find("location") != std::string::npos)
-        {
-            locationBlockParse newLocationNode;
-            newLocationNode.locationParse(it);
-            if((*it).find("location") == std::string::npos && *it != "}")
-                errorPrinting("error : You didn't close the server or may have other problems");
-            newParseNode.Locations.push_back(newLocationNode);
-        }
-        configFileList.push_back(newParseNode);
-        if (*it == "}")
-            it++;
-        if (it == configFileInfo.end())
-            return ;
-        while (*it == "")
-        {
-            std::cout << "hello world" << std::endl;
-            it++;
-            if (it == configFileInfo.end())
-                return ;
-        }
-    }
-}
 
-void ConfigFileParser::readingDataFromFile(std::list<std::string> &configFileInfo, std::string &configFilePath){
-    std::ifstream configFile(configFilePath);
-    std::string enteredData;
-    if (!configFile.is_open())
-        errorPrinting(CONFIG_FILE_COULDNT_OPEN_MSG);
-    while (std::getline(configFile, enteredData))
-        configFileInfo.push_back(enteredData);
+void	ConfigFileParser::parseConfigFile ( void )
+{
+	ConfigFileParser::readingDataFromFile();
+    ConfigFileParser::startParsingFile();
+    ConfigFileParser::printingParsingData();
 }

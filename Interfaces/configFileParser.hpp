@@ -44,10 +44,17 @@
 
 class ConfigFileParser {
 	public:
+		ConfigFileParser ( std::string & );
 		ConfigFileParser ( void );
 		~ConfigFileParser ( void );
 		void parseConfigFile ( void );
-		std::list<ServerConfiguration &>	listOfServersConfiguration;
+		static std::list<ServerConfiguration>	listOfServersConfiguration;
+		static void     startParsingFile( void );
+        static void     readingDataFromFile( void );
+        static void     printingParsingData( void );
+	private:
+		std::list<std::string> 					_configFileLines;				
+		std::string								_configFilePath;
 };
 
 
