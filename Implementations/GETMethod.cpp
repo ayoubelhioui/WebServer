@@ -1,4 +1,5 @@
 #include "../Interfaces/GETMethod.hpp"
+#include "../errorsHandling/errorsHandling.hpp"
 
 std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &request, ServerConfiguration &serverConfig){
 	std::string path = request["path"];
@@ -56,8 +57,13 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 	return "";
 }
 
-void	GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig ){
+bool	GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, std::list<ClientInfo *>::iterator &ClientInfoIt )
+{
 	std::string path = handleGETMethod(client->parsedRequest.requestDataMap, serverConfig);
+	if(path == ""){
+		error_404(ClientInfoIt);
+		return 1;
+	}
 	client->served.open(path, std::ios::binary);
 	client->served.seekg(0, std::ios::end);
 	client->served_size = client->served.tellg();
@@ -73,6 +79,7 @@ void	GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig ){
 	send(client->socket, buffer, strlen(buffer), 0);
 	sprintf(buffer, "\r\n"); // * 
 	send(client->socket, buffer, strlen(buffer), 0);
+	return 0;
 }
 
 int	GETMethod::directoryListing(char *rootDirectory, SOCKET socket){

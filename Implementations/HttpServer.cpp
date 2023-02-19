@@ -140,7 +140,7 @@ void	HttpServer::_serveClients( void )
 				(*ClientInfoIt)->parsedRequest.parse();
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
-					error_414(this->_clientsList, ClientInfoIt);
+					error_414( ClientInfoIt);
 					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					continue ;
 				}
@@ -148,7 +148,11 @@ void	HttpServer::_serveClients( void )
 				{
 					GETMethod getRequest;
 					// this->_serverConfiguration.printServerConfiguration();
-					getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
+					if (getRequest.callGET(*ClientInfoIt, this->_serverConfiguration, ClientInfoIt))
+					{
+						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+						continue;
+					}
 				}
 				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
 				// {

@@ -42,12 +42,12 @@ void isValidPostRequest(postRequestStruct &postRequest)
 {
     if(isNotValidPostRequest(postRequest.client->parsedRequest.request_data))
     {
-        error_400(postRequest.clientData, postRequest.clientDataIterator);
+        error_400(postRequest.clientDataIterator);
         throw postRequestExceptions("Bad Request Exception");
     }
     if(isTransferEncodingNotChunked(postRequest.client->parsedRequest.request_data))
     {
-        error_501(postRequest.clientData, postRequest.clientDataIterator);
+        error_501(postRequest.clientDataIterator);
         throw postRequestExceptions("Transfer Encoding Exception");
     }
     std::map<std::string, std::string>::iterator content = postRequest.client->parsedRequest.request_data.find("Content-Length:");
@@ -56,7 +56,7 @@ void isValidPostRequest(postRequestStruct &postRequest)
         int body_size = std::stoi(postRequest.client->parsedRequest.request_data["Content-Length:"]);
         if(isBodySizeBigger(postRequest.configFileData, body_size, postRequest.client))
         {
-            error_413(postRequest.clientData, postRequest.clientDataIterator);
+            error_413(postRequest.clientDataIterator);
             throw postRequestExceptions("Body Size Exception");
         }
     }
