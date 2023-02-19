@@ -85,7 +85,7 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 		    	std::ifstream check_file(final_path, std::ios::binary);
 		    	if(check_file){return final_path;}
 		    	else ;
-		    }	
+		    }
 		    // }
         }
 	}
@@ -136,8 +136,7 @@ void    GETMethod::directoryListing(std::string rootDirectory){
     struct dirent *entry;
     struct stat filestat;
     while ((entry = readdir(dir)) != NULL) {
-        if (stat(entry->d_name, &filestat) < 0) {
-            perror("Error getting file information");
+        if (stat(entry->d_name, &filestat) < 0){
             continue;
         }
 
@@ -147,10 +146,10 @@ void    GETMethod::directoryListing(std::string rootDirectory){
         std::string filetype = get_file_type(filestat.st_mode);
 
         file_list += "<tr><td><a href=\"" + filename + "\">" + filename + "</a></td><td>" + filesize + "</td><td>" + filemodtime + "</td><td>" + filetype + "</td></tr>\n";
-		file_list += "</table>\n"
-					"</body>\n"
-					"</html>\n";
 	}
+	file_list += "</table>\n"
+				"</body>\n"
+				"</html>\n";
 	closedir(dir);
     std::ofstream directoryListingFile("directoryListing.html");
     directoryListingFile << file_list;
