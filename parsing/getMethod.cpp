@@ -1,7 +1,5 @@
-#include "../Interfaces/GETMethod.hpp"
-#include "../errorsHandling/errorsHandling.hpp"
-
-std::string GETMethod::get_file_type(mode_t mode) {
+#include "../Interfaces/getMethod.hpp"
+std::string get_file_type(mode_t mode) {
     if (S_ISREG(mode)) {
         return "File";
     } else if (S_ISDIR(mode)) {
@@ -21,17 +19,17 @@ std::string GETMethod::get_file_type(mode_t mode) {
     }
 }
 
-std::string GETMethod::format_date(time_t t) {
+std::string format_date(time_t t) {
     struct tm* tm = localtime(&t);
     char buf[80];
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm);
     return std::string(buf);
 }
 
-std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &request, ServerConfiguration &serverConfig){
+std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &request, Parsing &server){
 	std::string path = request["path"];
-	for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++){
-		LocationBlockParse loc = *beg;
+	for (std::list<locationBlock>::iterator beg = server.Locations.begin(); beg != server.Locations.end(); beg++){
+		locationBlock loc = *beg;
 		std::string res = loc.Location;
 		int len = path.length() - 1; 
 		int	index_last = len;
@@ -52,11 +50,10 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 		std::string full_path = path.substr(0, index_last + 1);
 		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
 		if(full_path != res) continue;
-		// if(loc.Redirection.length() != 0){
+		if(loc.Redirection.length() != 0){
 			
-		// }
-		// else
-		// {
+		}
+		else{
 		std::string file = path.substr(index_last + 1);
 		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
 		if(is_file_last && file[file.length() - 1] == '/') file.erase(file.length() - 1);
@@ -68,10 +65,7 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 				std::string final_path = root + (*index_it);
 				if(final_path[0] == '/') final_path = '.' + final_path;
 				std::ifstream check_file(final_path, std::ios::binary);
-				if(check_file){
-                    if(loc.)
-                    return final_path;
-                }
+				if(check_file){return final_path;}
 				else ;
 			}
 		}
@@ -81,19 +75,13 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 			std::ifstream check_file(final_path, std::ios::binary);
 			if(check_file){return final_path;}
 			else ;
-		}	
-		// }
+		}
 	}
 	return "";
 }
 
-bool	GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, std::list<ClientInfo *>::iterator &ClientInfoIt )
-{
-	std::string path = handleGETMethod(client->parsedRequest.requestDataMap, serverConfig);
-	if(path == ""){
-		error_404(ClientInfoIt);
-		return 1;
-	}
+void	GETMethod::callGET(client_info *client){
+	std::string path = handle_get_method(client->parsedRequest.request_data, *it);
 	client->served.open(path, std::ios::binary);
 	client->served.seekg(0, std::ios::end);
 	client->served_size = client->served.tellg();
@@ -107,15 +95,15 @@ bool	GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, 
 	send(client->socket, buffer, strlen(buffer), 0);
 	sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
 	send(client->socket, buffer, strlen(buffer), 0);
-	sprintf(buffer, "\r\n"); // * 
+	sprintf(buffer, "\r\n");
 	send(client->socket, buffer, strlen(buffer), 0);
-	return 0;
 }
 
-std::string GETMethod::directoryListing(char *rootDirectory, SOCKET socket){
+int	GETMethod::directoryListing(char *rootDirectory, int socket){
 	DIR* dir = opendir(rootDirectory);
     if (dir == NULL) {
-        return "";
+        perror("Error opening directory");
+        return 1;
     }
     std::string file_list = "<!DOCTYPE html>\n"
                              "<html>\n"
@@ -125,7 +113,7 @@ std::string GETMethod::directoryListing(char *rootDirectory, SOCKET socket){
                              "<table>\n"
                              "<tr><th>Name</th><th>Size</th><th>Last modified</th><th>Type</th></tr>\n";
 
-    struct dirent *entry;
+    struct dirent* entry;
     struct stat filestat;
     while ((entry = readdir(dir)) != NULL) {
         if (stat(entry->d_name, &filestat) < 0) {
@@ -144,10 +132,17 @@ std::string GETMethod::directoryListing(char *rootDirectory, SOCKET socket){
 					"</html>\n";
 	}
 	closedir(dir);
-    std::ofstream directoryListingFile("directoryListing.html");
-    directoryListingFile << file_list;
-    directoryListingFile.close();
-    return "directoryListing.html";
+
+	const char* data = file_list.c_str();
+	int data_len = strlen(data);
+
+	if (send(sockfd, data, data_len, 0) != data_len) {
+	    perror("Error sending directory listing");
+	    return 1;
+	}
+
+	close(sockfd);
+
 }
 /*
 #include <iostream>
