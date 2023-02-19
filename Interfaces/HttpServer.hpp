@@ -11,7 +11,7 @@
 # include "ConfigFileParser.hpp"
 # include "ServerConfiguration.hpp"
 # include "GETMethod.hpp"
-
+# include "../errorsHandling/errorsHandling.hpp"
 # define SOCKET int
 # define MAXQUEUESIZE 10
 

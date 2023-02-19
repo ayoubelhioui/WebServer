@@ -86,3 +86,43 @@ void ServerConfiguration::errorPageKeywordFound(std::vector<std::string> &vec){
 // 	*this = obj;
 // }
 
+void	ServerConfiguration::printServerConfiguration ( void )
+{
+	 std::cout << "***********************************  CONFIG FILE DATA FOR EVERY SERVER *******************************" << std::endl;
+        std::cout << "SERVER HOST : " <<  this->serverHost << std::endl;
+        std::cout << "SERVER PORT : " <<  this->serverPort << std::endl;
+        std::cout << "SERVER BODY LIMIT : " <<  this->clientBodyLimit << std::endl;
+        std::cout << "SERVER NAMES : ";
+        for (std::list<std::string>::iterator it1 = this->serverName.begin(); it1 != this->serverName.end(); it1++)
+            std::cout << *it1 << " ";
+        std::cout << std::endl;
+        std::cout << "SERVER ERROR PAGES : ";
+        for (std::list<std::pair<int, std::string > >::iterator it2 = this->errorInfo.begin(); it2 != this->errorInfo.end(); it2++)
+            std::cout << (*it2).first << " " << (*it2).second << std::endl;
+        for (std::list<LocationBlockParse>::iterator it4 = this->Locations.begin(); it4 != this->Locations.end(); it4++)
+        {
+            std::cout << "direc path " << it4->UploadDirectoryPath << std::endl;
+            std::cout << "root is " << it4->Root << std::endl;
+            std::cout << "redirect is " << it4->Redirection << std::endl;
+            std::cout << "location path " << it4->Location << std::endl;
+            std::cout << "direct listing " << it4->isDirectoryListingOn << std::endl;
+            std::cout << "ALLOWED METHODS ";
+            std::list<std::string>::iterator it1;
+            for(it1 = it4->allowedMethods.begin(); it1 != it4->allowedMethods.end(); it1++){
+                std::cout << *it1 << " ";
+            }
+            std::cout << "\n";
+            std::cout << "index files :";
+            std::list<std::string>::iterator it2;
+            for(it2 = it4->indexFiles.begin(); it2 != it4->indexFiles.end(); it2++){
+                std::cout << *it2 << " ";
+            }
+            std::cout << "\n";
+            std::cout << "CGIS DATA : ";
+            std::list<std::pair<std::string, std::string> >::iterator it3;
+            for(it3 = it4->CGI.begin(); it3 != it4->CGI.end(); it3++){
+                std::cout << "first part " << it3->first << " ";
+                std::cout << "second part " << it3->second << std::endl;
+            }
+        }
+}

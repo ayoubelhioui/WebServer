@@ -15,7 +15,6 @@ HttpServer::~HttpServer ( void ) { }
 
 HttpServer	&HttpServer::operator= ( const HttpServer &obj )
 {
-	std::cout << "assingment operator" << std::endl;
 	if (this == &obj)
 		return (*this);
 	this->_serverConfiguration = obj._serverConfiguration;
@@ -42,7 +41,7 @@ void	HttpServer::_setUpListeningSocket( void )
 	_serverHints.ai_family = AF_INET;
 	_serverHints.ai_socktype = SOCK_STREAM;
 	_serverHints.ai_flags = AI_PASSIVE;
-	std::cout << "_serverConfig host is " << _serverConfiguration.serverHost << std::endl;
+	// std::cout << "_serverConfig host is " << _serverConfiguration.serverHost << std::endl;
 	getaddrinfo(_serverConfiguration.serverHost.c_str(),
 				_serverConfiguration.serverPort.c_str(),
 				&_serverHints, &bindAddress);
@@ -50,16 +49,16 @@ void	HttpServer::_setUpListeningSocket( void )
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
 	if (_listeningSocket < 0)
 		exit (EXIT_FAILURE); // to be replaced by sth else
-	std::cout << "Socket Created Successfully" << std::endl;
+	// std::cout << "Socket Created Successfully" << std::endl;
 	optval = 1;
     setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 	if (bind(_listeningSocket, bindAddress->ai_addr, bindAddress->ai_addrlen))
 		exit (EXIT_FAILURE); // to be replaced by sth else
-	std::cout << "Binded Successfully" << std::endl;
+	// std::cout << "Binded Successfully" << std::endl;
 	freeaddrinfo(bindAddress);
 	if (listen(_listeningSocket, MAXQUEUESIZE) < 0)
 		exit (EXIT_FAILURE); // to be replaced by sth else
-	std::cout << "Set Up for LISTENING Successfully" << std::endl;
+	// std::cout << "Set Up for LISTENING Successfully" << std::endl;
 }
 
 void	HttpServer::_selectClients ( void )
@@ -74,15 +73,12 @@ void	HttpServer::_selectClients ( void )
     FD_SET(this->_listeningSocket, &_writeFds);
 	for (; ClientInfoIt != this->_clientsList.end(); ClientInfoIt++)
 	{
-		std::cout << "Till Here" << std::endl;
 		FD_SET((*ClientInfoIt)->socket, &_readFds);
         FD_SET((*ClientInfoIt)->socket, &_writeFds);
 		_maxSocket = std::max(_maxSocket, (*ClientInfoIt)->socket);
 	}
-	std::cout << _maxSocket << std::endl;
 	if (select(_maxSocket + 1, &_readFds, &_writeFds, NULL, NULL) == -1)
 		errorPrinting("select has failed"); // to be moved
-	std::cout << "Select oh Yeah" << std::endl;
 
 }
 
@@ -105,7 +101,6 @@ void	HttpServer::_acceptNewConnection( void )
     {
 		ClientInfo	*newClient = new ClientInfo;
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
-		std::cout << newClient->socket << std::endl;
 		// fcntl(client->socket, F_SETFL, O_NONBLOCK); // need to be understood.
         FD_SET(newClient->socket, &(this->_readFds));
         FD_SET(newClient->socket, &(this->_writeFds));
@@ -121,13 +116,13 @@ void	HttpServer::_acceptNewConnection( void )
     }
 }
 
-// void HttpServer::dropClient( SOCKET &clientSocket, std::list<ClientInfo >::iterator &ClientInfoIt)
-// {
-//     close(clientSocket);
-//     std::list<ClientInfo >::iterator tempIterator = ClientInfoIt;
-//     ClientInfoIt++;
-//     this->_clientsList.erase(tempIterator);
-// }
+void HttpServer::dropClient( SOCKET &clientSocket, std::list<ClientInfo *>::iterator &ClientInfoIt)
+{
+    close(clientSocket);
+    std::list<ClientInfo *>::iterator tempIterator = ClientInfoIt;
+    ClientInfoIt++;
+    this->_clientsList.erase(tempIterator);
+}
 
 
 void	HttpServer::_serveClients( void )
@@ -152,6 +147,7 @@ void	HttpServer::_serveClients( void )
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
+					// this->_serverConfiguration.printServerConfiguration();
 					getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
 				}
 				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
@@ -193,7 +189,7 @@ void	HttpServer::_serveClients( void )
 
 void	HttpServer::setUpMultiplexing ( void )
 {
-	std::cout << "Set Up multiplexing for server with socket " << this->_listeningSocket << std::endl;
+	// std::cout << "Set Up multiplexing for server with socket " << this->_listeningSocket << std::endl;
 	this->_selectClients();
 	this->_acceptNewConnection();
 	this->_serveClients();
@@ -201,7 +197,7 @@ void	HttpServer::setUpMultiplexing ( void )
 
 void	HttpServer::setUpHttpServer( void )
 {
-	std::cout << this->_serverConfiguration.serverHost << std::endl;
-	std::cout << this->_serverConfiguration.serverPort << std::endl;
+	// std::cout << this->_serverConfiguration.serverHost << std::endl;
+	// std::cout << this->_serverConfiguration.serverPort << std::endl;
 	this->_setUpListeningSocket();
 }

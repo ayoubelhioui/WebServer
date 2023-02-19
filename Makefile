@@ -10,14 +10,15 @@ HEADERS = Interfaces/ConfigFileParser.hpp \
 SOURCES = _main.cpp \
 		Implementations/ConfigFileParser.cpp \
 		Implementations/LocationBlockParse.cpp \
+		Implementations/GETMethod.cpp \
 		Implementations/ServerConfiguration.cpp \
 		Implementations/MultiHttpServer.cpp \
 		Implementations/Client.cpp \
 		Implementations/HttpServer.cpp \
 		Implementations/RequestParser.cpp \
-		Implementations/GETMethod.cpp \
 		parsing/parsingUtils.cpp \
 		errorsHandling/errorsHandling.cpp \
+		getFormat.cpp \
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

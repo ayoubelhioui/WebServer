@@ -36,6 +36,7 @@ class ServerConfiguration {
         void serverNameKeywordFound(std::vector<std::string> &);
         void errorPageKeywordFound(std::vector<std::string> &);
         void clientBodySizeKeywordFound(std::vector<std::string> &);
+		void	printServerConfiguration ( void );
 };
 
 #endif

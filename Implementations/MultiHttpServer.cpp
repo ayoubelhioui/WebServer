@@ -27,7 +27,7 @@ void	MultiHttpServer::setUpServers ( void )
 	while (i < _vectorOfServers.size())
 	{
 		_vectorOfServers[i] = HttpServer(*serverConfigListIt);
-		std::cout << "serverHost: " << _vectorOfServers[i]._serverConfiguration.serverHost << std::endl;
+		// std::cout << "serverHost: " << _vectorOfServers[i]._serverConfiguration.serverHost << std::endl;
 		_vectorOfServers[i].setUpHttpServer();
 		serverConfigListIt++;
 		i++;
