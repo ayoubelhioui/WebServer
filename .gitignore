@@ -1,5 +1,6 @@
 post.html
 test.cpp
+main.cpp
 server_test.cpp
 test.png
 webserver
@@ -16,3 +17,4 @@ cmake-build-debug/
 *.jpeg
 *.jpg
 *.php
+*.o
