@@ -137,6 +137,9 @@ void	HttpServer::_serveClients( void )
 			if ((*ClientInfoIt)->isFirstRead)
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
+				std::cout << "*****************" << std::endl;
+				std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+				std::cout << "*****************" << std::endl;
 				(*ClientInfoIt)->parsedRequest.parse();
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{

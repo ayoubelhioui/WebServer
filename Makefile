@@ -20,6 +20,7 @@ SOURCES = _main.cpp \
 		errorsHandling/errorsHandling.cpp \
 		getFormat.cpp \
 
+DIR_LISTING_FILE = directoryListing.html
 OBJECTS=$(SOURCES:.cpp=.o)
 
 all : $(NAME)
@@ -31,6 +32,7 @@ $(OBJECTS) : $(HEADERS)
 
 clean:
 	$(RM) $(OBJECTS)
+	$(RM) $(DIR_LISTING_FILE)
 
 fclean: clean
 	$(RM) $(NAME)
