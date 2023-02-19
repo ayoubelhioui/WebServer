@@ -12,6 +12,7 @@ a.out
 nginx.conf
 # README.md
 cmake-build-debug/
+./CMakeLists.txt
 .idea/
 *.mp4
 *.png
