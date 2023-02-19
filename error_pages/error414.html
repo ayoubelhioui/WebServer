@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>414 Request-URI Too Long</title>
+  <style>
+    body {
+      background-image: radial-gradient(circle, #fdfdff, #2f3542);
+      display: flex;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      text-align: center;
+      width: 100%;
+    }
+    h1 {
+      font-size: 36px;
+      color: #333;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 18px;
+      color: #999;
+    }
+    a {
+      color: #337AB7;
+      text-decoration: none;
+    }
+    a:hover {
+      color: #23527C;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>414 Request-URI Too Long</h1>
+    <p>The URI provided is too long for the server to process. Please shorten the URI and try again.</p>
+    <p>Return to <a href="/" onclick="window.history.back();">previous page</a>.</p>
+  </div>
+  <script>
+    document.querySelector('a').addEventListener('click', function(event) {
+      event.preventDefault();
+      window.history.back();
+    });
+  </script>
+</body>
+</html>
