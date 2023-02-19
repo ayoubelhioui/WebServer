@@ -147,7 +147,6 @@ void	HttpServer::_serveClients( void )
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
-					// this->_serverConfiguration.printServerConfiguration();
 					if (getRequest.callGET(*ClientInfoIt, this->_serverConfiguration, ClientInfoIt))
 					{
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
