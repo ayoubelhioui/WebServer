@@ -1,6 +1,6 @@
 #include "../Interfaces/GETMethod.hpp"
 #include "../errorsHandling/errorsHandling.hpp"
-
+// 
 std::string GETMethod::get_file_type(mode_t mode) {
     if (S_ISREG(mode)) {
         return "File";
@@ -51,38 +51,43 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 		if(res[res.length() - 1] != '/') res += '/';
 		std::string full_path = path.substr(0, index_last + 1);
 		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
+        
+        
 		if(full_path != res) continue;
-		// if(loc.Redirection.length() != 0){
-			
-		// }
-		// else
-		// {
-		std::string file = path.substr(index_last + 1);
-		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
-		if(is_file_last && file[file.length() - 1] == '/') file.erase(file.length() - 1);
-		std::string root = loc.Root;
-		if(root[root.length() - 1] != '/') root += '/';
-		if(file == ""){
-			for(std::list<std::string>::iterator index_it = loc.indexFiles.begin(); index_it != loc.indexFiles.end(); index_it++)
-			{
-				std::string final_path = root + (*index_it);
-				if(final_path[0] == '/') final_path = '.' + final_path;
-				std::ifstream check_file(final_path, std::ios::binary);
-				if(check_file){
-                    if(loc.)
-                    return final_path;
-                }
-				else ;
-			}
-		}
-		else{
-			std::string final_path = root + file;
-			if(final_path[0] == '/') final_path = '.' + final_path;
-			std::ifstream check_file(final_path, std::ios::binary);
-			if(check_file){return final_path;}
-			else ;
-		}	
-		// }
+		if(loc.isDirectoryListingOn){
+            std::string root = loc.Root;
+            if(root[root.length() - 1] != '/') root += '/';
+            if(root[0] != '.') root = '.' + root;
+            std::cout << "ROOT IS  " << root << std::endl;
+            directoryListing(root);
+            return "directoryListing.html";
+        }
+        else{
+
+		    std::string file = path.substr(index_last + 1);
+		    if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
+		    if(is_file_last && file[file.length() - 1] == '/') file.erase(file.length() - 1);
+		    std::string root = loc.Root;
+		    if(root[root.length() - 1] != '/') root += '/';
+		    if(file == ""){
+		    	for(std::list<std::string>::iterator index_it = loc.indexFiles.begin(); index_it != loc.indexFiles.end(); index_it++)
+		    	{
+		    		std::string final_path = root + (*index_it);
+		    		if(final_path[0] == '/') final_path = '.' + final_path;
+		    		std::ifstream check_file(final_path, std::ios::binary);
+		    		if(check_file){return final_path;}
+		    		else ;
+		    	}
+		    }
+		    else{
+		    	std::string final_path = root + file;
+		    	if(final_path[0] == '/') final_path = '.' + final_path;
+		    	std::ifstream check_file(final_path, std::ios::binary);
+		    	if(check_file){return final_path;}
+		    	else ;
+		    }	
+		    // }
+        }
 	}
 	return "";
 }
@@ -90,6 +95,7 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 bool	GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, std::list<ClientInfo *>::iterator &ClientInfoIt )
 {
 	std::string path = handleGETMethod(client->parsedRequest.requestDataMap, serverConfig);
+    // 
 	if(path == ""){
 		error_404(ClientInfoIt);
 		return 1;
@@ -112,10 +118,12 @@ bool	GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, 
 	return 0;
 }
 
-std::string GETMethod::directoryListing(char *rootDirectory, SOCKET socket){
-	DIR* dir = opendir(rootDirectory);
+void    GETMethod::directoryListing(std::string rootDirectory){
+    
+	DIR* dir = opendir(rootDirectory.c_str());
     if (dir == NULL) {
-        return "";
+        std::cout << "IT DID NOT OPEN " << rootDirectory << std::endl;
+        exit(1);
     }
     std::string file_list = "<!DOCTYPE html>\n"
                              "<html>\n"
@@ -147,7 +155,6 @@ std::string GETMethod::directoryListing(char *rootDirectory, SOCKET socket){
     std::ofstream directoryListingFile("directoryListing.html");
     directoryListingFile << file_list;
     directoryListingFile.close();
-    return "directoryListing.html";
 }
 /*
 #include <iostream>
