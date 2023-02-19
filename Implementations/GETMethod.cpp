@@ -1,6 +1,6 @@
 #include "../Interfaces/GETMethod.hpp"
 #include "../errorsHandling/errorsHandling.hpp"
-// 
+
 std::string GETMethod::get_file_type(mode_t mode) {
     if (S_ISREG(mode)) {
         return "File";
@@ -51,19 +51,17 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 		if(res[res.length() - 1] != '/') res += '/';
 		std::string full_path = path.substr(0, index_last + 1);
 		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
-        
-        
 		if(full_path != res) continue;
-		if(loc.isDirectoryListingOn){
+		if(loc.isDirectoryListingOn && !is_file_last){
             std::string root = loc.Root;
             if(root[root.length() - 1] != '/') root += '/';
             if(root[0] != '.') root = '.' + root;
-            std::cout << "ROOT IS  " << root << std::endl;
-            directoryListing(root);
+            if(full_path[0] != '.') full_path = '.' + full_path;
+            directoryListing(root, full_path);
+            std::cout << "WAS HERE "<< std::endl;
             return "directoryListing.html";
         }
         else{
-
 		    std::string file = path.substr(index_last + 1);
 		    if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
 		    if(is_file_last && file[file.length() - 1] == '/') file.erase(file.length() - 1);
@@ -86,7 +84,6 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 		    	if(check_file){return final_path;}
 		    	else ;
 		    }
-		    // }
         }
 	}
 	return "";
@@ -95,7 +92,6 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 bool	GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, std::list<ClientInfo *>::iterator &ClientInfoIt )
 {
 	std::string path = handleGETMethod(client->parsedRequest.requestDataMap, serverConfig);
-    // 
 	if(path == ""){
 		error_404(ClientInfoIt);
 		return 1;
@@ -118,8 +114,7 @@ bool	GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, 
 	return 0;
 }
 
-void    GETMethod::directoryListing(std::string rootDirectory){
-    
+void    GETMethod::directoryListing(std::string rootDirectory, std::string linking_path){
 	DIR* dir = opendir(rootDirectory.c_str());
     if (dir == NULL) {
         std::cout << "IT DID NOT OPEN " << rootDirectory << std::endl;
@@ -136,16 +131,17 @@ void    GETMethod::directoryListing(std::string rootDirectory){
     struct dirent *entry;
     struct stat filestat;
     while ((entry = readdir(dir)) != NULL) {
-        if (stat(entry->d_name, &filestat) < 0){
+        char path[1024];
+        snprintf(path, sizeof(path), "%s%s", rootDirectory.c_str(), entry->d_name);
+        if(stat(path, &filestat) == -1){
             continue;
         }
-
         std::string filename = std::string(entry->d_name);
         std::string filesize = std::to_string(filestat.st_size);
         std::string filemodtime = format_date(filestat.st_mtime);
         std::string filetype = get_file_type(filestat.st_mode);
 
-        file_list += "<tr><td><a href=\"" + filename + "\">" + filename + "</a></td><td>" + filesize + "</td><td>" + filemodtime + "</td><td>" + filetype + "</td></tr>\n";
+        file_list += "<tr><td><a href=\"" + linking_path + filename + "\">" + filename + "</a></td><td>" + filesize + "</td><td>" + filemodtime + "</td><td>" + filetype + "</td></tr>\n";
 	}
 	file_list += "</table>\n"
 				"</body>\n"

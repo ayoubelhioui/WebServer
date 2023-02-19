@@ -12,7 +12,7 @@ class GETMethod{
 		void			redirectToWebsite(void);
 		std::string 	format_date(time_t t);
 		std::string 	get_file_type(mode_t mode);
-		void			directoryListing(std::string rootDirectory);
+		void			directoryListing(std::string , std::string );
 };
 
 #endif
