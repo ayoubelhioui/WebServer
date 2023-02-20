@@ -74,9 +74,9 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 		    		if(final_path[0] == '/') final_path = '.' + final_path;
 		    		std::ifstream check_file(final_path, std::ios::binary);
 		    		if(check_file){
-                        const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-                        std::cout << "FINAL PATH " << final_path << std::endl;
-						std::cout << "cgi_format " << cgi_format << std::endl;
+                        // const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
+                        // std::cout << "FINAL PATH " << final_path << std::endl;
+						// std::cout << "cgi_format " << cgi_format << std::endl;
 						// std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                         // for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         //     if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
@@ -96,11 +96,12 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 		    	if(final_path[0] == '/') final_path = '.' + final_path;
 		    	std::ifstream check_file(final_path, std::ios::binary);
 		    	if(check_file){
-					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
+					// const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
 					// std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                     // for( ; CGIit != loc.CGI.end(); CGIit++ ){
                     //     if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                    //         // php cgi
+                    //         std::cout << "i'm inside php cgi" << std::endl;
+					// 		exit(0);
                     //     }
                     //     else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
                     //         // python cgi 

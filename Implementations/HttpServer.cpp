@@ -138,10 +138,11 @@ void	HttpServer::_serveClients( void )
 			if ((*ClientInfoIt)->isFirstRead)
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
+				(*ClientInfoIt)->parsedRequest.parse();
 				std::cout << "*****************" << std::endl;
+				std::cout << "path is " << (*ClientInfoIt)->parsedRequest.requestDataMap["path"] << std::endl;
 				std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
 				std::cout << "*****************" << std::endl;
-				(*ClientInfoIt)->parsedRequest.parse();
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
 					error_414( ClientInfoIt);
