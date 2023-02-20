@@ -25,3 +25,7 @@ CMakeLists.txt
 exampleOfHeadMethod.txt
 transfer-encoding.md
 webserv.pdf
+file.conf
+./root/
+*.html
+*.txt

@@ -7,7 +7,7 @@ RM=rm -rf
 HEADERS = Interfaces/ConfigFileParser.hpp \
 		  Interfaces/MultiHttpServer.hpp \
 
-SOURCES = _main.cpp \
+SOURCES = main.cpp \
 		Implementations/ConfigFileParser.cpp \
 		Implementations/LocationBlockParse.cpp \
 		Implementations/GETMethod.cpp \
