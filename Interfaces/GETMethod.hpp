@@ -1,6 +1,6 @@
 #ifndef GET_METHOD
 #define GET_METHOD
-#include "../parsing/parsing.hpp"
+// #include "../parsing/parsing.hpp"
 # include "ServerConfiguration.hpp"
 # include "Client.hpp"
 # define SOCKET int

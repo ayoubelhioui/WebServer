@@ -16,7 +16,6 @@ SOURCES = main.cpp \
 		Implementations/Client.cpp \
 		Implementations/HttpServer.cpp \
 		Implementations/RequestParser.cpp \
-		parsing/parsingUtils.cpp \
 		errorsHandling/errorsHandling.cpp \
 		getFormat.cpp \
 

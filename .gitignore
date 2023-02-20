@@ -25,7 +25,9 @@ CMakeLists.txt
 exampleOfHeadMethod.txt
 transfer-encoding.md
 webserv.pdf
-file.conf
-./root/
+cmake-build-debug/
+htmlErrorPages/
+out
+php-cgi
 *.html
-*.txt
+

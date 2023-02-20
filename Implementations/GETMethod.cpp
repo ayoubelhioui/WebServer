@@ -1,5 +1,6 @@
 #include "../Interfaces/GETMethod.hpp"
 #include "../errorsHandling/errorsHandling.hpp"
+# include "../webserver.hpp"
 
 std::string GETMethod::get_file_type(mode_t mode) {
     if (S_ISREG(mode)) {

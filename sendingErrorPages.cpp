@@ -2,7 +2,7 @@
 
 void    error_405(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
 {
-    std::string path = "error_pages/error405.html";
+    std::string path = "htmlErrorPages/error405.html";
     std::ifstream served(path);
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
