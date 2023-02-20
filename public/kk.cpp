@@ -96,7 +96,7 @@
 // //}
 // void    error_414(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
 // {
-//     std::string path = "error_pages/error414.html";
+//     std::string path = "htmlErrorPages/error414.html";
 //     std::ifstream served(path);
 //     served.seekg(0, std::ios::end);
 //     int file_size = served.tellg();
@@ -171,7 +171,7 @@
 
 // void    error_501(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
 // {
-//     std::string path = "error_pages/error501.html";
+//     std::string path = "htmlErrorPages/error501.html";
 //     std::ifstream served(path);
 //     served.seekg(0, std::ios::end);
 //     int file_size = served.tellg();
@@ -194,7 +194,7 @@
 
 // void    error_400(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
 // {
-//     std::string path = "error_pages/error400.html";
+//     std::string path = "htmlErrorPages/error400.html";
 //     std::ifstream served(path);
 //     served.seekg(0, std::ios::end);
 //     int file_size = served.tellg();
@@ -216,7 +216,7 @@
 // }
 // void    error_413(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
 // {
-//     std::string path = "error_pages/error413.html";
+//     std::string path = "htmlErrorPages/error413.html";
 //     std::ifstream served(path);
 //     served.seekg(0, std::ios::end);
 //     int file_size = served.tellg();

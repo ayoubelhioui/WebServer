@@ -29,7 +29,7 @@ bool isUriTooLong(std::string &Uri)
 
 void    error_414(std::list<ClientInfo *>::iterator &client)
 {
-    std::string path = "error_pages/error414.html";
+    std::string path = "htmlErrorPages/error414.html";
     std::ifstream served(path);
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
@@ -52,7 +52,7 @@ void    error_414(std::list<ClientInfo *>::iterator &client)
 
 void    error_501(std::list<ClientInfo *>::iterator &client)
 {
-    std::string path = "error_pages/error501.html";
+    std::string path = "htmlErrorPages/error501.html";
     std::ifstream served(path);
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
@@ -75,7 +75,7 @@ void    error_501(std::list<ClientInfo *>::iterator &client)
 
 void    error_400(std::list<ClientInfo *>::iterator &client)
 {
-    std::string path = "error_pages/error400.html";
+    std::string path = "htmlErrorPages/error400.html";
     std::ifstream served(path);
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
@@ -96,9 +96,20 @@ void    error_400(std::list<ClientInfo *>::iterator &client)
     delete [] buffer;
 }
 
+void errorPrinting(const char *errorMessage){
+    std::cout << errorMessage << std::endl;
+    exit (EXIT_FAILURE);
+}
+
+bool isValidNumber(std::string &data){
+    for (size_t i = 0; i < data.length(); i++)
+        if (!isnumber(data[i]))
+            return (false);
+    return (true);
+}
 void    error_413(std::list<ClientInfo *>::iterator &client)
 {
-    std::string path = "error_pages/error404.html";
+    std::string path = "htmlErrorPages/error404.html";
     std::ifstream served(path);
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
@@ -121,7 +132,7 @@ void    error_413(std::list<ClientInfo *>::iterator &client)
 
 void    error_404(std::list<ClientInfo *>::iterator &client)
 {
-    std::string path = "error_pages/error404.html";
+    std::string path = "htmlErrorPages/error404.html";
     std::ifstream served(path);
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
