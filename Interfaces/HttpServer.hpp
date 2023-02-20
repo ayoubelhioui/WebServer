@@ -27,14 +27,16 @@ class HttpServer {
 		void	setUpMultiplexing ( void );
 		void	setClientInfoList ( std::list<ClientInfo> & );
 		void	dropClient ( SOCKET &, std::list<ClientInfo *>::iterator & );
-		 ServerConfiguration	_serverConfiguration;
+		ServerConfiguration	_serverConfiguration;
+		std::string			queryString;
+		std::string			newPath;
 	private:
 		SOCKET						_listeningSocket;
 		struct addrinfo 			_serverHints;
 		std::list<ClientInfo *>		_clientsList;
 		fd_set						_readFds;
 		fd_set						_writeFds; // * May ruin code
-		int 					_maxSocket;
+		int 						_maxSocket;
 		void	_setUpListeningSocket ( void );
 		void	_addClient ( SOCKET );
 		void	_selectClients ( void );

@@ -1,3 +1,4 @@
+*.dSYM/
 post.html
 webserv
 test.cpp
@@ -12,6 +13,7 @@ a.out
 nginx.conf
 # README.md
 cmake-build-debug/
+./CMakeLists.txt
 .idea/
 *.mp4
 *.png
@@ -20,3 +22,10 @@ cmake-build-debug/
 *.php
 *.o
 CMakeLists.txt
+exampleOfHeadMethod.txt
+transfer-encoding.md
+webserv.pdf
+cmake-build-debug/
+out
+php-cgi
+
