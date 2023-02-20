@@ -28,5 +28,4 @@ webserv.pdf
 cmake-build-debug/
 out
 php-cgi
-*.html
 
