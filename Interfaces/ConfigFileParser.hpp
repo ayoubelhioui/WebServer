@@ -31,7 +31,7 @@
 #define ERROR_PAGE_KEYWORD "error_page"
 #define MAX_CLIENT_BODY_SIZE_KEYWORD "max_client_body_size"
 #define INVALID_KEYWORD " : Is An Invalid Keyword."
-#define DEFAULT_CONFIG_FILE_NAME "parsing/file.conf"
+#define DEFAULT_CONFIG_FILE_NAME "file.conf"
 #define CONFIG_FILE_COULDNT_OPEN_MSG "Couldn't Open Config File."
 #define SERVER_KEYWORD_MSG "Error on server keyword"
 #define ERROR_PAGE_FILE_NOT_FOUND "Error_Page file is not exist !!"
