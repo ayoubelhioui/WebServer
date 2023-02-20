@@ -1,3 +1,4 @@
+*.dSYM/
 post.html
 webserv
 test.cpp
@@ -21,3 +22,6 @@ cmake-build-debug/
 *.php
 *.o
 CMakeLists.txt
+exampleOfHeadMethod.txt
+transfer-encoding.md
+webserv.pdf
