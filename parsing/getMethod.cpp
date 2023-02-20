@@ -79,6 +79,7 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 	}
 	return "";
 }
+}
 
 void	GETMethod::callGET(client_info *client){
 	std::string path = handle_get_method(client->parsedRequest.request_data, *it);
