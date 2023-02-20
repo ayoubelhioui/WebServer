@@ -26,7 +26,6 @@ exampleOfHeadMethod.txt
 transfer-encoding.md
 webserv.pdf
 cmake-build-debug/
-htmlErrorPages/
 out
 php-cgi
 *.html
