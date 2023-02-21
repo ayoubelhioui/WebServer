@@ -176,27 +176,29 @@ void	HttpServer::_serveClients( void )
 			}
 		}
 		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))){
-            char *s = new char[1024]();
-            (*ClientInfoIt)->served.read(s, 1024);
-            int r = (*ClientInfoIt)->served.gcount();
-            send((*ClientInfoIt)->socket, s, r, 0);
-            if(r < 1024){
-                close((*ClientInfoIt)->socket);
-                std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
-                ClientInfoIt++;
-                this->_clientsList.erase(temp_it);
-                continue;
+                char *s = new char[1024]();
+                (*ClientInfoIt)->served.read(s, 1024);
+                int r = (*ClientInfoIt)->served.gcount();
+                send((*ClientInfoIt)->socket, s, r, 0);
+                if(r < 1024){
+                    close((*ClientInfoIt)->socket);
+                    std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
+                    ClientInfoIt++;
+                    this->_clientsList.erase(temp_it);
+                    continue;
+                }
             }
-        }
-		ClientInfoIt++;
 	}
 }
 
 void	HttpServer::setUpMultiplexing ( void )
 {
+	// std::cout << "Set Up multiplexing for server with socket " << this->_listeningSocket << std::endl;
+	std::cout << "client list size before  " << this->_clientsList.size() << std::endl;
 	this->_selectClients();
 	this->_acceptNewConnection();
 	this->_serveClients();
+	std::cout << "client list size after  " << this->_clientsList.size() << std::endl;
 }
 
 void	HttpServer::setUpHttpServer( void )
