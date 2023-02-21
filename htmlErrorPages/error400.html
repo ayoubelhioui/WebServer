@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      /* Add some styles for the error page */
+      body {
+        background-image: radial-gradient(circle, #fdfdff, #2f3542);
+        font-family: Arial, sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+      }
+      .error-container {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 400px;
+        padding: 50px;
+        text-align: center;
+        box-sizing: border-box;
+      }
+      h1 {
+        color: #2f3542;
+        font-size: 36px;
+        margin-bottom: 40px;
+      }
+      p {
+        font-size: 18px;
+        color: #333;
+        margin-bottom: 40px;
+      }
+      a {
+        display: inline-block;
+        background-color: #2f3542;
+        color: #fff;
+        padding: 15px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 40px;
+      }
+      a:hover {
+        background-color: #354051;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="error-container">
+      <h1>400 Bad Request</h1>
+      <p>
+        The server cannot or will not process the request due to something that is perceived to be a client error.
+      </p>
+      <a href="/" onclick="window.history.back(); return false;">Go back</a>
+    </div>
+  </body>
+</html>

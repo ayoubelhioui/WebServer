@@ -1,5 +1,6 @@
+# include "../webserver.hpp"
 # include "../Interfaces/HttpServer.hpp"
-# include "../parsing/parsing.hpp"
+// # include "../parsing/parsing.hpp"
 
 /* ----------------------------------------------------- */
 /* ------------------ CANONICAL FORM ------------------- */
@@ -138,6 +139,10 @@ void	HttpServer::_serveClients( void )
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
+				std::cout << "*****************" << std::endl;
+				std::cout << "path is " << (*ClientInfoIt)->parsedRequest.requestDataMap["path"] << std::endl;
+				std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+				std::cout << "*****************" << std::endl;
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
 					error_414( ClientInfoIt);
@@ -147,7 +152,6 @@ void	HttpServer::_serveClients( void )
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
-					// this->_serverConfiguration.printServerConfiguration();
 					if (getRequest.callGET(*ClientInfoIt, this->_serverConfiguration, ClientInfoIt))
 					{
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);

@@ -7,7 +7,7 @@ RM=rm -rf
 HEADERS = Interfaces/ConfigFileParser.hpp \
 		  Interfaces/MultiHttpServer.hpp \
 
-SOURCES = _main.cpp \
+SOURCES = main.cpp \
 		Implementations/ConfigFileParser.cpp \
 		Implementations/LocationBlockParse.cpp \
 		Implementations/GETMethod.cpp \
@@ -16,10 +16,10 @@ SOURCES = _main.cpp \
 		Implementations/Client.cpp \
 		Implementations/HttpServer.cpp \
 		Implementations/RequestParser.cpp \
-		parsing/parsingUtils.cpp \
 		errorsHandling/errorsHandling.cpp \
 		getFormat.cpp \
 
+DIR_LISTING_FILE = directoryListing.html
 OBJECTS=$(SOURCES:.cpp=.o)
 
 all : $(NAME)
@@ -31,6 +31,7 @@ $(OBJECTS) : $(HEADERS)
 
 clean:
 	$(RM) $(OBJECTS)
+	$(RM) $(DIR_LISTING_FILE)
 
 fclean: clean
 	$(RM) $(NAME)
