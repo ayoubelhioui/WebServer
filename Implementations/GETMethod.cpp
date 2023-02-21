@@ -96,16 +96,16 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
 		    	if(final_path[0] == '/') final_path = '.' + final_path;
 		    	std::ifstream check_file(final_path, std::ios::binary);
 		    	if(check_file){
-					// const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-					// std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
-                    // for( ; CGIit != loc.CGI.end(); CGIit++ ){
-                    //     if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                    //         return CGIexecutedFile(final_path, parsedData.queryString, serverConfig);
-                    //     }
-                    //     else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
-                    //         // python cgi 
-                    //     }
-                    // }
+					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
+					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
+                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
+                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
+                            return CGIexecutedFile(final_path, parsedData.queryString, serverConfig);
+                        }
+                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
+                            // python cgi 
+                        }
+                    }
 					return final_path;
 				}
 		    	else ;
@@ -178,32 +178,31 @@ void    GETMethod::directoryListing(std::string rootDirectory, std::string linki
 }
 
 std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string queryString, ServerConfiguration &server ){
-    (void) php_file;
-    (void) queryString;
-    (void) server;
-    return "";
-    // int status = 0, pid = 0;
-    // const char * request_method = "GET";
-    // const char * script_name = "../CGIS/php-cgi";
-	// const char * query_string = queryString.c_str();
-    // const char * server_name = server.serverHost.c_str();
-    // const char * server_port = server.serverPort.c_str();
+    int pid = 0;
+    const char * request_method = "GET";
+    const char * script_name = "../CGIS/php-cgi";
+	const char * query_string = queryString.c_str();
+    const char * server_name = server.serverHost.c_str();
+    const char * server_port = server.serverPort.c_str();
 
-    // setenv("REQUEST_METHOD", request_method, 1);
-    // setenv("QUERY_STRING", query_string, 1);
-    // setenv("SCRIPT_NAME", script_name, 1);
-    // setenv("SERVER_NAME", server_name, 1);
-    // setenv("SERVER_PORT", server_port, 1);
-    // setenv("REDIRECT_STATUS", "200", 1);
+    setenv("REQUEST_METHOD", request_method, 1);
+    setenv("QUERY_STRING", query_string, 1);
+    setenv("SCRIPT_NAME", script_name, 1);
+    setenv("SERVER_NAME", server_name, 1);
+    setenv("SERVER_PORT", server_port, 1);
+    setenv("REDIRECT_STATUS", "200", 1);
 
-    // pid = fork();
-    // if (pid == 0){
-    //     char *const args[] = {script_name, php_file.c_str(), NULL};
-    //     args[0] = script_name;
-    //     args[1] = php_file.c_str();
-    //     args[2] = NULL;
-    //     execve(script_name, args, NULL);
-    // }
-    // exit(1);
+    pid = fork();
+    if (pid == 0){
+        char  *args[3];
+        args[0] = (char *) script_name;
+        args[1] = (char *) php_file.c_str();
+        args[2] = NULL;
+        std::cout << args[0] << std::endl;
+        std::cout << args[1] << std::endl;
+        std::cout << args[2] << std::endl;
+        execve(script_name, args, NULL);
+    }
+    exit(1);
 
 }

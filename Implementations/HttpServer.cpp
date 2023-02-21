@@ -139,6 +139,8 @@ void	HttpServer::_serveClients( void )
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
+				std::cout << "------------ header is --------------" << std::endl;
+				std::cout <<  (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
 				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 				size_t	foundQuery = word.find('?');
 				if(foundQuery != std::string::npos){

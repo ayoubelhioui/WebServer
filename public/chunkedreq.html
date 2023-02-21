@@ -1,21 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Chunked Request Example</title>
+  <title>Chunked POST Request with File Upload</title>
 </head>
 <body>
 
-  <h1>Chunked Request Example</h1>
+  <h1>Chunked POST Request with File Upload</h1>
+
+  <form id="uploadForm">
+    <label for="fileInput">Select a file to upload:</label>
+    <input type="file" id="fileInput" name="fileInput"><br><br>
+    <button type="submit">Upload</button>
+  </form>
 
   <script>
-    const url = 'http://example.com/my-endpoint';
-    const body = 'This is the first chunk.\nThis is the second chunk.\nThis is the third chunk.';
+    const uploadForm = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('fileInput');
+    const url = 'http://10.11.1.5:8080/';
 
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url);
-    xhr.setRequestHeader('Transfer-Encoding', 'chunked');
-    xhr.setRequestHeader('Content-Type', 'text/plain');
-    xhr.send(body);
+    uploadForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      xhr.setRequestHeader('Transfer-Encoding', 'chunked');
+
+      const file = fileInput.files[0];
+      const fileSize = file.size;
+      const chunkSize = 1024 * 1024; // 1 MB chunks
+      let offset = 0;
+
+      xhr.onreadystatechange = function() {
+        if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+          console.log('File upload completed successfully.');
+        }
+      };
+
+      function readChunk() {
+        const reader = new FileReader();
+        const blob = file.slice(offset, offset + chunkSize);
+
+        reader.onload = function() {
+          if (reader.readyState === FileReader.DONE) {
+            const data = new Uint8Array(reader.result);
+            xhr.send(data);
+            offset += chunkSize;
+            if (offset < fileSize) {
+              readChunk();
+            }
+          }
+        };
+
+        reader.readAsArrayBuffer(blob);
+      }
+
+      readChunk();
+    });
   </script>
 
 </body>
