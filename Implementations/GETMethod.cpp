@@ -29,8 +29,8 @@ std::string GETMethod::format_date(time_t t) {
     return std::string(buf);
 }
 
-std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &request, ServerConfiguration &serverConfig){
-	std::string path = request["path"];
+std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfiguration &serverConfig){
+	std::string path = parsedData["path"];
 	for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++){
 		LocationBlockParse loc = *beg;
 		std::string res = loc.Location;
@@ -96,17 +96,16 @@ std::string	GETMethod::handleGETMethod(std::map<std::string, std::string> &reque
 		    	if(final_path[0] == '/') final_path = '.' + final_path;
 		    	std::ifstream check_file(final_path, std::ios::binary);
 		    	if(check_file){
-					// const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-					// std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
-                    // for( ; CGIit != loc.CGI.end(); CGIit++ ){
-                    //     if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                    //         std::cout << "i'm inside php cgi" << std::endl;
-					// 		exit(0);
-                    //     }
-                    //     else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
-                    //         // python cgi 
-                    //     }
-                    // }
+					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
+					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
+                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
+                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
+                            return CGIexecutedFile(final_path, );
+                        }
+                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
+                            // python cgi 
+                        }
+                    }
 					return final_path;
 				}
 		    	else ;
@@ -176,4 +175,19 @@ void    GETMethod::directoryListing(std::string rootDirectory, std::string linki
     std::ofstream directoryListingFile("directoryListing.html");
     directoryListingFile << file_list;
     directoryListingFile.close();
+}
+
+std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string queryString, ServerConfiguration &server ){
+	const char *query_string = queryString.c_str();
+    const char *request_method = "GET";
+    const char *script_name = "../CGIS/php-cgi";
+    const char *server_name = server.serverHost.c_str();
+    const char *server_port = server.serverPort.c_str();
+
+    setenv("REQUEST_METHOD", request_method, 1);
+    setenv("QUERY_STRING", query_string, 1);
+    setenv("SCRIPT_NAME", script_name, 1);
+    setenv("SERVER_NAME", server_name, 1);
+    setenv("SERVER_PORT", server_port, 1);
+    setenv("REDIRECT_STATUS", "200", 1);
 }
