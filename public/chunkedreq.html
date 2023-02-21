@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chunked Request Example</title>
+</head>
+<body>
+
+  <h1>Chunked Request Example</h1>
+
+  <script>
+    const url = 'http://example.com/my-endpoint';
+    const body = 'This is the first chunk.\nThis is the second chunk.\nThis is the third chunk.';
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.setRequestHeader('Transfer-Encoding', 'chunked');
+    xhr.setRequestHeader('Content-Type', 'text/plain');
+    xhr.send(body);
+  </script>
+
+</body>
+</html>

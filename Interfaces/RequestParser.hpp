@@ -15,12 +15,12 @@ class ParsingRequest{
 		int	receivedBytes;
 		char *requestHeader;
 		std::map<std::string, std::string> requestDataMap;
+		std::string		queryString;
 		void	parse();
 		void	parsingRequestFirstLine(std::string);
 		void	parsingRequest(std::string);
 		void	receiveFirstTime ( SOCKET );
 		void	parsingMiniHeader( ); 
-
 		int		retIndex(char *);
 		ParsingRequest();
 		~ParsingRequest();

@@ -139,10 +139,12 @@ void	HttpServer::_serveClients( void )
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
-				std::cout << "*****************" << std::endl;
-				std::cout << "path is " << (*ClientInfoIt)->parsedRequest.requestDataMap["path"] << std::endl;
-				std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-				std::cout << "*****************" << std::endl;
+				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
+				size_t	foundQuery = word.find('?');
+				if(foundQuery != std::string::npos){
+					(*ClientInfoIt)->parsedRequest.requestDataMap["path"] = word.substr(0, foundQuery);
+					(*ClientInfoIt)->parsedRequest.queryString = word.substr(foundQuery + 1);
+				}
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
 					error_414( ClientInfoIt);
