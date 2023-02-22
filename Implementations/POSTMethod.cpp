@@ -1,43 +1,38 @@
 # include "../Interfaces/POSTMethod.hpp"
 # include "../errorsHandling/errorsHandling.hpp"
-PostMethod::PostMethod(ServerConfiguration &serverConfiguration, std::list<ClientInfo *>::iterator &clientInfoIt, std::list<ClientInfo *> &clientsList)
-    : _serverConfiguration(serverConfiguration), _clientInfoIt(clientInfoIt), _clientsList(clientsList)
-    {}
-
-PostMethod::PostMethod() {};
 
 
-PostMethod::~PostMethod() {}
 
 PostMethodExceptions::PostMethodExceptions(const std::string &errorMessage) : std::runtime_error(errorMessage) { };
 
+PostMethod::PostMethod(ServerConfiguration &serverConfiguration)
+: _serverConfiguration(serverConfiguration)
+{}
 
-
-
-void PostMethod::preparingPostRequest() {
-    (*this->_clientInfoIt)->requestBody.open(TMP_FOLDER_PATH + (*_clientInfoIt)->parsedRequest.uploadFileName, std::ios::binary);
-    if (!(*_clientInfoIt)->requestBody.is_open())
+void PostMethod::preparingPostRequest(ClientInfo *client) {
+    client->requestBody.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
+    if (!client->requestBody.is_open())
         throw (std::runtime_error(TMP_FOLDER_COULDNT_OPEN));
-    (*_clientInfoIt)->requestBody.write((*_clientInfoIt)->parsedRequest.requestHeader + (*_clientInfoIt)->parsedRequest.bodyIndex, (*_clientInfoIt)->parsedRequest.receivedBytes - (*_clientInfoIt)->parsedRequest.bodyIndex);
-    (*_clientInfoIt)->requestBody.close();
+    client->requestBody.write(client->parsedRequest.requestHeader + client->parsedRequest.bodyIndex, client->parsedRequest.received - client->parsedRequest.bodyIndex);
+//    client->requestBody.close();
 }
 
-void PostMethod::isValidPostRequest() {
-    if(isNotValidPostRequest((*_clientInfoIt)->parsedRequest.requestDataMap))
+void PostMethod::isValidPostRequest(ClientInfo *client) {
+    if(isNotValidPostRequest(client->parsedRequest.requestDataMap))
     {
-        error_400(this->_clientInfoIt);
+        error_400(client);
         throw std::runtime_error(BAD_REQUEST_EXCEPTION);
     }
-    if(isTransferEncodingNotChunked((*_clientInfoIt)->parsedRequest.requestDataMap))
+    if(isTransferEncodingNotChunked(client->parsedRequest.requestDataMap))
     {
-        error_501(this->_clientInfoIt);
+        error_501(client);
         throw std::runtime_error(TRANSFER_ENCODING_EXCEPTION);
     }
-//    std::map<std::string, std::string>::iterator content = (*_clientInfoIt)->parsedRequest.requestDataMap.find("Content-Length:");
-//    if(content != (*_clientInfoIt)->parsedRequest.requestDataMap.end())
+//    std::map<std::string, std::string>::iterator content = client->parsedRequest.requestDataMap.find("Content-Length:");
+//    if(content != client->parsedRequest.requestDataMap.end())
 //    {
 ////        std::cout << "the content length is : " << (*_clientInfoIt  )->parsedRequest.contentLength << std::endl;
-//        int bodySize = ((*_clientInfoIt)->parsedRequest.bodyIndex) - std::stoi((*_clientInfoIt)->parsedRequest.requestDataMap["Content-Length:"]);
+//        int bodySize = (client->parsedRequest.bodyIndex) - std::stoi(client->parsedRequest.requestDataMap["Content-Length:"]);
 //        if(isBodySizeBigger(this->_serverConfiguration, bodySize))
 //        {
 //            error_413(this->_clientInfoIt);
@@ -47,32 +42,31 @@ void PostMethod::isValidPostRequest() {
 }
 
 
-void PostMethod::writeInTempFile() {
-    (*_clientInfoIt)->requestBody.write((*_clientInfoIt)->parsedRequest.requestHeader, (*_clientInfoIt)->bytesToReceive);
+void PostMethod::writeInTempFile(ClientInfo *client) {
+//    std::cout << "i will write : " << client->parsedRequest.receivedBytes << std::endl;
+    client->requestBody.write(client->parsedRequest.requestHeader, client->parsedRequest.receivedBytes);
 }
 
-void PostMethod::receiveFromClient(){
-    int received = 0;
-    std::cout << "the received : " << std::endl;
-    (*_clientInfoIt)->bytesToReceive = ((*_clientInfoIt)->received + MAX_REQUEST_SIZE < (*_clientInfoIt)->parsedRequest.contentLength) ? MAX_REQUEST_SIZE : (*_clientInfoIt)->parsedRequest.contentLength - (*_clientInfoIt)->received;
-    received = recv((*_clientInfoIt)->socket, (*_clientInfoIt)->parsedRequest.requestHeader, (*_clientInfoIt)->bytesToReceive, 0);
-    (*_clientInfoIt)->received += received;
-    (*_clientInfoIt)->parsedRequest.requestHeader[received] = 0;
+void PostMethod::receiveFromClient(ClientInfo *client){
+    client->parsedRequest.bytesToReceive = (client->parsedRequest.received + MAX_REQUEST_SIZE < client->parsedRequest.contentLength) ? MAX_REQUEST_SIZE : client->parsedRequest.contentLength - client->parsedRequest.received;
+    client->parsedRequest.receivedBytes = recv(client->socket, client->parsedRequest.requestHeader, client->parsedRequest.bytesToReceive, 0);
+    client->parsedRequest.received += client->parsedRequest.receivedBytes;
+    client->parsedRequest.requestHeader[client->parsedRequest.receivedBytes] = 0;
 }
 
-void PostMethod::serveClient(){
-    this->receiveFromClient();
-    this->writeInTempFile();
+void PostMethod::serveClient(ClientInfo *client){
+    this->receiveFromClient(client);
+    this->writeInTempFile(client);
 };
 
 
-void PostMethod::moveFileToUploads()
+void PostMethod::moveFileToUploads(ClientInfo *client)
 {
-    std::ifstream sourceFile(TMP_FOLDER_PATH + (*_clientInfoIt)->parsedRequest.uploadFileName, std::ios::binary);
-    std::ofstream destinationFile(UPLOADS_FOLDER_PATH + (*_clientInfoIt)->parsedRequest.uploadFileName, std::ios::binary);
+    std::ifstream sourceFile(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
+    std::ofstream destinationFile(UPLOADS_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
     if (!destinationFile.is_open() || !sourceFile.is_open())
-        throw (PostMethodExceptions("couldn't Open" + (*_clientInfoIt)->parsedRequest.uploadFileName));
-    int totalToWrite = (*_clientInfoIt)->received - (*_clientInfoIt)->boundarySize - (*_clientInfoIt)->parsedRequest.bodyIndex - 4, toWrite = 0;
+        throw (PostMethodExceptions("couldn't Open" + client->parsedRequest.uploadFileName));
+    int totalToWrite = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.bodyIndex - 4, toWrite = 0;
     while (totalToWrite > 0)
     {
         toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
@@ -87,9 +81,9 @@ void PostMethod::moveFileToUploads()
 }
 
 
-void  PostMethod::successfulPostRequest(){
-    (*_clientInfoIt)->requestBody.close();
-    moveFileToUploads();
+void  PostMethod::successfulPostRequest(ClientInfo *client){
+    client->requestBody.close();
+    moveFileToUploads(client);
     std::string path = "uploadSuccess.html";
     std::ifstream served(path);
     if (!served.is_open())
@@ -100,16 +94,16 @@ void  PostMethod::successfulPostRequest(){
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 201 Created\r\n");
-    send((*_clientInfoIt)->socket, buffer, strlen(buffer), 0);
+    send(client->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Connection: close\r\n");
-    send((*_clientInfoIt)->socket, buffer, strlen(buffer), 0);
+    send(client->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*_clientInfoIt)->socket, buffer, strlen(buffer), 0);
+    send(client->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*_clientInfoIt)->socket, buffer, strlen(buffer), 0);
+    send(client->socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "\r\n");
-    send((*_clientInfoIt)->socket, buffer, strlen(buffer), 0);
+    send(client->socket, buffer, strlen(buffer), 0);
     served.read(buffer, file_size);
-    send((*_clientInfoIt)->socket, buffer, strlen(buffer), 0);
+    send(client->socket, buffer, strlen(buffer), 0);
     delete [] buffer;
 }

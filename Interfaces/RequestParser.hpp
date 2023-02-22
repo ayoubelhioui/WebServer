@@ -17,7 +17,9 @@ class ParsingRequest{
 		int contentLength;
 		int	receivedBytes;
 		char *requestHeader;
+		int received;
 		int boundarySize;
+		int newBodyIndex;
 		std::string uploadFileName;
 		std::map<std::string, std::string> requestDataMap;
 		void	parse();
@@ -27,7 +29,6 @@ class ParsingRequest{
 		void	parsingMiniHeader( void );
 		void 	gettingFileName(std::string &);
 		void	gettingNewBodyIndex(std::string &);
-		void	receiveFromClient(int &, SOCKET &);
 		int		retIndex(char *);
 };
 #endif

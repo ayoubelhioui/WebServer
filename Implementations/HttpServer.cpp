@@ -1,7 +1,4 @@
 # include "../webserver.hpp"
-# include "../Interfaces/HttpServer.hpp"
-# include "../Interfaces/POSTMethod.hpp"
-// # include "../parsing/parsing.hpp"
 
 /* ----------------------------------------------------- */
 /* ------------------ CANONICAL FORM ------------------- */
@@ -67,7 +64,7 @@ void	HttpServer::_selectClients ( void )
 {
 	_maxSocket = _listeningSocket;
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
-	std::cout << "the size of the list is : " << this->_clientsList.size() << std::endl;
+//	std::cout << "the size of the list is : " << this->_clientsList.size() << std::endl;
 	ClientInfoIt = this->_clientsList.begin();
 	FD_ZERO(&_readFds);
     FD_SET(this->_listeningSocket, &_readFds);
@@ -75,7 +72,6 @@ void	HttpServer::_selectClients ( void )
     FD_SET(this->_listeningSocket, &_writeFds);
 	for (; ClientInfoIt != this->_clientsList.end(); ClientInfoIt++)
 	{
-		std::cout << "********" << std::endl;
 		FD_SET((*ClientInfoIt)->socket, &_readFds);
         FD_SET((*ClientInfoIt)->socket, &_writeFds);
 		_maxSocket = std::max(_maxSocket, (*ClientInfoIt)->socket);
@@ -102,6 +98,7 @@ void	HttpServer::_acceptNewConnection( void )
 	
 	if (FD_ISSET(this->_listeningSocket, &(this->_readFds)))
     {
+		std::cout << "I'M HERE ENTERING TO ACCEPT NEW CONNECTION\n";
 		ClientInfo	*newClient = new ClientInfo;
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
 		// fcntl(client->socket, F_SETFL, O_NONBLOCK); // need to be understood.
@@ -131,7 +128,6 @@ void HttpServer::dropClient( SOCKET &clientSocket, std::list<ClientInfo *>::iter
 void	HttpServer::_serveClients( void )
 {
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
-	PostMethod *postRequest = new PostMethod();
 	ClientInfoIt = this->_clientsList.begin();
 	while (ClientInfoIt != this->_clientsList.end())
 	{
@@ -139,19 +135,19 @@ void	HttpServer::_serveClients( void )
 		{
 			if ((*ClientInfoIt)->isFirstRead)
 			{
-                std::cout  << "the read is : " << FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)) << std::endl;
-                std::cout << "the write is : " << FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)) << std::endl;
                 (*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
 //				std::cout << "*****************" << std::endl;
 //				std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
 //				std::cout << "*****************" << std::endl;
+//                std::cout << "the content length is : " << (*ClientInfoIt)->parsedRequest.requestDataMap["Content-Length:"] << std::endl;
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
 					error_414( ClientInfoIt);
 					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					continue ;
 				}
+				std::cout << "socket is " << (*ClientInfoIt)->socket << std::endl;
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
@@ -168,13 +164,12 @@ void	HttpServer::_serveClients( void )
 				// }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
-                    delete postRequest;
-                    postRequest = new PostMethod(this->_serverConfiguration, ClientInfoIt, this->_clientsList);
+					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
 					(*ClientInfoIt)->parsedRequest.parsingMiniHeader();
 					 try
 					 {
-						 postRequest->preparingPostRequest();
-						 postRequest->isValidPostRequest();
+						 (*ClientInfoIt)->postRequest->preparingPostRequest(*ClientInfoIt);
+						 (*ClientInfoIt)->postRequest->isValidPostRequest(*ClientInfoIt);
 					 }
 					 catch (std::exception &e){
 						 std::cout << e.what() << std::endl;
@@ -184,19 +179,20 @@ void	HttpServer::_serveClients( void )
 				 }
 				(*ClientInfoIt)->isFirstRead = false;
 			}
-			else
+			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
-				std::cout << "im here" << std::endl;
-				postRequest->serveClient();
-				if ((*ClientInfoIt)->received == (*ClientInfoIt)->parsedRequest.contentLength)
+				std::cout << "it segfaults at socket " << (*ClientInfoIt)->socket << std::endl;
+				(*ClientInfoIt)->postRequest->serveClient(*ClientInfoIt);
+				std::cout << "i have received : " << (*ClientInfoIt)->parsedRequest.received << std::endl;
+				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
 				{
-					postRequest->successfulPostRequest();
-                   this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+					(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
+                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					continue ;
 				}
 			}
 		}
-		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))){
+		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)) && (*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"){
 			char *s = new char[1024]();
 			(*ClientInfoIt)->served.read(s, 1024);
 			int r = (*ClientInfoIt)->served.gcount();
@@ -204,6 +200,7 @@ void	HttpServer::_serveClients( void )
 			if(r < 1024){
 				close((*ClientInfoIt)->socket);
 				std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
+
 				ClientInfoIt++;
 				this->_clientsList.erase(temp_it);
 				continue;
