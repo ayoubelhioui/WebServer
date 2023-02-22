@@ -178,7 +178,7 @@ void    GETMethod::directoryListing(std::string rootDirectory, std::string linki
 }
 
 std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string queryString, ServerConfiguration &server ){
-    int pid = 0;
+    int     pid = 0;
     const char * request_method = "GET";
     const char * script_name = "CGIS/php-cgi";
 	const char * query_string = queryString.c_str();
@@ -191,16 +191,47 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
     setenv("SERVER_NAME", server_name, 1);
     setenv("SERVER_PORT", server_port, 1);
     setenv("REDIRECT_STATUS", "200", 1);
-
+    int fd[2];
+    pipe(fd);
+    std::ofstream out_file("out_file.html");
     pid = fork();
     if (pid == 0){
         char  *args[3];
+        close(fd[0]);
+        dup2(fd[1], 1);
         args[0] = (char *) script_name;
         args[1] = (char *) php_file.c_str();
         args[2] = NULL;
         if (execve(script_name, args, NULL) == -1)
-            std::cout << "YES IT FAILED" << std::endl; ;
+            std::cout << "YES IT FAILED" << std::endl;
     }
-    exit(1);
-
+    else if (pid > 0){
+        close(fd[1]);
+        char buffer[2001];
+        ssize_t n;
+        n = read(fd[0], buffer, 1000);
+        buffer[n] = 0;
+        out_file << bodyFromCgiHeader(buffer);
+        while(n > 0){
+            n = read(fd[0], buffer, 1000);
+            buffer[n] = 0;
+            out_file << buffer;
+        }
+        out_file.close();
+        waitpid(pid, NULL, 0);
+    }
+    return "out_file.html";
+}
+int     cgiretIndex(char *requestHeader){
+    for(int i = 0; requestHeader[i]; i++){
+      if(!strncmp(&requestHeader[i], "\r\n\r\n", 4))
+          return i;
+    }
+    return -1;
+}
+std::string GETMethod::bodyFromCgiHeader(char *buffer){`
+    std::string stringBuffer(buffer);
+    int body = cgiretIndex(buffer) + 4;
+    stringBuffer = stringBuffer.substr(body);
+    return stringBuffer;
 }

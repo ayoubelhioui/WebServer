@@ -14,6 +14,7 @@ class GETMethod{
 		std::string 	get_file_type(mode_t mode);
 		void			directoryListing(std::string , std::string );
 		std::string		CGIexecutedFile( std::string , std::string, ServerConfiguration & );
+		std::string		bodyFromCgiHeader(char *);
 };
 
 #endif
