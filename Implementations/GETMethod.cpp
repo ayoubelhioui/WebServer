@@ -180,7 +180,7 @@ void    GETMethod::directoryListing(std::string rootDirectory, std::string linki
 std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string queryString, ServerConfiguration &server ){
     int pid = 0;
     const char * request_method = "GET";
-    const char * script_name = "../CGIS/php-cgi";
+    const char * script_name = "CGIS/php-cgi";
 	const char * query_string = queryString.c_str();
     const char * server_name = server.serverHost.c_str();
     const char * server_port = server.serverPort.c_str();
@@ -198,10 +198,8 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
         args[0] = (char *) script_name;
         args[1] = (char *) php_file.c_str();
         args[2] = NULL;
-        std::cout << args[0] << std::endl;
-        std::cout << args[1] << std::endl;
-        std::cout << args[2] << std::endl;
-        execve(script_name, args, NULL);
+        if (execve(script_name, args, NULL) == -1)
+            std::cout << "YES IT FAILED" << std::endl; ;
     }
     exit(1);
 
