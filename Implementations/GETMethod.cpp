@@ -58,8 +58,7 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
             if(root[root.length() - 1] != '/') root += '/';
             if(root[0] != '.') root = '.' + root;
             if(full_path[0] != '.') full_path = '.' + full_path;
-            directoryListing(root, full_path);
-            return "directoryListing.html";
+            return directoryListing(root, full_path);
         }
         else{
 		    std::string file = path.substr(index_last + 1);
@@ -115,12 +114,12 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
 	return "";
 }
 
-bool	GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, std::list<ClientInfo *>::iterator &ClientInfoIt )
+std::string GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, std::list<ClientInfo *>::iterator &ClientInfoIt )
 {
 	std::string path = handleGETMethod(client->parsedRequest, serverConfig);
 	if(path == ""){
 		error_404(ClientInfoIt);
-		return 1;
+		return "";
 	}
 	client->served.open(path, std::ios::binary);
 	client->served.seekg(0, std::ios::end);
@@ -137,10 +136,25 @@ bool	GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, 
 	send(client->socket, buffer, strlen(buffer), 0);
 	sprintf(buffer, "\r\n"); // * 
 	send(client->socket, buffer, strlen(buffer), 0);
-	return 0;
+	return path;
 }
 
-void    GETMethod::directoryListing(std::string rootDirectory, std::string linking_path){
+std::string    generateRandString ( int n )
+{
+    std::string         randString;
+
+    const std::string    chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789";
+    
+    for (int i = 0; i < n; ++i) {
+        randString += chars[rand() % chars.size()];
+    }
+    return randString;
+}
+
+std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path){
 	DIR* dir = opendir(rootDirectory.c_str());
     if (dir == NULL) {
         
@@ -172,9 +186,11 @@ void    GETMethod::directoryListing(std::string rootDirectory, std::string linki
 				"</body>\n"
 				"</html>\n";
 	closedir(dir);
-    std::ofstream directoryListingFile("directoryListing.html");
+    std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
+    std::ofstream directoryListingFile(newFile);
     directoryListingFile << file_list;
     directoryListingFile.close();
+    return newFile;
 }
 
 std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string queryString, ServerConfiguration &server ){
@@ -193,7 +209,8 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
     setenv("REDIRECT_STATUS", "200", 1);
     int fd[2];
     pipe(fd);
-    std::ofstream out_file("out_file.html");
+    std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
+    std::ofstream out_file(newFile);
     pid = fork();
     if (pid == 0){
         char  *args[3];
@@ -203,7 +220,7 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
         args[1] = (char *) php_file.c_str();
         args[2] = NULL;
         if (execve(script_name, args, NULL) == -1)
-            std::cout << "YES IT FAILED" << std::endl;
+            return "";
     }
     else if (pid > 0){
         close(fd[1]);
@@ -220,7 +237,7 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
         out_file.close();
         waitpid(pid, NULL, 0);
     }
-    return "out_file.html";
+    return newFile;
 }
 int     cgiretIndex(char *requestHeader){
     for(int i = 0; requestHeader[i]; i++){
@@ -229,7 +246,7 @@ int     cgiretIndex(char *requestHeader){
     }
     return -1;
 }
-std::string GETMethod::bodyFromCgiHeader(char *buffer){`
+std::string GETMethod::bodyFromCgiHeader(char *buffer){
     std::string stringBuffer(buffer);
     int body = cgiretIndex(buffer) + 4;
     stringBuffer = stringBuffer.substr(body);

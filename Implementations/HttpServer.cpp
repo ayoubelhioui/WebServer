@@ -139,8 +139,6 @@ void	HttpServer::_serveClients( void )
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
-				std::cout << "header is " << std::endl;
-				std::cout << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
 				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 				size_t	foundQuery = word.find('?');
 				if(foundQuery != std::string::npos){
@@ -156,8 +154,8 @@ void	HttpServer::_serveClients( void )
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
-					if (getRequest.callGET(*ClientInfoIt, this->_serverConfiguration, ClientInfoIt))
-					{
+					(*ClientInfoIt)->currentServerFile = getRequest.callGET(*ClientInfoIt, this->_serverConfiguration, ClientInfoIt);
+					if((*ClientInfoIt)->currentServerFile == ""){
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
 					}
@@ -192,6 +190,8 @@ void	HttpServer::_serveClients( void )
                 close((*ClientInfoIt)->socket);
                 std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
                 ClientInfoIt++;
+				std::cout << "deleted file is " << (*ClientInfoIt)->socket << std::endl;
+				// std::remove((*ClientInfoIt)->currentServerFile.c_str());
                 this->_clientsList.erase(temp_it);
                 continue;
             }

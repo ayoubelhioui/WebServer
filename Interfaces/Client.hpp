@@ -25,6 +25,7 @@ class ClientInfo {
         char address_buffer[128];
         SOCKET socket;
         std::ifstream served;
+		std::string	  currentServerFile;
         int served_size;
 		// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 		// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
