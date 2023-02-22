@@ -1,5 +1,6 @@
 # include "../webserver.hpp"
 # include "../Interfaces/HttpServer.hpp"
+# include "../Interfaces/ChunkedPostRequest.hpp"
 // # include "../parsing/parsing.hpp"
 
 /* ----------------------------------------------------- */
@@ -158,13 +159,14 @@ void	HttpServer::_serveClients( void )
 						continue;
 					}
 				}
+		
 				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
 				// {
 				// 	ClientInfoIt++;
 				// 	continue ;
 				// }
-				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
-				// {
+				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
+				{
 				// 		parsingMiniHeader(ClientInfoIt);
 				// 		postRequestStruct postRequest(ClientInfoIt, client_data_it, client_data, *it);
 				// 		(*ClientInfoIt)->requestBody.open("uploads/" + (*ClientInfoIt)->uploadFileName, std::ios::binary);
@@ -174,9 +176,17 @@ void	HttpServer::_serveClients( void )
 				// }
 				(*ClientInfoIt)->isFirstRead = false;
 			}
-			else
+			else // * This is should be with the if condition of the Monster Ayoub Xopina
 			{
+	// 			(*ClientInfoIt)->parsedRequest.receivedBytes = recv((*ClientInfoIt)->socket, (*ClientInfoIt)->parsedRequest.requestHeader, MAX_REQUEST_SIZE, 0);
+    // (*ClientInfoIt)->parsedRequest.requestHeader[(*ClientInfoIt)->parsedRequest.receivedBytes] = 0;
+    // (*ClientInfoIt)->parsedRequest.bytesToReceive += (*ClientInfoIt)->parsedRequest.receivedBytes;
+    // bodyIndex = retIndex(requestHeader);
+				(*ClientInfoIt)->parsedRequest.receivedBytes = recv((*ClientInfoIt)->socket, (*ClientInfoIt)->parsedRequest.requestHeader, MAX_REQUEST_SIZE, 0);
+				(*ClientInfoIt)->parsedRequest.requestHeader[(*ClientInfoIt)->parsedRequest.receivedBytes] = 0;
 				
+				std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+				std::cout << "*****************" << std::endl;	
 			}
 		}
 		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))){
@@ -192,7 +202,9 @@ void	HttpServer::_serveClients( void )
                 continue;
             }
         }
+		
 		ClientInfoIt++;
+		}
 	}
 }
 
