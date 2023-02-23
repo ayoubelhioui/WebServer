@@ -1,6 +1,7 @@
 #include "../Interfaces/RequestParser.hpp"
 
-ParsingRequest::ParsingRequest() : bodyIndex(0), bytesToReceive(0), contentLength(0), receivedBytes(0), boundarySize(0)
+ParsingRequest::ParsingRequest() : bodyIndex(0), bytesToReceive(0), contentLength(0)
+, receivedBytes(0), received(0), boundarySize(0), newBodyIndex(0)
 {
     requestHeader = new char[2001]();
 }
@@ -62,10 +63,11 @@ void	ParsingRequest::parse(){
 }
 
 void    ParsingRequest::receiveFirstTime(int socket){
-    receivedBytes = recv(socket, requestHeader, MAX_REQUEST_SIZE, 0);
-    requestHeader[receivedBytes] = 0;
-    bytesToReceive += receivedBytes;
-    bodyIndex = retIndex(requestHeader);
+    this->receivedBytes = recv(socket, this->requestHeader, MAX_REQUEST_SIZE, 0);
+    this->requestHeader[this->receivedBytes] = 0;
+    this->received += this->receivedBytes;
+    this->bodyIndex = retIndex(this->requestHeader);
+    this->received -= (this->bodyIndex + 4);
 }
 
 int     ParsingRequest::retIndex(char *requestHeader){
@@ -76,18 +78,12 @@ int     ParsingRequest::retIndex(char *requestHeader){
     return -1;
 }
 
-void ParsingRequest::receiveFromClient(int &received, SOCKET &clientSocket)
-{
-    bytesToReceive = (received + MAX_REQUEST_SIZE < contentLength) ? MAX_REQUEST_SIZE : contentLength - received;
-    received = recv(clientSocket, requestHeader, bytesToReceive, 0);
-    received += received;
-    requestHeader[received] = 0;
-}
 
 void ParsingRequest::gettingNewBodyIndex(std::string &boundarySavior)
 {
-    bodyIndex += (retIndex(requestHeader + bodyIndex + 4)) + 8;
-    boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
+    this->newBodyIndex = retIndex(requestHeader + bodyIndex + 4);
+    this->bodyIndex += newBodyIndex + 8; // skipping the header to the mini header.
+    this->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
 
 void ParsingRequest::gettingFileName(std::string &newString)

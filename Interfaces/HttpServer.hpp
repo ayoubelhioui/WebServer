@@ -15,7 +15,6 @@
 # define SOCKET int
 # define MAXQUEUESIZE 10
 
-
 class HttpServer {
 	public:
 		HttpServer ( ServerConfiguration & );

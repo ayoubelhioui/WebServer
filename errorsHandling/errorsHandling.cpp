@@ -1,4 +1,3 @@
-# include "../webserver.hpp"
 # include "../errorsHandling/errorsHandling.hpp"
 bool    isBodySizeBigger(ServerConfiguration &serverConfig, unsigned int bodySize) // STATUS CODE : 403 REQUEST ENTITY TOO LARGE
 {
@@ -52,7 +51,7 @@ void    error_414(std::list<ClientInfo *>::iterator &client)
     delete [] buffer;
 }
 
-void    error_501(std::list<ClientInfo *>::iterator &client)
+void    error_501(ClientInfo *client)
 {
     std::string path = "htmlErrorPages/error501.html";
     std::ifstream served(path);
@@ -61,21 +60,21 @@ void    error_501(std::list<ClientInfo *>::iterator &client)
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 501 Not Implemented\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     delete [] buffer;
 }
 
-void    error_400(std::list<ClientInfo *>::iterator &client)
+void    error_400(ClientInfo *client)
 {
     std::string path = "htmlErrorPages/error400.html";
     std::ifstream served(path);
@@ -84,17 +83,17 @@ void    error_400(std::list<ClientInfo *>::iterator &client)
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 400 Bad Request\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    send((*client).socket, buffer, strlen(buffer), 0);
     delete [] buffer;
 }
 

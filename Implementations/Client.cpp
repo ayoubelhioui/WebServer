@@ -1,6 +1,6 @@
 #include "../Interfaces/Client.hpp"
 	
-ClientInfo::ClientInfo( void ) : received(0), isFirstRead(true), bodyFirstRead(false), boundarySize(0), bytesToReceive(0), addressLength(sizeof(this->address))
+ClientInfo::ClientInfo( void ) : isFirstRead(true) , addressLength(sizeof(this->address))
 {
 }
 

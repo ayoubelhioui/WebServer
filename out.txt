@@ -1,41 +1,46 @@
-*****************
-req head POST /testmsd.php HTTP/1.1
-Host: 10.11.1.7:8080
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:109.0) Gecko/20100101 Firefox/110.0
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
-Accept-Language: en-US,en;q=0.5
-Accept-Encoding: gzip, deflate
-Referer: http://10.11.1.7:8080/upload.html
-Content-Type: multipart/form-data; boundary=---------------------------271876017832945170947247955
-Content-Length: 477
-Origin: http://10.11.1.7:8080
-Connection: keep-alive
-Upgrade-Insecure-Requests: 1
+# include "../webserver.hpp"
+# include "../Interfaces/HttpServer.hpp"
+# include "../Interfaces/POSTMethod.hpp"
+// # include "../parsing/parsing.hpp"
 
------------------------------271876017832945170947247955
-Content-Disposition: form-data; name="file"; filename="index.html"
-Content-Type: text/html
+/* ----------------------------------------------------- */
+/* ------------------ CANONICAL FORM ------------------- */
+/* ----------------------------------------------------- */
 
-<html><head>
-<title>Example Page</title>
-</head><body>
+HttpServer::HttpServer ( ServerConfiguration &serverConfig )
+	: _serverConfiguration(serverConfig) 
+{
+	 }
 
-<h1>Example Page</h1>
+HttpServer::HttpServer ( void ) { }
+HttpServer::~HttpServer ( void ) { }
 
-<p>This page is only an example.</p>
+HttpServer	&HttpServer::operator= ( const HttpServer &obj )
+{
+	if (this == &obj)
+		return (*this);
+	this->_serverConfiguration = obj._serverConfiguration;
+	return (*this);
+}
 
+HttpServer::HttpServer ( const HttpServer &obj )
+{
+	*this = obj;
+}
+/*
+// */
 
-<img src="resto1.jpg"/>
-<video width="720" height="360" controls>
-    <source src="yt.mp4" type="video/mp4">
-</video>
-</video>
-</body>
-</html>
+/* ----------------------------------------------------- */
+/* ------------------ MEMBER FUNCTIONS ----------------- */
+/* ----------------------------------------------------- */
 
+void	HttpServer::_setUpListeningSocket( void )
+{
+	struct addrinfo *bindAddress;
+	int				optval; // ???
 
------------------------------271876017832945170947247955--
-
-*****************
-the content length is : 477
-the bodySize : 236and the client limit size is : 263
+	memset(&_serverHints, 0, sizeof(_serverHints));
+	_serverHints.ai_family = AF_INET;
+	_serverHints.ai_socktype = SOCK_STREAM;
+	_serverHints.ai_flags = AI_PASSIVE;
+	// std::cout << "_serverConfig host is " << _server
