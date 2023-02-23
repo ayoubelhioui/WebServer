@@ -13,12 +13,10 @@ class ChunkedPostRequest {
 		~ChunkedPostRequest ( void );
 		ChunkedPostRequest ( const ChunkedPostRequest & );
 		ChunkedPostRequest	&operator= ( const ChunkedPostRequest & );
-		void	handleFirst( const char * );
-
+		void	handleChunk( SOCKET &, const char * );
 		void 	simulatePostReq ( std::ifstream & );
 	private:
 		std::ofstream	_uploadedFile;
-		SOCKET			_clientSocket;
 		char			_buffer[BUFFER_SIZE];
 		unsigned int	_currentChunkLength;
 		void			_createUploadedFile( const char * );

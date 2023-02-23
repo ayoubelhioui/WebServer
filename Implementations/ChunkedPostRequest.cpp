@@ -36,15 +36,75 @@ ChunkedPostRequest::ChunkedPostRequest ( const ChunkedPostRequest &obj )
 
 void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 {
-	std::cout << "hola comment allez vous" << std::endl;
-	this->_uploadedFile.open(generateRandString(7) + std::string(get_real_format(mimeType)));
+	std::string	fileName;
+
+	fileName = generateRandString(7) + std::string(get_real_format(mimeType));
+	this->_uploadedFile.open(fileName);
+	if (this->_uploadedFile.is_open())
+		std::cout << fileName << " is created!!" << std::endl;
+
+}
+
+void	ChunkedPostRequest::_receiveChunk( void )
+{
+	if (-1 == recv(clientSocket, this->_buffer, BUFFER_SIZE, 0))
+		std::cerr << "SOCKET " << clientSocket << " NOT READY TO BE READ!!" std::endl;
 }
 
 void	ChunkedPostRequest::_parseChunk( void )
 {
-	 
+	
 }
 
+void	ChunkedPostRequest::handleChunk ( SOCKET &clientSocket )
+{
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
 void	ChunkedPostRequest::simulatePostReq ( std::ifstream &infile )
 {
 
@@ -62,17 +122,4 @@ void	ChunkedPostRequest::simulatePostReq ( std::ifstream &infile )
 	buffer[BUFFER_SIZE] = 0;
 	std::cout << buffer << std::endl;
 }
-
-void	ChunkedPostRequest::handle ( const char *mimeType )
-{
-	this->_createUploadedFile(mimeType);
-	this->_receiveChunk();
-	this->_parseChunk();
-}
-
-/*
-	I should read the first chunk:
-	from where
-	ChunksHeader - 
 */
-
