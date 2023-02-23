@@ -166,7 +166,12 @@ void	HttpServer::_serveClients( void )
 					(*ClientInfoIt)->parsedRequest.parsingMiniHeader();
 					 try
 					 {
-//
+//						 std::cout << "*****************" << std::endl;
+//						 std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+//						 std::cout << "*****************" << std::endl;
+//						 std::cout << "i have received :" << (*ClientInfoIt)->parsedRequest.received << std::endl;
+//						 std::cout << "and the content length is  :" << (*ClientInfoIt)->parsedRequest.contentLength << std::endl;
+//						 exit (1);
 						 (*ClientInfoIt)->postRequest->preparingPostRequest(*ClientInfoIt);
 						 (*ClientInfoIt)->postRequest->isValidPostRequest(*ClientInfoIt);
                           if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)

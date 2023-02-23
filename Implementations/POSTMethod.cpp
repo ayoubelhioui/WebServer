@@ -102,4 +102,5 @@ void  PostMethod::successfulPostRequest(ClientInfo *client){
     served.read(buffer, file_size);
     send(client->socket, buffer, strlen(buffer), 0);
     delete [] buffer;
+    delete client->postRequest;
 }

@@ -82,7 +82,7 @@ int     ParsingRequest::retIndex(char *requestHeader){
 void ParsingRequest::gettingNewBodyIndex(std::string &boundarySavior)
 {
     this->newBodyIndex = retIndex(requestHeader + bodyIndex + 4);
-    this->bodyIndex += newBodyIndex + 8;
+    this->bodyIndex += newBodyIndex + 8; // skipping the header to the mini header.
     this->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
 
