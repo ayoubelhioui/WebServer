@@ -73,20 +73,18 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
 		    		if(final_path[0] == '/') final_path = '.' + final_path;
 		    		std::ifstream check_file(final_path, std::ios::binary);
 		    		if(check_file){
-                        // const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-                        // std::cout << "FINAL PATH " << final_path << std::endl;
-						// std::cout << "cgi_format " << cgi_format << std::endl;
-						// std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
-                        // for( ; CGIit != loc.CGI.end(); CGIit++ ){
-                        //     if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                        //         // php cgi
-                        //     }
-                        //     else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
-                        //         // python cgi 
-                        //     }
-                        // }
-                        return final_path;
+					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
+					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
+                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
+                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
+                            return CGIexecutedFile(final_path, parsedData.queryString, serverConfig);
+                        }
+                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
+                            // python cgi 
+                        }
                     }
+					return final_path;
+				}
 		    		else ;
 		    	}
 		    }
@@ -127,15 +125,15 @@ std::string GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverC
 	client->served.seekg(0, std::ios::beg);
 	char *buffer = new char[1024];
 	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND FAILED");
+	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
 	sprintf(buffer, "Connection: close\r\n");
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND FAILED");
+	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
 	sprintf(buffer, "Content-Length: %d\r\n", client->served_size);
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND FAILED");
+	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
 	sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND FAILED");
+	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
 	sprintf(buffer, "\r\n"); // * 
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND FAILED");
+	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
     delete [] buffer;
 	return path;
 }
@@ -250,10 +248,4 @@ int     cgiretIndex(char *requestHeader){
           return i;
     }
     return -1;
-}
-std::string GETMethod::bodyFromCgiHeader(char *buffer){
-    std::string stringBuffer(buffer);
-    int body = cgiretIndex(buffer) + 4;
-    stringBuffer = stringBuffer.substr(body);
-    return stringBuffer;
 }

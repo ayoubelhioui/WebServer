@@ -52,7 +52,7 @@ void	HttpServer::_setUpListeningSocket( void )
 		exit (EXIT_FAILURE); // to be replaced by sth else
 	// std::cout << "Socket Created Successfully" << std::endl;
 	optval = 1;
-    setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
+    setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT , &optval, sizeof(optval));
 	if (bind(_listeningSocket, bindAddress->ai_addr, bindAddress->ai_addrlen))
 		exit (EXIT_FAILURE); // to be replaced by sth else
 	// std::cout << "Binded Successfully" << std::endl;
@@ -187,9 +187,9 @@ void	HttpServer::_serveClients( void )
             (*ClientInfoIt)->served.read(s, 1024);
             int r = (*ClientInfoIt)->served.gcount();
 			if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
+				std::cout << "errno is " << errno << std::endl;
 				error_500(ClientInfoIt) ;
 				this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-				exit(1);
 			} 
 			delete [] s;
             if(r < 1024){
