@@ -155,6 +155,7 @@ void	HttpServer::_serveClients( void )
 				{
 					GETMethod getRequest;
 					(*ClientInfoIt)->currentServerFile = getRequest.callGET(*ClientInfoIt, this->_serverConfiguration, ClientInfoIt);
+					std::cout << "I SUCCEED GET" << std::endl;
 					if((*ClientInfoIt)->currentServerFile == ""){
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
@@ -185,13 +186,25 @@ void	HttpServer::_serveClients( void )
             char *s = new char[1024]();
             (*ClientInfoIt)->served.read(s, 1024);
             int r = (*ClientInfoIt)->served.gcount();
-            send((*ClientInfoIt)->socket, s, r, 0);
+			std::cout << "I'M PRE SEND AND SUCCESS" << std::endl;
+			std::cout << "socket is " << (*ClientInfoIt)->socket << std::endl;
+			try
+			{
+				send((*ClientInfoIt)->socket, s, r, 0);
+				std::cout << "errno " << errno << std::endl;
+			}
+			catch(const std::exception& e)
+			{
+				std::cout << "send failed" << std::endl;
+				exit(0);
+			}
+			std::cout << "SEND IS DONE" << std::endl;
             if(r < 1024){
                 close((*ClientInfoIt)->socket);
                 std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
+				if ((*ClientInfoIt)->currentServerFile != "")
+					std::remove((*ClientInfoIt)->currentServerFile.c_str());
                 ClientInfoIt++;
-				std::cout << "deleted file is " << (*ClientInfoIt)->socket << std::endl;
-				// std::remove((*ClientInfoIt)->currentServerFile.c_str());
                 this->_clientsList.erase(temp_it);
                 continue;
             }

@@ -136,6 +136,7 @@ std::string GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverC
 	send(client->socket, buffer, strlen(buffer), 0);
 	sprintf(buffer, "\r\n"); // * 
 	send(client->socket, buffer, strlen(buffer), 0);
+    delete [] buffer;
 	return path;
 }
 
@@ -200,33 +201,37 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
 	const char * query_string = queryString.c_str();
     const char * server_name = server.serverHost.c_str();
     const char * server_port = server.serverPort.c_str();
-
-    setenv("REQUEST_METHOD", request_method, 1);
-    setenv("QUERY_STRING", query_string, 1);
-    setenv("SCRIPT_NAME", script_name, 1);
-    setenv("SERVER_NAME", server_name, 1);
-    setenv("SERVER_PORT", server_port, 1);
-    setenv("REDIRECT_STATUS", "200", 1);
+    if (setenv("REQUEST_METHOD", request_method, 1) == -1) std::cout << "setenv failed" << std::endl;;
+    if (setenv("QUERY_STRING", query_string, 1) == -1) std::cout << "setenv failed" << std::endl;;
+    if (setenv("SCRIPT_NAME", script_name, 1) == -1) std::cout << "setenv failed" << std::endl;;
+    if (setenv("SERVER_NAME", server_name, 1) == -1) std::cout << "setenv failed" << std::endl;;
+    if (setenv("SERVER_PORT", server_port, 1) == -1) std::cout << "setenv failed" << std::endl;;
+    if (setenv("REDIRECT_STATUS", "200", 1) == -1) std::cout << "setenv failed" << std::endl;
     int fd[2];
-    pipe(fd);
+    if (pipe(fd) == -1) std::cout << "pipe is failing" << std::endl; ;
     std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
     std::ofstream out_file(newFile);
     pid = fork();
+    if(pid == -1) std::cout << "fork is failing" << std::endl;
     if (pid == 0){
         char  *args[3];
-        close(fd[0]);
-        dup2(fd[1], 1);
+        if (close(fd[0]) == -1) std::cout << "close is failing" << std::endl; ;
+        if (dup2(fd[1], 1) == -1 ) std::cout << "dup2 is failing" << std::endl;;
         args[0] = (char *) script_name;
         args[1] = (char *) php_file.c_str();
         args[2] = NULL;
-        if (execve(script_name, args, NULL) == -1)
+        if (execve(script_name, args, NULL) == -1){
+            std::cout << "execve is failing" << std::endl;
             return "";
+        }
     }
     else if (pid > 0){
-        close(fd[1]);
+        if (waitpid(pid, NULL, 0) == -1) std::cout << "waitpid is failing" << std::endl; ;
+        if (close(fd[1]) == -1) std::cout << "close is failing" << std::endl; ;
         char buffer[2001];
         ssize_t n;
         n = read(fd[0], buffer, 1000);
+        if(n == -1) std::cout << "read is failing" << std::endl;
         buffer[n] = 0;
         out_file << bodyFromCgiHeader(buffer);
         while(n > 0){
@@ -235,7 +240,7 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
             out_file << buffer;
         }
         out_file.close();
-        waitpid(pid, NULL, 0);
+        if(!out_file) std::cout << "out close is failing" << std::endl;
     }
     return newFile;
 }
