@@ -13,8 +13,7 @@ void PostMethod::preparingPostRequest(ClientInfo *client) {
     client->requestBody.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
     if (!client->requestBody.is_open())
         throw (std::runtime_error(TMP_FOLDER_COULDNT_OPEN));
-    client->requestBody.write(client->parsedRequest.requestHeader + client->parsedRequest.bodyIndex, client->parsedRequest.received - client->parsedRequest.bodyIndex);
-//    client->requestBody.close();
+    client->requestBody.write(client->parsedRequest.requestHeader + client->parsedRequest.bodyIndex, client->parsedRequest.received - client->parsedRequest.newBodyIndex - 4);
 }
 
 void PostMethod::isValidPostRequest(ClientInfo *client) {
@@ -43,7 +42,6 @@ void PostMethod::isValidPostRequest(ClientInfo *client) {
 
 
 void PostMethod::writeInTempFile(ClientInfo *client) {
-//    std::cout << "i will write : " << client->parsedRequest.receivedBytes << std::endl;
     client->requestBody.write(client->parsedRequest.requestHeader, client->parsedRequest.receivedBytes);
 }
 
@@ -59,14 +57,13 @@ void PostMethod::serveClient(ClientInfo *client){
     this->writeInTempFile(client);
 };
 
-
 void PostMethod::moveFileToUploads(ClientInfo *client)
 {
     std::ifstream sourceFile(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
     std::ofstream destinationFile(UPLOADS_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
     if (!destinationFile.is_open() || !sourceFile.is_open())
-        throw (PostMethodExceptions("couldn't Open" + client->parsedRequest.uploadFileName));
-    int totalToWrite = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.bodyIndex - 4, toWrite = 0;
+        throw (std::runtime_error("couldn't Open" + client->parsedRequest.uploadFileName));
+    int totalToWrite = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex - 8, toWrite = 0;
     while (totalToWrite > 0)
     {
         toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
@@ -88,7 +85,6 @@ void  PostMethod::successfulPostRequest(ClientInfo *client){
     std::ifstream served(path);
     if (!served.is_open())
         throw (PostMethodExceptions(UPLOAD_SUCCESS_FILE_PROBLEM));
-    std::cout << "im here" << std::endl;
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
     served.seekg(0, std::ios::beg);

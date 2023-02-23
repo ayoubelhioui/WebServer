@@ -98,7 +98,6 @@ void	HttpServer::_acceptNewConnection( void )
 	
 	if (FD_ISSET(this->_listeningSocket, &(this->_readFds)))
     {
-		std::cout << "I'M HERE ENTERING TO ACCEPT NEW CONNECTION\n";
 		ClientInfo	*newClient = new ClientInfo;
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
 		// fcntl(client->socket, F_SETFL, O_NONBLOCK); // need to be understood.
@@ -147,7 +146,6 @@ void	HttpServer::_serveClients( void )
 					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					continue ;
 				}
-				std::cout << "socket is " << (*ClientInfoIt)->socket << std::endl;
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
@@ -168,8 +166,15 @@ void	HttpServer::_serveClients( void )
 					(*ClientInfoIt)->parsedRequest.parsingMiniHeader();
 					 try
 					 {
+//
 						 (*ClientInfoIt)->postRequest->preparingPostRequest(*ClientInfoIt);
 						 (*ClientInfoIt)->postRequest->isValidPostRequest(*ClientInfoIt);
+                          if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+                        {
+                            (*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
+                            this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                            continue ;
+                        }
 					 }
 					 catch (std::exception &e){
 						 std::cout << e.what() << std::endl;
@@ -181,9 +186,7 @@ void	HttpServer::_serveClients( void )
 			}
 			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
-				std::cout << "it segfaults at socket " << (*ClientInfoIt)->socket << std::endl;
-				(*ClientInfoIt)->postRequest->serveClient(*ClientInfoIt);
-				std::cout << "i have received : " << (*ClientInfoIt)->parsedRequest.received << std::endl;
+                (*ClientInfoIt)->postRequest->serveClient(*ClientInfoIt);
 				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
 				{
 					(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);

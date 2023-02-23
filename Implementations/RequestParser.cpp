@@ -67,7 +67,7 @@ void    ParsingRequest::receiveFirstTime(int socket){
     this->requestHeader[this->receivedBytes] = 0;
     this->received += this->receivedBytes;
     this->bodyIndex = retIndex(this->requestHeader);
-    this->received -= this->bodyIndex;
+    this->received -= (this->bodyIndex + 4);
 }
 
 int     ParsingRequest::retIndex(char *requestHeader){
@@ -82,7 +82,6 @@ int     ParsingRequest::retIndex(char *requestHeader){
 void ParsingRequest::gettingNewBodyIndex(std::string &boundarySavior)
 {
     this->newBodyIndex = retIndex(requestHeader + bodyIndex + 4);
-    this->received -= newBodyIndex;
     this->bodyIndex += newBodyIndex + 8;
     this->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
@@ -102,5 +101,4 @@ void ParsingRequest::parsingMiniHeader( void )
     std::string newString(requestHeader + bodyIndex);
     gettingFileName(newString);
     gettingNewBodyIndex(boundarySavior);
-    this->contentLength = this->contentLength - this->newBodyIndex - this->boundarySize - 8;
 }
