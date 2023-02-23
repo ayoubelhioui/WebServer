@@ -52,7 +52,7 @@ void	HttpServer::_setUpListeningSocket( void )
 		exit (EXIT_FAILURE); // to be replaced by sth else
 	// std::cout << "Socket Created Successfully" << std::endl;
 	optval = 1;
-    setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT , &optval, sizeof(optval));
+    setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 	if (bind(_listeningSocket, bindAddress->ai_addr, bindAddress->ai_addrlen))
 		exit (EXIT_FAILURE); // to be replaced by sth else
 	// std::cout << "Binded Successfully" << std::endl;
@@ -66,7 +66,7 @@ void	HttpServer::_selectClients ( void )
 {
 	_maxSocket = _listeningSocket;
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
-		
+//	std::cout << "the size of the list is : " << this->_clientsList.size() << std::endl;
 	ClientInfoIt = this->_clientsList.begin();
 	FD_ZERO(&_readFds);
     FD_SET(this->_listeningSocket, &_readFds);
@@ -130,7 +130,6 @@ void HttpServer::dropClient( SOCKET &clientSocket, std::list<ClientInfo *>::iter
 void	HttpServer::_serveClients( void )
 {
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
-
 	ClientInfoIt = this->_clientsList.begin();
 	while (ClientInfoIt != this->_clientsList.end())
 	{
@@ -166,20 +165,44 @@ void	HttpServer::_serveClients( void )
 				// 	ClientInfoIt++;
 				// 	continue ;
 				// }
-				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
-				// {
-				// 		parsingMiniHeader(ClientInfoIt);
-				// 		postRequestStruct postRequest(ClientInfoIt, client_data_it, client_data, *it);
-				// 		(*ClientInfoIt)->requestBody.open("uploads/" + (*ClientInfoIt)->uploadFileName, std::ios::binary);
-				// 		(*ClientInfoIt)->requestBody.write((*ClientInfoIt)->requestHeader + (*ClientInfoIt)->bodyIndex, receivedBytes - (*ClientInfoIt)->bodyIndex);
-				// 		(*ClientInfoIt)->requestBody.close();
-				// 		exit (1);
-				// }
+				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
+				{
+					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
+					(*ClientInfoIt)->parsedRequest.parsingMiniHeader();
+					 try
+					 {
+//						 std::cout << "*****************" << std::endl;
+//						 std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+//						 std::cout << "*****************" << std::endl;
+//						 std::cout << "i have received :" << (*ClientInfoIt)->parsedRequest.received << std::endl;
+//						 std::cout << "and the content length is  :" << (*ClientInfoIt)->parsedRequest.contentLength << std::endl;
+//						 exit (1);
+						 (*ClientInfoIt)->postRequest->preparingPostRequest(*ClientInfoIt);
+						 (*ClientInfoIt)->postRequest->isValidPostRequest(*ClientInfoIt);
+                          if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+                        {
+                            (*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
+                            this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                            continue ;
+                        }
+					 }
+					 catch (std::exception &e){
+						 std::cout << e.what() << std::endl;
+						 this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+						 continue ;
+					 }
+				 }
 				(*ClientInfoIt)->isFirstRead = false;
 			}
-			else
+			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
-				
+                (*ClientInfoIt)->postRequest->serveClient(*ClientInfoIt);
+				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+				{
+					(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
+                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+					continue ;
+				}
 			}
 		}
 		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))){

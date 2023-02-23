@@ -1,6 +1,7 @@
-# include "../webserver.hpp"
+# include "../errorsHandling/errorsHandling.hpp"
 bool    isBodySizeBigger(ServerConfiguration &serverConfig, unsigned int bodySize) // STATUS CODE : 403 REQUEST ENTITY TOO LARGE
 {
+    std::cout << "the bodySize : " << bodySize << "and the client limit size is : " << serverConfig.clientBodyLimit << std::endl;
     return (bodySize > serverConfig.clientBodyLimit);
 }
 
@@ -132,7 +133,7 @@ bool isValidNumber(std::string &data){
 }
 void    error_413(std::list<ClientInfo *>::iterator &client)
 {
-    std::string path = "htmlErrorPages/error404.html";
+    std::string path = "htmlErrorPages/error413.html";
     std::ifstream served(path);
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();

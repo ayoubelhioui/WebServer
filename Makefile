@@ -1,7 +1,7 @@
 NAME=webserv
 CC=c++
 CPPFLAGS= -Wall -Wextra -Werror -std=c++98
-# FS=-fsanitize=address -g
+FS=-fsanitize=address -g
 RM=rm -rf
 
 HEADERS = Interfaces/ConfigFileParser.hpp \
@@ -11,6 +11,7 @@ SOURCES = main.cpp \
 		Implementations/ConfigFileParser.cpp \
 		Implementations/LocationBlockParse.cpp \
 		Implementations/GETMethod.cpp \
+		Implementations/POSTMethod.cpp \
 		Implementations/ServerConfiguration.cpp \
 		Implementations/MultiHttpServer.cpp \
 		Implementations/Client.cpp \
