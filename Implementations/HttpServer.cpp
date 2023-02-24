@@ -147,7 +147,7 @@ void	HttpServer::_serveClients( void )
 				}
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
-					error_414( *ClientInfoIt);
+					error_414  ( *ClientInfoIt);
 					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					continue ;
 				}
@@ -171,20 +171,10 @@ void	HttpServer::_serveClients( void )
 					(*ClientInfoIt)->parsedRequest.parsingMiniHeader();
 					 try
 					 {
-//						 std::cout << "*****************" << std::endl;
-//						 std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-//						 std::cout << "*****************" << std::endl;
-//						 std::cout << "i have received :" << (*ClientInfoIt)->parsedRequest.received << std::endl;
-//						 std::cout << "and the content length is  :" << (*ClientInfoIt)->parsedRequest.contentLength << std::endl;
-//						 exit (1);
 						 (*ClientInfoIt)->postRequest->preparingPostRequest(*ClientInfoIt);
 						 (*ClientInfoIt)->postRequest->isValidPostRequest(*ClientInfoIt);
-                          if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
-                        {
-                            (*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
-                            this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-                            continue ;
-                        }
+                         if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+                             (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					 }
 					 catch (std::exception &e){
 						 std::cout << e.what() << std::endl;
@@ -194,37 +184,46 @@ void	HttpServer::_serveClients( void )
 				 }
 				(*ClientInfoIt)->isFirstRead = false;
 			}
-			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
+			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST" &&
+                    (*ClientInfoIt)->parsedRequest.received < (*ClientInfoIt)->parsedRequest.contentLength)
+                (*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
+		}
+		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)))
+        {
+			if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
-                (*ClientInfoIt)->postRequest->serveClient(*ClientInfoIt);
 				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
 				{
-					(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
-                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-					continue ;
+                    (*ClientInfoIt)->postRequest->writeToUploadedFile();
+					if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
+					{
+						(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
+						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+						continue ;
+					}
 				}
 			}
-		}
-		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))){
-            char *s = new char[1024]();
-            (*ClientInfoIt)->served.read(s, 1024);
-            int r = (*ClientInfoIt)->served.gcount();
-			if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
-				std::cout << "errno is " << errno << std::endl;
-				error_500(*ClientInfoIt) ;
-				this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-			} 
-			delete [] s;
-            if(r < 1024){
-                close((*ClientInfoIt)->socket);
-                std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
-				if ((*ClientInfoIt)->currentServerFile != "")
-					std::remove((*ClientInfoIt)->currentServerFile.c_str());
-				delete *ClientInfoIt;
-                ClientInfoIt++;
-                this->_clientsList.erase(temp_it);
-                continue;
-            }
+			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
+			{
+				char *s = new char[1024]();
+				(*ClientInfoIt)->served.read(s, 1024);
+				int r = (*ClientInfoIt)->served.gcount();
+				if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
+					error_500(*ClientInfoIt) ;
+					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+				}
+				delete [] s;
+				if(r < 1024){
+					close((*ClientInfoIt)->socket);
+					std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
+//					if ((*ClientInfoIt)->currentServerFile != "")
+//						std::remove((*ClientInfoIt)->currentServerFile.c_str());
+					delete *ClientInfoIt;
+					ClientInfoIt++;
+					this->_clientsList.erase(temp_it);
+					continue;
+				}
+			}
         }
 		ClientInfoIt++;
 	}

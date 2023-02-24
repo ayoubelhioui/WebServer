@@ -6,7 +6,7 @@
 PostMethodExceptions::PostMethodExceptions(const std::string &errorMessage) : std::runtime_error(errorMessage) { };
 
 PostMethod::PostMethod(ServerConfiguration &serverConfiguration)
-: _serverConfiguration(serverConfiguration)
+: _serverConfiguration(serverConfiguration), totalTempFileSize(0), toWrite(0)
 {}
 
 void PostMethod::preparingPostRequest(ClientInfo *client) {
@@ -52,39 +52,42 @@ void PostMethod::receiveFromClient(ClientInfo *client){
     client->parsedRequest.requestHeader[client->parsedRequest.receivedBytes] = 0;
 }
 
-void PostMethod::serveClient(ClientInfo *client){
+void PostMethod::receiveTheBody(ClientInfo *client){
     this->receiveFromClient(client);
     this->writeInTempFile(client);
+    if (client->parsedRequest.received == client->parsedRequest.contentLength)
+        this->preparingMovingTempFile(client);
 };
 
-void PostMethod::moveFileToUploads(ClientInfo *client)
-{
-    std::ifstream sourceFile(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-    std::ofstream destinationFile(UPLOADS_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-    if (!destinationFile.is_open() || !sourceFile.is_open())
+
+void PostMethod::preparingMovingTempFile(ClientInfo *client) {
+    this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex - 8;
+    this->toWrite = 0;
+     client->requestBody.close();
+     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
+     this->destinationFile.open(UPLOADS_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
+     if (!destinationFile.is_open() || !sourceFile.is_open())
         throw (std::runtime_error("couldn't Open" + client->parsedRequest.uploadFileName));
-    int totalToWrite = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex - 8, toWrite = 0;
-    while (totalToWrite > 0)
-    {
-        toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
-        char buffer[toWrite + 1];
-        sourceFile.read(buffer, toWrite);
-        buffer[toWrite] = 0;
-        destinationFile.write(buffer, toWrite);
-        totalToWrite -= toWrite;
-    }
-    sourceFile.close();
-    destinationFile.close();
+
+}
+void PostMethod::writeToUploadedFile()
+{
+    this->toWrite = (this->totalTempFileSize > 1024) ? 1024 : this->totalTempFileSize;
+    char buffer[this->toWrite + 1];
+    this->sourceFile.read(buffer, this->toWrite);
+    buffer[this->toWrite] = 0;
+    this->destinationFile.write(buffer, this->toWrite);
+    this->totalTempFileSize -= this->toWrite;
 }
 
 
 void  PostMethod::successfulPostRequest(ClientInfo *client){
-    client->requestBody.close();
-    moveFileToUploads(client);
+    this->sourceFile.close();
+    this->destinationFile.close();
     std::string path = "uploadSuccess.html";
     std::ifstream served(path);
     if (!served.is_open())
-        throw (PostMethodExceptions(UPLOAD_SUCCESS_FILE_PROBLEM));
+        throw (std::runtime_error(UPLOAD_SUCCESS_FILE_PROBLEM));
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
     served.seekg(0, std::ios::beg);
@@ -102,5 +105,5 @@ void  PostMethod::successfulPostRequest(ClientInfo *client){
     served.read(buffer, file_size);
     send(client->socket, buffer, strlen(buffer), 0);
     delete [] buffer;
-    delete client->postRequest;
+    delete this;
 }

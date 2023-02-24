@@ -24,14 +24,19 @@ class PostMethod{
     private :
         void writeInTempFile( ClientInfo* );
         void receiveFromClient( ClientInfo* );
-        void moveFileToUploads( ClientInfo* );
         ServerConfiguration _serverConfiguration;
 public :
+        std::ifstream sourceFile;
+        std::ofstream destinationFile;
+        int totalTempFileSize;
+        int toWrite;
         PostMethod(ServerConfiguration &);
+        void writeToUploadedFile( void );
         void preparingPostRequest( ClientInfo* );
         void isValidPostRequest( ClientInfo* );
-        void serveClient( ClientInfo* );
+        void receiveTheBody( ClientInfo* );
         void  successfulPostRequest( ClientInfo* );
+        void preparingMovingTempFile( ClientInfo* );
 };
 
 #endif
