@@ -37,6 +37,7 @@ void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 {
 	std::string	fileName;
 
+	
 	fileName = generateRandString(7) + std::string(get_real_format(mimeType));
 	this->_uploadedFile.open(fileName);
 	if (this->_uploadedFile.is_open())
@@ -44,23 +45,41 @@ void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 
 }
 
-void	ChunkedPostRequest::_receiveChunk( void )
+void	ChunkedPostRequest::_receiveChunk( SOCKET &clientSocket )
 {
 	this->_receivedBytes = recv(clientSocket, this->_buffer, BUFFER_SIZE, 0);
 	if (this->_receivedBytes == -1)
-		std::cerr << "SOCKET " << clientSocket << " NOT READY TO BE READ!!" std::endl;
+		std::cerr << "SOCKET " << clientSocket << " NOT READY TO BE READ!!" << std::endl;
+	this->_buffer[this->_receivedBytes] = 0;
+	std::cout << "--- RECEIVED BYTES ---" << std::endl;
+	std::cout << this->_receivedBytes << std::endl;
 }
+
 
 void	ChunkedPostRequest::_parseChunk( void )
 {
 	
 }
 
+
+
+
+
+
+
+
+
+
 void	ChunkedPostRequest::handleChunk ( SOCKET &clientSocket )
 {
-
+	this->_receiveChunk ( clientSocket );
 }
 
+void	ChunkedPostRequest::handleFirstChunk ( SOCKET &clientSocket, const char *contentType )
+{
+	this->_createUploadedFile(contentType);
+	this->_receiveChunk(clientSocket);
+}
 
 
 
