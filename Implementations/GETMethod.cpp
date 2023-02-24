@@ -115,8 +115,9 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
 std::string GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig)
 {
 	std::string path = handleGETMethod(client->parsedRequest, serverConfig);
-	if(path == "")
+	if(path == ""){
 		throw std::runtime_error("file path not allowed");
+	}
 	client->served.open(path, std::ios::binary);
 	client->served.seekg(0, std::ios::end);
 	client->served_size = client->served.tellg();
@@ -206,14 +207,14 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
     const char * server_name = server.serverHost.c_str();
     const char * server_port = server.serverPort.c_str();
     setenv("REQUEST_METHOD", request_method, 1);
-    setenv("QUERY_STRING", query_string, 1)   ;
-    setenv("SCRIPT_NAME", script_name, 1)    ;
-    setenv("SERVER_NAME", server_name, 1)    ;
-    setenv("SERVER_PORT", server_port, 1)    ;
-    setenv("REDIRECT_STATUS", "200", 1)     ;
+    setenv("QUERY_STRING", query_string, 1);
+    setenv("SCRIPT_NAME", script_name, 1);
+    setenv("SERVER_NAME", server_name, 1)   ;
+    setenv("SERVER_PORT", server_port, 1)   ;
+    setenv("REDIRECT_STATUS", "200", 1)    ;
     int fd[2];
     pipe(fd);
-    std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
+    std::string newFile = "FilesForServingGET/" + generateRandString(10);
     std::ofstream out_file(newFile);
     pid = fork();
     if (pid == 0){
@@ -241,17 +242,7 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
         int body_index = bef_header + 4;
         header = header.substr(0, bef_header);
         std::string body = header.substr(body_index);
-        std::cout << body << std::endl;
         out_file << body;
-        while(n > 0){
-            n = read(fd[0], buffer, 1000);
-            std::cout << buffer << std::endl;
-            buffer[n] = 0;
-            out_file << buffer;
-        }
-        out_file.close();
-        close(fd[0]);
-        if(!out_file) std::cout << "out close is failing" << std::endl;
     }
     return newFile;
 }
