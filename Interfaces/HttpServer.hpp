@@ -29,6 +29,7 @@ class HttpServer {
 		ServerConfiguration	_serverConfiguration;
 		std::string			queryString;
 		std::string			newPath;
+		std::string			cgi_exec_type;
 	private:
 		SOCKET						_listeningSocket;
 		struct addrinfo 			_serverHints;

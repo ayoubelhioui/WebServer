@@ -43,6 +43,7 @@ void MultiHttpServer::startServers(void)
 
 	while (1)
 	{
+		signal(SIGPIPE, SIG_IGN);
 		vecIdx = 0;
 		while (vecIdx < _vectorOfServers.size())
 		{

@@ -24,7 +24,30 @@ class ClientInfo {
         char address_buffer[128];
         SOCKET socket;
         std::ifstream served;
+		std::string	  currentServerFile;
         int served_size;
+		// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
+		// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
+		// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);
+		// static void dropClient(int &, std::list<ClientInfo>::iterator &, std::list<ClientInfo> &);
+		// void       dropClient(int &clientSocket, std::list<ClientInfo *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
+		// void    printingParsingData(std::list<Parsing> &parsingData);
+		// bool    isValidNumber(std::string &data);
+		// void    errorPrinting(const char *errorMessage);
+		// void    readingData(std::list<Parsing> &parsingData);
+		// bool    all_empty(std::string str);
+		// void	set_upload_file(std::vector<std::string> &vec, locationBlock &loc);
+		// void	set_cgi(std::vector<std::string> &vec, locationBlock &loc);
+		// void	set_indexes(std::vector<std::string> &vec, locationBlock &loc);
+		// void	set_root(std::vector<std::string> &vec, locationBlock &loc);
+		// void	set_dirlisting(std::vector<std::string> &vec, locationBlock &loc);
+		// void	fill_redirection(std::vector<std::string> &vec, locationBlock &loc);
+		// void	fill_allow_methods(std::vector<std::string> &vec, locationBlock &loc);
+		// void	get_path(std::vector<std::string> &vec, locationBlock &loc);
+		// void	server_start(std::list<Parsing> &servers);
+		// bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
+		// bool    isUriTooLong(std::string &Uri);
+		// std::string handle_get_method(std::map<std::string, std::string> &request, Parsing &server);
 };
 
 #endif

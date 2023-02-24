@@ -11,13 +11,13 @@ SOURCES = main.cpp \
 		Implementations/ConfigFileParser.cpp \
 		Implementations/LocationBlockParse.cpp \
 		Implementations/GETMethod.cpp \
-		errorsHandling/errorsHandling.cpp \
 		Implementations/POSTMethod.cpp \
 		Implementations/ServerConfiguration.cpp \
 		Implementations/MultiHttpServer.cpp \
 		Implementations/Client.cpp \
 		Implementations/HttpServer.cpp \
 		Implementations/RequestParser.cpp \
+		errorsHandling/errorsHandling.cpp \
 		getFormat.cpp \
 
 DIR_LISTING_FILE = directoryListing.html

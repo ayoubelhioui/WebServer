@@ -21,6 +21,7 @@ class ParsingRequest{
 		int boundarySize;
 		int newBodyIndex;
 		std::string uploadFileName;
+		std::string		queryString;
 		std::map<std::string, std::string> requestDataMap;
 		void	parse();
 		void	parsingRequestFirstLine(std::string);

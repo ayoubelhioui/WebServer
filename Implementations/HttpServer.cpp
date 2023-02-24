@@ -1,5 +1,7 @@
 # include "../webserver.hpp"
-
+# include "../Interfaces/HttpServer.hpp"
+// # include "../parsing/parsing.hpp"
+// std::cout
 /* ----------------------------------------------------- */
 /* ------------------ CANONICAL FORM ------------------- */
 /* ----------------------------------------------------- */
@@ -119,7 +121,8 @@ void HttpServer::dropClient( SOCKET &clientSocket, std::list<ClientInfo *>::iter
 {
     close(clientSocket);
     std::list<ClientInfo *>::iterator tempIterator = ClientInfoIt;
-    ClientInfoIt++;
+    delete *ClientInfoIt;
+	ClientInfoIt++;
     this->_clientsList.erase(tempIterator);
 }
 
@@ -134,23 +137,25 @@ void	HttpServer::_serveClients( void )
 		{
 			if ((*ClientInfoIt)->isFirstRead)
 			{
-                (*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
+				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
-//				std::cout << "*****************" << std::endl;
-//				std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-//				std::cout << "*****************" << std::endl;
-//                std::cout << "the content length is : " << (*ClientInfoIt)->parsedRequest.requestDataMap["Content-Length:"] << std::endl;
+				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
+				size_t	foundQuery = word.find('?');
+				if(foundQuery != std::string::npos){
+					(*ClientInfoIt)->parsedRequest.requestDataMap["path"] = word.substr(0, foundQuery);
+					(*ClientInfoIt)->parsedRequest.queryString = word.substr(foundQuery + 1);
+				}
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
-					error_414( ClientInfoIt);
+					error_414( *ClientInfoIt);
 					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					continue ;
 				}
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
-					if (getRequest.callGET(*ClientInfoIt, this->_serverConfiguration, ClientInfoIt))
-					{
+					(*ClientInfoIt)->currentServerFile = getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
+					if((*ClientInfoIt)->currentServerFile == ""){
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
 					}
@@ -200,21 +205,28 @@ void	HttpServer::_serveClients( void )
 				}
 			}
 		}
-		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)) && (*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"){
-			char *s = new char[1024]();
-			(*ClientInfoIt)->served.read(s, 1024);
-			int r = (*ClientInfoIt)->served.gcount();
-			send((*ClientInfoIt)->socket, s, r, 0);
-			if(r < 1024){
-				close((*ClientInfoIt)->socket);
-				std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
-
-				ClientInfoIt++;
-				this->_clientsList.erase(temp_it);
-				continue;
-			}
-		}
-        ClientInfoIt++;
+		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))){
+            char *s = new char[1024]();
+            (*ClientInfoIt)->served.read(s, 1024);
+            int r = (*ClientInfoIt)->served.gcount();
+			if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
+				std::cout << "errno is " << errno << std::endl;
+				error_500(*ClientInfoIt) ;
+				this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+			} 
+			delete [] s;
+            if(r < 1024){
+                close((*ClientInfoIt)->socket);
+                std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
+				if ((*ClientInfoIt)->currentServerFile != "")
+					std::remove((*ClientInfoIt)->currentServerFile.c_str());
+				delete *ClientInfoIt;
+                ClientInfoIt++;
+                this->_clientsList.erase(temp_it);
+                continue;
+            }
+        }
+		ClientInfoIt++;
 	}
 }
 
