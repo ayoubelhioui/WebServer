@@ -10,9 +10,8 @@
 // }
 
 ChunkedPostRequest::ChunkedPostRequest ( void )
-{
-	
-}
+	: _receivedBytes(0)
+{}
 
 ChunkedPostRequest::~ChunkedPostRequest ( void )
 {
@@ -47,7 +46,8 @@ void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 
 void	ChunkedPostRequest::_receiveChunk( void )
 {
-	if (-1 == recv(clientSocket, this->_buffer, BUFFER_SIZE, 0))
+	this->_receivedBytes = recv(clientSocket, this->_buffer, BUFFER_SIZE, 0);
+	if (this->_receivedBytes == -1)
 		std::cerr << "SOCKET " << clientSocket << " NOT READY TO BE READ!!" std::endl;
 }
 
@@ -58,7 +58,7 @@ void	ChunkedPostRequest::_parseChunk( void )
 
 void	ChunkedPostRequest::handleChunk ( SOCKET &clientSocket )
 {
-	
+
 }
 
 
