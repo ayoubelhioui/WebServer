@@ -11,6 +11,7 @@ SOURCES = main.cpp \
 		Implementations/ConfigFileParser.cpp \
 		Implementations/LocationBlockParse.cpp \
 		Implementations/GETMethod.cpp \
+		Implementations/POSTMethod.cpp \
 		Implementations/ServerConfiguration.cpp \
 		Implementations/MultiHttpServer.cpp \
 		Implementations/Client.cpp \

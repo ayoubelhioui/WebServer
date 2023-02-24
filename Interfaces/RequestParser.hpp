@@ -1,5 +1,6 @@
 #ifndef PARSING_REQUEST
 #define PARSING_REQUEST
+#include <iostream>
 #include <map>
 #include <string>
 #include <sstream>
@@ -9,21 +10,27 @@
 
 class ParsingRequest{
 	public :
+		ParsingRequest();
+		~ParsingRequest();
 		int bodyIndex;
 		int bytesToReceive;
 		int contentLength;
 		int	receivedBytes;
 		char *requestHeader;
+		int received;
+		int boundarySize;
+		int newBodyIndex;
+		std::string uploadFileName;
+		std::string		queryString;
 		std::map<std::string, std::string> requestDataMap;
 		void	parse();
 		void	parsingRequestFirstLine(std::string);
 		void	parsingRequest(std::string);
 		void	receiveFirstTime ( SOCKET );
-		void	parsingMiniHeader( ); 
-
+		void	parsingMiniHeader( void );
+		void 	gettingFileName(std::string &);
+		void	gettingNewBodyIndex(std::string &);
 		int		retIndex(char *);
-		ParsingRequest();
-		~ParsingRequest();
 };
 #endif
 

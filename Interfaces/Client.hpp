@@ -1,30 +1,30 @@
 
-#ifndef _CLIENT_H__
-#define _CLIENT_H__
-#include <iostream>
+# ifndef _CLIENT_H__
+# define _CLIENT_H__
+# include <iostream>
 # include <fstream>
 # include <list>
-#include "../Interfaces/RequestParser.hpp"
+# include "../Interfaces/RequestParser.hpp"
+# include "../Interfaces/POSTMethod.hpp"
+
+class PostMethod;
 
 class ClientInfo {
     public:
 		ClientInfo ( void );
 		~ClientInfo ( void );
+		PostMethod *postRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
         ParsingRequest parsedRequest;
-        std::string uploadFileName;
-        int received;
         bool isFirstRead;
-        bool bodyFirstRead;
-        int boundarySize;
-        int bytesToReceive;
         std::ofstream requestBody;
         socklen_t addressLength;
         struct sockaddr_storage address;
         char address_buffer[128];
         SOCKET socket;
         std::ifstream served;
+		std::string	  currentServerFile;
         int served_size;
 		// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 		// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
@@ -35,7 +35,6 @@ class ClientInfo {
 		// bool    isValidNumber(std::string &data);
 		// void    errorPrinting(const char *errorMessage);
 		// void    readingData(std::list<Parsing> &parsingData);
-		// void	location_parse(std::list<std::string>::iterator &it, locationBlock &loc);
 		// bool    all_empty(std::string str);
 		// void	set_upload_file(std::vector<std::string> &vec, locationBlock &loc);
 		// void	set_cgi(std::vector<std::string> &vec, locationBlock &loc);

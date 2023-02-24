@@ -102,17 +102,17 @@ void  successfulPostRequest(std::list<client_info *>::iterator &clientDataIterat
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 201 Created\r\n");
-    send(client->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND FAILED");
     sprintf(buffer, "Connection: close\r\n");
-    send(client->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND FAILED");
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send(client->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND FAILED");
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send(client->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND FAILED");
     sprintf(buffer, "\r\n");
-    send(client->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND FAILED");
     served.read(buffer, file_size);
-    send(client->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND FAILED");
     delete [] buffer;
     dropClient(client->socket, clientDataIterator, clientData);
 }

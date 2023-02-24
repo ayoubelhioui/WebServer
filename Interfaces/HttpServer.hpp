@@ -15,7 +15,6 @@
 # define SOCKET int
 # define MAXQUEUESIZE 10
 
-
 class HttpServer {
 	public:
 		HttpServer ( ServerConfiguration & );
@@ -30,6 +29,7 @@ class HttpServer {
 		ServerConfiguration	_serverConfiguration;
 		std::string			queryString;
 		std::string			newPath;
+		std::string			cgi_exec_type;
 	private:
 		SOCKET						_listeningSocket;
 		struct addrinfo 			_serverHints;

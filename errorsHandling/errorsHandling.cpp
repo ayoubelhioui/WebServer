@@ -1,6 +1,7 @@
-# include "../webserver.hpp"
+# include "../errorsHandling/errorsHandling.hpp"
 bool    isBodySizeBigger(ServerConfiguration &serverConfig, unsigned int bodySize) // STATUS CODE : 403 REQUEST ENTITY TOO LARGE
 {
+    std::cout << "the bodySize : " << bodySize << "and the client limit size is : " << serverConfig.clientBodyLimit << std::endl;
     return (bodySize > serverConfig.clientBodyLimit);
 }
 
@@ -27,7 +28,7 @@ bool isUriTooLong(std::string &Uri)
 }
 
 
-void    error_414(std::list<ClientInfo *>::iterator &client)
+void    error_414(ClientInfo *client)
 {
     std::string path = "htmlErrorPages/error414.html";
     std::ifstream served(path);
@@ -36,21 +37,21 @@ void    error_414(std::list<ClientInfo *>::iterator &client)
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 414 Request-URI Too Long\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     delete [] buffer;
 }
 
-void    error_501(std::list<ClientInfo *>::iterator &client)
+void    error_501(ClientInfo *client)
 {
     std::string path = "htmlErrorPages/error501.html";
     std::ifstream served(path);
@@ -59,21 +60,44 @@ void    error_501(std::list<ClientInfo *>::iterator &client)
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 501 Not Implemented\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     delete [] buffer;
 }
 
-void    error_400(std::list<ClientInfo *>::iterator &client)
+void    error_500(ClientInfo *client)
+{
+    std::string path = "htmlErrorPages/error500.html";
+    std::ifstream served(path);
+    served.seekg(0, std::ios::end);
+    int file_size = served.tellg();
+    served.seekg(0, std::ios::beg);
+    char *buffer = new char[file_size + 1]();
+    sprintf(buffer, "HTTP/1.1 500 Internal Server Error\r\n");
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting(" OK");
+    sprintf(buffer, "Connection: close\r\n");
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK 1");
+    sprintf(buffer, "Content-Length: %d\r\n", file_size);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK 2");
+    sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK 3 ");
+    sprintf(buffer, "\r\n");
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK 4 ");
+    served.read(buffer, file_size);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK 5 ");
+    delete [] buffer;
+}
+
+void    error_400(ClientInfo *client)
 {
     std::string path = "htmlErrorPages/error400.html";
     std::ifstream served(path);
@@ -82,17 +106,17 @@ void    error_400(std::list<ClientInfo *>::iterator &client)
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 400 Bad Request\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     delete [] buffer;
 }
 
@@ -107,30 +131,30 @@ bool isValidNumber(std::string &data){
             return (false);
     return (true);
 }
-void    error_413(std::list<ClientInfo *>::iterator &client)
+void    error_413(ClientInfo *client)
 {
-    std::string path = "htmlErrorPages/error404.html";
+    std::string path = "htmlErrorPages/error413.html";
     std::ifstream served(path);
     served.seekg(0, std::ios::end);
     int file_size = served.tellg();
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 413 Request Entity Too Large\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     delete [] buffer;
 }
 
-void    error_404(std::list<ClientInfo *>::iterator &client)
+void    error_404(ClientInfo *client)
 {
     std::string path = "htmlErrorPages/error404.html";
     std::ifstream served(path);
@@ -139,16 +163,16 @@ void    error_404(std::list<ClientInfo *>::iterator &client)
     served.seekg(0, std::ios::beg);
     char *buffer = new char[file_size + 1]();
     sprintf(buffer, "HTTP/1.1 404 Not Found\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Connection: close\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     sprintf(buffer, "\r\n");
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     served.read(buffer, file_size);
-    send((*client)->socket, buffer, strlen(buffer), 0);
+    if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("SEND IS NOT OK");
     delete [] buffer;
 }

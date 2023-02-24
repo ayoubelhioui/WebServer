@@ -1,0 +1,46 @@
+# include "../webserver.hpp"
+# include "../Interfaces/HttpServer.hpp"
+# include "../Interfaces/POSTMethod.hpp"
+// # include "../parsing/parsing.hpp"
+
+/* ----------------------------------------------------- */
+/* ------------------ CANONICAL FORM ------------------- */
+/* ----------------------------------------------------- */
+
+HttpServer::HttpServer ( ServerConfiguration &serverConfig )
+	: _serverConfiguration(serverConfig) 
+{
+	 }
+
+HttpServer::HttpServer ( void ) { }
+HttpServer::~HttpServer ( void ) { }
+
+HttpServer	&HttpServer::operator= ( const HttpServer &obj )
+{
+	if (this == &obj)
+		return (*this);
+	this->_serverConfiguration = obj._serverConfiguration;
+	return (*this);
+}
+
+HttpServer::HttpServer ( const HttpServer &obj )
+{
+	*this = obj;
+}
+/*
+// */
+
+/* ----------------------------------------------------- */
+/* ------------------ MEMBER FUNCTIONS ----------------- */
+/* ----------------------------------------------------- */
+
+void	HttpServer::_setUpListeningSocket( void )
+{
+	struct addrinfo *bindAddress;
+	int				optval; // ???
+
+	memset(&_serverHints, 0, sizeof(_serverHints));
+	_serverHints.ai_family = AF_INET;
+	_serverHints.ai_socktype = SOCK_STREAM;
+	_serverHints.ai_flags = AI_PASSIVE;
+	// std::cout << "_serverConfig host is " << _server
