@@ -136,6 +136,7 @@ void	HttpServer::_serveClients( void )
 	{
 		if (FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)))
 		{
+			std::cout << "i'm a champion\n";
 			if ((*ClientInfoIt)->isFirstRead)
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
@@ -168,46 +169,72 @@ void	HttpServer::_serveClients( void )
 				// 	continue ;
 				// }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
-				{`
-					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
-					(*ClientInfoIt)->parsedRequest.parsingMiniHeader();
-					 try
-					 {
-//						 std::cout << "*****************" << std::endl;
-//						 std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-//						 std::cout << "*****************" << std::endl;
-//						 std::cout << "i have received :" << (*ClientInfoIt)->parsedRequest.received << std::endl;
-//						 std::cout << "and the content length is  :" << (*ClientInfoIt)->parsedRequest.contentLength << std::endl;
-//						 exit (1);
-						 (*ClientInfoIt)->postRequest->preparingPostRequest(*ClientInfoIt);
-						 (*ClientInfoIt)->postRequest->isValidPostRequest(*ClientInfoIt);
-                          if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
-                        {
-                            (*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
-                            this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-                            continue ;
-                        }
-					 }
-					 catch (std::exception &e){
-						 std::cout << e.what() << std::endl;
-						 this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-						 continue ;
-					 }
+				{
+					if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding"] == "chunked")
+					{
+						std::cout << "Transfer-Encoding : " << (*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding"] << std::endl;
+					}
+					else
+					{
+						(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
+						(*ClientInfoIt)->parsedRequest.parsingMiniHeader();
+						try
+						{
+	//						 std::cout << "*****************" << std::endl;
+	//						 std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+	//						 std::cout << "*****************" << std::endl;
+	//						 std::cout << "i have received :" << (*ClientInfoIt)->parsedRequest.received << std::endl;
+	//						 std::cout << "and the content length is  :" << (*ClientInfoIt)->parsedRequest.contentLength << std::endl;
+	//						 exit (1);
+							(*ClientInfoIt)->postRequest->preparingPostRequest(*ClientInfoIt);
+							(*ClientInfoIt)->postRequest->isValidPostRequest(*ClientInfoIt);
+							if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+							{
+								(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
+								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+								continue ;
+							}
+						}
+						catch (std::exception &e){
+							std::cout << e.what() << std::endl;
+							this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+							continue ;
+						}
+					}
 				 }
 				(*ClientInfoIt)->isFirstRead = false;
+				// std::cout << "method is " << ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST") << std::endl;
 			}
 			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
-                (*ClientInfoIt)->postRequest->serveClient(*ClientInfoIt);
-				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+					/*-----------------*/
+				if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding"] == "chunked")
 				{
-					(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
-                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-					continue ;
+					std::cout << "------------------- ALREADY READ -------------------" << std::endl;
+					char buffer[1024];
+					int recBytes = recv((*ClientInfoIt)->socket, buffer, 1024, 0);
+					buffer[recBytes] = 0;
+					if (recBytes == -1 )
+						std::cerr << "ERROR ON RECEIVING "<< std::endl;
+					std::cout << buffer << std::endl;
+						/*-----------------*/
+				}
+				else 
+				{
+
+					(*ClientInfoIt)->postRequest->serveClient(*ClientInfoIt);
+					if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+					{
+						(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
+						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+						continue ;
+					}
 				}
 			}
+			// std::cout << "is it post |" << ((*ClientInfoIt)->parsedRequest.requestDataMap["method"].compare("POST") == 0) << "|" << std::endl;
+			// std::cout << "is it first " << (*ClientInfoIt)->isFirstRead << std::endl;
 		}
-		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))){
+		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)) && (*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"){
             char *s = new char[1024]();
             (*ClientInfoIt)->served.read(s, 1024);
             int r = (*ClientInfoIt)->served.gcount();
@@ -231,8 +258,8 @@ void	HttpServer::_serveClients( void )
 		
 		ClientInfoIt++;
 		}
-	}
 }
+
 
 void	HttpServer::setUpMultiplexing ( void )
 {
