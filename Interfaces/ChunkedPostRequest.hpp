@@ -4,6 +4,7 @@
 # include <iostream>
 # include <sys/socket.h>
 # include "../Header/utils.hpp"
+# include "../Interfaces/RequestParser.hpp"
 // # include "../errorsHandling/errorsHandling.hpp"
 # define BUFFER_SIZE 1024
 # define SOCKET int
@@ -16,7 +17,7 @@ class ChunkedPostRequest {
 		ChunkedPostRequest ( const ChunkedPostRequest & );
 		ChunkedPostRequest	&operator= ( const ChunkedPostRequest & );
 		void	handleChunk( SOCKET & );
-		void	handleFirstChunk ( SOCKET & , const char * );
+		void	handleFirstChunk ( SOCKET & , const char *, ParsingRequest & );
 
 		// void 	simulatePostReq ( std::ifstream & );
 	private:

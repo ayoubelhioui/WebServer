@@ -67,18 +67,17 @@ void	ChunkedPostRequest::_parseChunk( void )
 
 
 
+/*---------------------------------------------------------*/
 
-
+void	ChunkedPostRequest::handleFirstChunk ( SOCKET &clientSocket, const char *contentType, ParsingRequest &request )
+{
+	this->_createUploadedFile(contentType);
+	memcpy(this->_buffer, &(request.requestHeader[request.retIndex(request.requestHeader)]), 1024);
+}
 
 void	ChunkedPostRequest::handleChunk ( SOCKET &clientSocket )
 {
 	this->_receiveChunk ( clientSocket );
-}
-
-void	ChunkedPostRequest::handleFirstChunk ( SOCKET &clientSocket, const char *contentType )
-{
-	this->_createUploadedFile(contentType);
-	this->_receiveChunk(clientSocket);
 }
 
 
