@@ -112,11 +112,11 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
 	return "";
 }
 
-std::string GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig, std::list<ClientInfo *>::iterator &ClientInfoIt )
+std::string GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig)
 {
 	std::string path = handleGETMethod(client->parsedRequest, serverConfig);
 	if(path == ""){
-		error_404(ClientInfoIt);
+		error_404(client);
 		return "";
 	}
 	client->served.open(path, std::ios::binary);
@@ -192,6 +192,14 @@ std::string GETMethod::directoryListing(std::string rootDirectory, std::string l
     return newFile;
 }
 
+int     cgiretIndex(char *requestHeader){
+    for(int i = 0; requestHeader[i]; i++){
+      if(!strncmp(&requestHeader[i], "\r\n\r\n", 4))
+          return i;
+    }
+    return -1;
+}
+
 std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string queryString, ServerConfiguration &server ){
     int     pid = 0;
     const char * request_method = "GET";
@@ -230,9 +238,16 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
         ssize_t n;
         n = read(fd[0], buffer, 1000);
         buffer[n] = 0;
-        out_file << bodyFromCgiHeader(buffer);
+        std::string header(buffer);
+        int bef_header = cgiretIndex(buffer);
+        int body_index = bef_header + 4;
+        header = header.substr(0, bef_header);
+        std::string body = header.substr(body_index);
+        std::cout << body << std::endl;
+        out_file << body;
         while(n > 0){
             n = read(fd[0], buffer, 1000);
+            std::cout << buffer << std::endl;
             buffer[n] = 0;
             out_file << buffer;
         }
@@ -241,11 +256,4 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string query
         if(!out_file) std::cout << "out close is failing" << std::endl;
     }
     return newFile;
-}
-int     cgiretIndex(char *requestHeader){
-    for(int i = 0; requestHeader[i]; i++){
-      if(!strncmp(&requestHeader[i], "\r\n\r\n", 4))
-          return i;
-    }
-    return -1;
 }

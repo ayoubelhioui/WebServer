@@ -7,7 +7,7 @@
 
 class GETMethod{
 	public:
-		std::string		callGET( ClientInfo *, ServerConfiguration &, std::list<ClientInfo *>::iterator & );
+		std::string		callGET( ClientInfo *, ServerConfiguration & );
 		std::string		handleGETMethod(ParsingRequest &, ServerConfiguration &);
 		void			redirectToWebsite(void);
 		std::string 	format_date(time_t t);

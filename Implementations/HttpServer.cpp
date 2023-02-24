@@ -147,14 +147,14 @@ void	HttpServer::_serveClients( void )
 				}
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
-					error_414( ClientInfoIt);
+					error_414( *ClientInfoIt);
 					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					continue ;
 				}
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
-					(*ClientInfoIt)->currentServerFile = getRequest.callGET(*ClientInfoIt, this->_serverConfiguration, ClientInfoIt);
+					(*ClientInfoIt)->currentServerFile = getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
 					if((*ClientInfoIt)->currentServerFile == ""){
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
@@ -211,7 +211,7 @@ void	HttpServer::_serveClients( void )
             int r = (*ClientInfoIt)->served.gcount();
 			if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
 				std::cout << "errno is " << errno << std::endl;
-				error_500(ClientInfoIt) ;
+				error_500(*ClientInfoIt) ;
 				this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 			} 
 			delete [] s;
