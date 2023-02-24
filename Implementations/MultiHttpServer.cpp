@@ -41,9 +41,9 @@ void MultiHttpServer::startServers(void)
 	std::list<ServerConfiguration>::iterator	serverConfigListIt;
 	size_t								vecIdx;
 
+	signal(SIGPIPE, SIG_IGN);
 	while (1)
 	{
-		signal(SIGPIPE, SIG_IGN);
 		vecIdx = 0;
 		while (vecIdx < _vectorOfServers.size())
 		{

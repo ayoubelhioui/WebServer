@@ -115,10 +115,8 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
 std::string GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig)
 {
 	std::string path = handleGETMethod(client->parsedRequest, serverConfig);
-	if(path == ""){
-		error_404(client);
-		return "";
-	}
+	if(path == "")
+		throw std::runtime_error("file path not allowed");
 	client->served.open(path, std::ios::binary);
 	client->served.seekg(0, std::ios::end);
 	client->served_size = client->served.tellg();

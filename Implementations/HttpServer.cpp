@@ -66,7 +66,6 @@ void	HttpServer::_selectClients ( void )
 {
 	_maxSocket = _listeningSocket;
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
-//	std::cout << "the size of the list is : " << this->_clientsList.size() << std::endl;
 	ClientInfoIt = this->_clientsList.begin();
 	FD_ZERO(&_readFds);
     FD_SET(this->_listeningSocket, &_readFds);
@@ -147,16 +146,17 @@ void	HttpServer::_serveClients( void )
 				}
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
-					error_414( *ClientInfoIt);
-					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+					error_414(*ClientInfoIt);
 					continue ;
 				}
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
-					(*ClientInfoIt)->currentServerFile = getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
-					if((*ClientInfoIt)->currentServerFile == ""){
-						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+					try{
+						(*ClientInfoIt)->currentServerFile = getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
+					}
+					catch(std::exception &e){
+						error_404((*ClientInfoIt));
 						continue;
 					}
 				}
@@ -187,8 +187,6 @@ void	HttpServer::_serveClients( void )
                         }
 					 }
 					 catch (std::exception &e){
-						 std::cout << e.what() << std::endl;
-						 this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						 continue ;
 					 }
 				 }
@@ -205,21 +203,20 @@ void	HttpServer::_serveClients( void )
 				}
 			}
 		}
-		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))){
+		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))
+		&& (*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"){
             char *s = new char[1024]();
             (*ClientInfoIt)->served.read(s, 1024);
             int r = (*ClientInfoIt)->served.gcount();
 			if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
-				std::cout << "errno is " << errno << std::endl;
-				error_500(*ClientInfoIt) ;
 				this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 			} 
 			delete [] s;
             if(r < 1024){
                 close((*ClientInfoIt)->socket);
                 std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
-				if ((*ClientInfoIt)->currentServerFile != "")
-					std::remove((*ClientInfoIt)->currentServerFile.c_str());
+				// if ((*ClientInfoIt)->currentServerFile != "")
+				// 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
 				delete *ClientInfoIt;
                 ClientInfoIt++;
                 this->_clientsList.erase(temp_it);
