@@ -176,7 +176,6 @@ void	HttpServer::_serveClients( void )
 						(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
 						(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
 														, (*ClientInfoIt)->parsedRequest);
-					exit(EXIT_SUCCESS);
 					}
 					else
 					{
@@ -215,6 +214,8 @@ void	HttpServer::_serveClients( void )
 				{
 					std::cout << "Chunked being processed for the SECOND time" << std::endl;
 					(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
+					// exit(EXIT_SUCCESS);
+
 				}
 				else
 				{

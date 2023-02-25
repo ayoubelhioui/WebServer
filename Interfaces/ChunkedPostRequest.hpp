@@ -21,7 +21,6 @@ class ChunkedPostRequest {
 		ChunkedPostRequest	&operator= ( const ChunkedPostRequest & );
 		void	handleRecv( SOCKET & );
 		void	handleFirstRecv ( const char *, ParsingRequest & );
-
 		// void 	simulatePostReq ( std::ifstream & );
 	private:
 		std::ofstream	_uploadedFile;
@@ -31,6 +30,8 @@ class ChunkedPostRequest {
 		unsigned int	_currentChunkSize;
 		unsigned int	_currentChunkSizeStrLength;
 		unsigned int	_fileSize;
+		unsigned int	_writtenBytes;
+		char			*_chunkContent;
 		void			_createUploadedFile( const char * );
 		void			_receiveChunk ( SOCKET & );
 		void			_parseChunk( void );
