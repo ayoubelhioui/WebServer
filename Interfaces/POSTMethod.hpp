@@ -22,21 +22,23 @@ class PostMethodExceptions : std::runtime_error{
 class ClientInfo;
 class PostMethod{
     private :
-        void writeInTempFile( ClientInfo* );
-        void receiveFromClient( ClientInfo* );
+        void _searchingForUploadFolder( ClientInfo* );
+        void _preparingPostRequest( ClientInfo* );
+        void _isValidPostRequest( ClientInfo* );
+        void _writeInTempFile( ClientInfo* );
+        void _receiveFromClient( ClientInfo* );
         ServerConfiguration _serverConfiguration;
-public :
+    public :
         std::ifstream sourceFile;
         std::ofstream destinationFile;
         int totalTempFileSize;
         int toWrite;
         PostMethod(ServerConfiguration &);
         void writeToUploadedFile( void );
-        void preparingPostRequest( ClientInfo* );
-        void isValidPostRequest( ClientInfo* );
         void receiveTheBody( ClientInfo* );
-        void  successfulPostRequest( ClientInfo* );
+        void successfulPostRequest( ClientInfo* );
         void preparingMovingTempFile( ClientInfo* );
+        void handleFirstRead( ClientInfo* );
 };
 
 #endif

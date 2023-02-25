@@ -94,11 +94,11 @@ void ParsingRequest::gettingFileName(std::string &newString)
 }
 
 
-void ParsingRequest::parsingMiniHeader( void )
+void ParsingRequest::_parsingMiniHeader( void )
 {
     std::map<std::string, std::string>::iterator content = requestDataMap.find("Content-Type:");
     std::string boundarySavior = content->second;
     std::string newString(requestHeader + bodyIndex);
-    gettingFileName(newString);
-    gettingNewBodyIndex(boundarySavior);
+    this->gettingFileName(newString);
+    this->gettingNewBodyIndex(boundarySavior);
 }

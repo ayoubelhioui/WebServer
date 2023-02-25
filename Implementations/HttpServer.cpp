@@ -168,11 +168,9 @@ void	HttpServer::_serveClients( void )
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
 					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
-					(*ClientInfoIt)->parsedRequest.parsingMiniHeader();
 					 try
 					 {
-						 (*ClientInfoIt)->postRequest->preparingPostRequest(*ClientInfoIt);
-						 (*ClientInfoIt)->postRequest->isValidPostRequest(*ClientInfoIt);
+						 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
                          if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
                              (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					 }
