@@ -169,58 +169,39 @@ void	HttpServer::_serveClients( void )
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
 					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
-					(*ClientInfoIt)->parsedRequest.parsingMiniHeader();
 					 try
 					 {
-//						 std::cout << "*****************" << std::endl;
-//						 std::cout << "req head " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-//						 std::cout << "*****************" << std::endl;
-//						 std::cout << "i have received :" << (*ClientInfoIt)->parsedRequest.received << std::endl;
-//						 std::cout << "and the content length is  :" << (*ClientInfoIt)->parsedRequest.contentLength << std::endl;
-//						 exit (1);
-						 (*ClientInfoIt)->postRequest->preparingPostRequest(*ClientInfoIt);
-						 (*ClientInfoIt)->postRequest->isValidPostRequest(*ClientInfoIt);
-                          if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
-                        {
-                            (*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
-                            this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-                            continue ;
-                        }
+						 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
+                         if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+                             (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					 }
 					 catch (std::exception &e){
 					 }
 				 }
 				(*ClientInfoIt)->isFirstRead = false;
 			}
-			else
+			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST" &&
+                    (*ClientInfoIt)->parsedRequest.received < (*ClientInfoIt)->parsedRequest.contentLength)
+                (*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
+		}
+		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)))
+        {
+			if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
-				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST"){
-					(*ClientInfoIt)->postRequest->serveClient(*ClientInfoIt);
-					if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+				{
+                    (*ClientInfoIt)->postRequest->writeToUploadedFile();
+					if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
 					{
 						(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue ;
 					}
 				}
-				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
-				&& (*ClientInfoIt)->inReadCgiOut){
-					char buffer[1001];
-					ssize_t n;
-					n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
-        			buffer[n] = 0;
-					(*ClientInfoIt)->cgi_out << buffer;
-					if(n < 1000) {
-						close((*ClientInfoIt)->CgiReadEnd);
-						(*ClientInfoIt)->cgi_out.close();
-						(*ClientInfoIt)->inReadCgiOut = 0;
-					}
-				}
 			}
-		}
-		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))
-		&& (*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"){
-			if((*ClientInfoIt)->inReadCgiOut == 0){
+			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
+			{
+				if((*ClientInfoIt)->inReadCgiOut == 0){
             		char *s = new char[1024]();
             		(*ClientInfoIt)->served.read(s, 1024);
             		int r = (*ClientInfoIt)->served.gcount();
@@ -241,6 +222,7 @@ void	HttpServer::_serveClients( void )
             		    continue;
             		}
 				}
+			}
         }
 		ClientInfoIt++;
 	}
