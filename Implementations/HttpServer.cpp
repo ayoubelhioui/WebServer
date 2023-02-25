@@ -66,7 +66,6 @@ void	HttpServer::_selectClients ( void )
 {
 	_maxSocket = _listeningSocket;
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
-//	std::cout << "the size of the list is : " << this->_clientsList.size() << std::endl;
 	ClientInfoIt = this->_clientsList.begin();
 	FD_ZERO(&_readFds);
     FD_SET(this->_listeningSocket, &_readFds);
@@ -80,7 +79,6 @@ void	HttpServer::_selectClients ( void )
 	}
 	if (select(_maxSocket + 1, &_readFds, &_writeFds, NULL, NULL) == -1)
 		errorPrinting("select has failed"); // to be moved
-
 }
 
 void	HttpServer::setClientInfoList ( std::list<ClientInfo> & )
@@ -134,6 +132,9 @@ void	HttpServer::_serveClients( void )
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
+//				std::cout << "*************************" << std::endl;
+//				std::cout << "req header" << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+//				std::cout << "*************************" << std::endl;
 				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 				size_t	foundQuery = word.find('?');
 				if(foundQuery != std::string::npos){
@@ -142,17 +143,17 @@ void	HttpServer::_serveClients( void )
 				}
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
-					error_414  ( *ClientInfoIt);
-					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-					continue ;
+					error_414(*ClientInfoIt);
 				}
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
-					(*ClientInfoIt)->currentServerFile = getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
-					if((*ClientInfoIt)->currentServerFile == ""){
-						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-						continue;
+					try{
+						getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
+					}
+					catch(std::exception &e){
+						error_404((*ClientInfoIt));
+						// continue;
 					}
 				}
 				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
@@ -170,23 +171,41 @@ void	HttpServer::_serveClients( void )
                              (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					 }
 					 catch (std::exception &e){
-                         std::cout << "errno " << errno << std::endl;
+						 (*ClientInfoIt)->postRequest->isErrorOccured = true;
 						 std::cout << e.what() << std::endl;
-						 this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-						 continue ;
+//						 this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					 }
 				 }
 				(*ClientInfoIt)->isFirstRead = false;
 			}
-			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST" &&
-                    (*ClientInfoIt)->parsedRequest.received < (*ClientInfoIt)->parsedRequest.contentLength)
-                (*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
+			else{
+				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST" &&
+                    (*ClientInfoIt)->parsedRequest.received < (*ClientInfoIt)->parsedRequest.contentLength
+                    && (*ClientInfoIt)->postRequest->isErrorOccured == false)
+					    (*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
+				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
+				&& (*ClientInfoIt)->inReadCgiOut){
+					char buffer[1001];
+					ssize_t n;
+					n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
+        			buffer[n] = 0;
+					(*ClientInfoIt)->cgi_out << buffer;
+					if(n < 1000) {
+						close((*ClientInfoIt)->CgiReadEnd);
+						(*ClientInfoIt)->cgi_out.close();
+						(*ClientInfoIt)->inReadCgiOut = 0;
+					}
+				}
+			}
 		}
+
 		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)))
         {
 			if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
-				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+
+				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
+                && (*ClientInfoIt)->postRequest->isErrorOccured == false)
 				{
                     (*ClientInfoIt)->postRequest->writeToUploadedFile();
 					if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
@@ -196,26 +215,51 @@ void	HttpServer::_serveClients( void )
 						continue ;
 					}
 				}
+                else if ((*ClientInfoIt)->postRequest->isErrorOccured == true){
+                    char *s = new char[1024]();
+            		(*ClientInfoIt)->served.read(s, 1024);
+            		int r = (*ClientInfoIt)->served.gcount();
+					if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
+						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+						delete [] s;
+                        continue;
+					}
+					delete [] s;
+            		if(r < 1024){
+            		    close((*ClientInfoIt)->socket);
+            		    std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
+						// if ((*ClientInfoIt)->currentServerFile != "")
+						// 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
+						// delete *ClientInfoIt;
+						(*ClientInfoIt)->served.close();
+            		    ClientInfoIt++;
+            		    this->_clientsList.erase(temp_it);
+            		    continue;
+            		}
+                }
 			}
 			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 			{
-				char *s = new char[1024]();
-				(*ClientInfoIt)->served.read(s, 1024);
-				int r = (*ClientInfoIt)->served.gcount();
-				if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
-					error_500(*ClientInfoIt) ;
-					this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-				}
-				delete [] s;
-				if(r < 1024){
-					close((*ClientInfoIt)->socket);
-					std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
-//					if ((*ClientInfoIt)->currentServerFile != "")
-//						std::remove((*ClientInfoIt)->currentServerFile.c_str());
-					delete *ClientInfoIt;
-					ClientInfoIt++;
-					this->_clientsList.erase(temp_it);
-					continue;
+				if((*ClientInfoIt)->inReadCgiOut == 0){
+            		char *s = new char[1024]();
+            		(*ClientInfoIt)->served.read(s, 1024);
+            		int r = (*ClientInfoIt)->served.gcount();
+					if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
+						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+						continue;
+					} 
+					delete [] s;
+            		if(r < 1024){
+            		    close((*ClientInfoIt)->socket);
+            		    std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
+						// if ((*ClientInfoIt)->currentServerFile != "")
+						// 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
+						// delete *ClientInfoIt;
+						(*ClientInfoIt)->served.close();
+            		    ClientInfoIt++;
+            		    this->_clientsList.erase(temp_it);
+            		    continue;
+            		}
 				}
 			}
         }

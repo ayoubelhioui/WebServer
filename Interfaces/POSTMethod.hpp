@@ -23,12 +23,14 @@ class PostMethod{
         void _isValidPostRequest( ClientInfo* );
         void _writeInTempFile( ClientInfo* );
         void _receiveFromClient( ClientInfo* );
+        std::list<LocationBlockParse>::iterator  _isLocationExist(ClientInfo *);
         ServerConfiguration _serverConfiguration;
     public :
         std::ifstream sourceFile;
         std::ofstream destinationFile;
         int totalTempFileSize;
         int toWrite;
+        bool    isErrorOccured;
         PostMethod(ServerConfiguration &);
         void writeToUploadedFile( void );
         void receiveTheBody( ClientInfo* );
