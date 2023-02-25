@@ -78,6 +78,7 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                     for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
+                            CGIexecutedFile(final_path, client, serverConfig);
                             return ;
                         }
                         else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
@@ -99,6 +100,8 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                     for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
+                            CGIexecutedFile(final_path, client, serverConfig);
+                            std::cout << "AFTER CGI IS " << client->servedFileName << std::endl;
                             return ;
                         }
                         else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
@@ -213,11 +216,11 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
     int fd[2];
     pipe(fd);
     std::string newFile = "FilesForServingGET/" + generateRandString(10);
+    client->servedFileName = newFile;
     if(client->cgi_out.is_open()) client->cgi_out.close();
     client->cgi_out.open(newFile);
     pid = fork();
     if (pid == 0){
-        client->cgi_out.close();
         char  *args[3];
         dup2(fd[1], 1);
         close(fd[0]);
@@ -229,7 +232,7 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
             return "";
         }
     }
-    else if (pid > 0){
+    if (pid > 0){
         waitpid(pid, NULL, 0);
         close(fd[1]);
         char buffer[1001];
@@ -239,13 +242,15 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
         std::string header(buffer);
         int bef_header = cgiretIndex(buffer);
         int body_index = bef_header + 4;
+        std::cout << "substr have problems" << std::endl;
         header = header.substr(0, bef_header);
+        std::cout << "substr have problems" << std::endl;
         std::string body = header.substr(body_index);
-        client->servedFileName = newFile;
-        std::cout << "file name is " << client->servedFileName << std::endl;
+        std::cout << "substr have problems" << std::endl;
         client->CgiReadEnd = fd[0];
         client->inReadCgiOut = 1;
         client->cgi_out << body;
     }
+    std::cout << "i'm getting out" << std::endl;
     return newFile;
 }

@@ -152,6 +152,7 @@ void	HttpServer::_serveClients( void )
 						getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
 					}
 					catch(std::exception &e){
+						std::cout << e.what() << std::endl;
 						error_404((*ClientInfoIt));
 						// continue;
 					}
