@@ -23,8 +23,9 @@ class PostMethod{
         void _isValidPostRequest( ClientInfo* );
         void _writeInTempFile( ClientInfo* );
         void _receiveFromClient( ClientInfo* );
-        std::list<LocationBlockParse>::iterator  _isLocationExist(ClientInfo *);
+        void _isLocationExist(ClientInfo *);
         ServerConfiguration _serverConfiguration;
+        std::list<LocationBlockParse>::iterator _currentLocation;
     public :
         std::ifstream sourceFile;
         std::ofstream destinationFile;

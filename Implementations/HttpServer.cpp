@@ -203,7 +203,6 @@ void	HttpServer::_serveClients( void )
         {
 			if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
-
 				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
                 && (*ClientInfoIt)->postRequest->isErrorOccured == false)
 				{
@@ -215,7 +214,7 @@ void	HttpServer::_serveClients( void )
 						continue ;
 					}
 				}
-                else if ((*ClientInfoIt)->postRequest->isErrorOccured == true){
+                else if ((*ClientInfoIt)->postRequest->isErrorOccured){
                     char *s = new char[1024]();
             		(*ClientInfoIt)->served.read(s, 1024);
             		int r = (*ClientInfoIt)->served.gcount();

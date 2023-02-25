@@ -6,24 +6,22 @@ PostMethod::PostMethod(ServerConfiguration &serverConfiguration)
 {}
 
 
-void PostMethod::handleFirstRead(ClientInfo *client) {
-     std::list<LocationBlockParse>::iterator currentLocation = this->_isLocationExist(client);
-     if(currentLocation == this->_serverConfiguration.Locations.end()){
+void    PostMethod::handleFirstRead(ClientInfo *client) {
+     this->_isLocationExist(client);
+     if(this->_currentLocation == this->_serverConfiguration.Locations.end()){
          error_404(client);
-         throw std::runtime_error("Lpcation not found");
+         throw std::runtime_error("Location not found");
      }
-     if(currentLocation->UploadDirectoryPath.length()){
-         client->postRequest->_searchingForUploadFolder(client);
+     if(this->_currentLocation->UploadDirectoryPath.length()){
          client->parsedRequest._parsingMiniHeader();
          client->postRequest->_preparingPostRequest(client);
          client->postRequest->_isValidPostRequest(client);
      }
      else{
-
      }
 }
 
-std::list<LocationBlockParse>::iterator  PostMethod::_isLocationExist(ClientInfo *client) {
+void    PostMethod::_isLocationExist(ClientInfo *client) {
     std::list<LocationBlockParse>::iterator beg = this->_serverConfiguration.Locations.begin();
     for (; beg != this->_serverConfiguration.Locations.end(); beg++) {
         LocationBlockParse loc = *beg;
@@ -47,12 +45,12 @@ std::list<LocationBlockParse>::iterator  PostMethod::_isLocationExist(ClientInfo
         std::string full_path = path.substr(0, index_last + 1);
         if (!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
         if (full_path != res) continue;
-        return beg;
+        this->_currentLocation = beg;
+        return ;
     }
-    return (beg);
+    this->_currentLocation = beg;
 }
 void PostMethod::_preparingPostRequest(ClientInfo *client) {
-    std::cout << "the upload is : " << TMP_FOLDER_PATH + client->parsedRequest.uploadFileName << std::endl;
     client->requestBody.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
 //    if (!client->requestBody.is_open()) // this gives a problem when trying to upload yt.mp4 video.
 //        throw (std::runtime_error(TMP_FOLDER_COULDNT_OPEN));
@@ -193,11 +191,13 @@ void PostMethod::receiveTheBody(ClientInfo *client){
 void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex - 8;
     this->toWrite = 0;
-     client->requestBody.close();
-     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-     this->destinationFile.open(UPLOADS_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-     if (!destinationFile.is_open() || !sourceFile.is_open())
-        throw (std::runtime_error("couldn't Open" + client->parsedRequest.uploadFileName));
+    client->requestBody.close();
+    this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
+    std::string uploadFolder = this->_currentLocation->UploadDirectoryPath  + "/" + client->parsedRequest.uploadFileName;
+    this->destinationFile.open(UPLOADS_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
+    std::cout << "i will upload this in :" << uploadFolder << std::endl;
+    if (!destinationFile.is_open() || !sourceFile.is_open())
+        throw (std::runtime_error("couldn't Open " + client->parsedRequest.uploadFileName));
 
 }
 void PostMethod::writeToUploadedFile()
