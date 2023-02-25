@@ -15,10 +15,6 @@
 
 
 
-class PostMethodExceptions : std::runtime_error{
-    public:
-        PostMethodExceptions( const std::string & );
-};
 class ClientInfo;
 class PostMethod{
     private :

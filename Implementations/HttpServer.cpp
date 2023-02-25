@@ -109,11 +109,6 @@ void	HttpServer::_acceptNewConnection( void )
         if (newClient->socket < 0)
 			std::cerr << "accept function failed\n";
 		this->_clientsList.push_front(newClient);
-		// for (std::list<ClientInfo *>::iterator	ClientInfoIt = this->_clientsList.begin()
-		// 	; ClientInfoIt != this->_clientsList.end(); ClientInfoIt++)
-		// {
-		// 	std::cout << (*ClientInfoIt)->socket << std::endl;
-		// }
     }
 }
 
@@ -175,6 +170,7 @@ void	HttpServer::_serveClients( void )
                              (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					 }
 					 catch (std::exception &e){
+                         std::cout << "errno " << errno << std::endl;
 						 std::cout << e.what() << std::endl;
 						 this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						 continue ;
