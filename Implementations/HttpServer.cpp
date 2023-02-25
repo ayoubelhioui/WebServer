@@ -170,15 +170,13 @@ void	HttpServer::_serveClients( void )
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
 
-					std::cout << "hello worldd" << std::endl;
-					std::cout << (*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] << std::endl;
 					if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 					{
-						std::cout << "Chunked being processed for the FIRST time" << std::endl;
 						// std::cout << "REQUEST HEADER : " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
 						(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
-						(*ClientInfoIt)->chunkedRequest->handleFirstChunk((*ClientInfoIt)->socket, 
-														((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str());
+						(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
+														, (*ClientInfoIt)->parsedRequest);
+					exit(EXIT_SUCCESS);
 					}
 					else
 					{
@@ -216,9 +214,9 @@ void	HttpServer::_serveClients( void )
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 				{
 					std::cout << "Chunked being processed for the SECOND time" << std::endl;
-					(*ClientInfoIt)->chunkedRequest->handleChunk((*ClientInfoIt)->socket);
+					(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
 				}
-				else 
+				else
 				{
 
 					// (*ClientInfoIt)->postRequest->serveClient(*ClientInfoIt);
