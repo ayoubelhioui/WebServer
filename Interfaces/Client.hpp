@@ -24,8 +24,10 @@ class ClientInfo {
         char address_buffer[128];
         SOCKET socket;
         std::ifstream served;
+		std::ofstream cgi_out;
 		std::string	   servedFileName;	
 		std::string	  currentServerFile;
+		bool			inReadCgiOut;
 		int				CgiReadEnd;
         int				served_size;
 		// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);

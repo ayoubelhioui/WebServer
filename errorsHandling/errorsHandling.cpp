@@ -162,6 +162,7 @@ void    error_404(ClientInfo *client)
     std::string path = "htmlErrorPages/error404.html";
     if(client->served.is_open()) client->served.close();
     client->served.open(path);
+    if(client->served) std::cout << "file 404 is found" << std::endl;
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
