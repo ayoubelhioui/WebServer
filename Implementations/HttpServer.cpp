@@ -186,6 +186,7 @@ void	HttpServer::_serveClients( void )
 					    (*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
 				&& (*ClientInfoIt)->inReadCgiOut){
+					std::cout << "just cgi reading" << std::endl;
 					char buffer[1001];
 					ssize_t n;
 					n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
@@ -195,11 +196,16 @@ void	HttpServer::_serveClients( void )
 						close((*ClientInfoIt)->CgiReadEnd);
 						(*ClientInfoIt)->cgi_out.close();
 						(*ClientInfoIt)->inReadCgiOut = 0;
+						close((*ClientInfoIt)->CgiReadEnd);
+						if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
+						(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
+						(*ClientInfoIt)->served.seekg(0, std::ios::end);
+						(*ClientInfoIt)->served_size = (*ClientInfoIt)->served.tellg();
+						(*ClientInfoIt)->served.seekg(0, std::ios::beg);
 					}
 				}
 			}
 		}
-
 		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)))
         {
 			if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
@@ -245,6 +251,9 @@ void	HttpServer::_serveClients( void )
             		char *s = new char[1024]();
             		(*ClientInfoIt)->served.read(s, 1024);
             		int r = (*ClientInfoIt)->served.gcount();
+					std::cout << "****************" << std::endl;
+					std::cout << "r is " << r << std::endl;
+					std::cout << "****************" << std::endl;
 					if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;

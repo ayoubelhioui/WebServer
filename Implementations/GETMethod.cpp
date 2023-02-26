@@ -123,10 +123,12 @@ void    GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfi
 	if(client->servedFileName == ""){
 		throw std::runtime_error("file path not allowed");
 	}
-	client->served.open(client->servedFileName, std::ios::binary);
-	client->served.seekg(0, std::ios::end);
-	client->served_size = client->served.tellg();
-	client->served.seekg(0, std::ios::beg);
+    if(!client->inReadCgiOut){
+	    client->served.open(client->servedFileName, std::ios::binary);
+	    client->served.seekg(0, std::ios::end);
+	    client->served_size = client->served.tellg();
+	    client->served.seekg(0, std::ios::beg);
+    }
 	std::string  buffer = "HTTP/1.1 200 OK\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
@@ -215,7 +217,7 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
     setenv("REDIRECT_STATUS", "200", 1)    ;
     int fd[2];
     pipe(fd);
-    std::string newFile = "FilesForServingGET/" + generateRandString(10);
+    std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
     client->servedFileName = newFile;
     if(client->cgi_out.is_open()) client->cgi_out.close();
     client->cgi_out.open(newFile);
@@ -239,18 +241,14 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
         ssize_t n;
         n = read(fd[0], buffer, 1000);
         buffer[n] = 0;
-        std::string header(buffer);
+        std::string str_buffer(buffer);
         int bef_header = cgiretIndex(buffer);
-        int body_index = bef_header + 4;
-        std::cout << "substr have problems" << std::endl;
-        header = header.substr(0, bef_header);
-        std::cout << "substr have problems" << std::endl;
-        std::string body = header.substr(body_index);
-        std::cout << "substr have problems" << std::endl;
+        std::string header_part = str_buffer.substr(0, bef_header);
+        // std::stringstream(header_part);
+        std::string body = str_buffer.substr(bef_header + 4);
         client->CgiReadEnd = fd[0];
         client->inReadCgiOut = 1;
         client->cgi_out << body;
     }
-    std::cout << "i'm getting out" << std::endl;
     return newFile;
 }
