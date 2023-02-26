@@ -1,6 +1,6 @@
 #include "../Interfaces/Client.hpp"
 	
-ClientInfo::ClientInfo( void ) : isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0)
+ClientInfo::ClientInfo( void ) : isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), stillWaiting(0), isFirstCgiRead(0)
 {
 }
 

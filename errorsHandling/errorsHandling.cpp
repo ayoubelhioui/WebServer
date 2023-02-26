@@ -157,10 +157,10 @@ void    error_404(ClientInfo *client)
     client->served.seekg(0, std::ios::beg);
     std::string error_header = "";
 
-    error_header += "HTTP/1.1 404 Not Found\n"
+    error_header += "HTTP/1.1 404 Not Found\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
-    + std::to_string(file_size) 
+    + std::to_string(file_size)  
     + "\r\n"
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())

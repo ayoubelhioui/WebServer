@@ -126,7 +126,8 @@ void	HttpServer::_serveClients( void )
 	ClientInfoIt = this->_clientsList.begin();
 	while (ClientInfoIt != this->_clientsList.end())
 	{
-		if (FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)))
+		if (FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds))
+		|| (*ClientInfoIt)->inReadCgiOut)
 		{
 			if ((*ClientInfoIt)->isFirstRead)
 			{
@@ -186,27 +187,54 @@ void	HttpServer::_serveClients( void )
 					    (*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
 				&& (*ClientInfoIt)->inReadCgiOut){
-					std::cout << "just cgi reading" << std::endl;
-					char buffer[1001];
-					ssize_t n;
-					n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
-        			buffer[n] = 0;
-					(*ClientInfoIt)->cgi_out << buffer;
-					if(n < 1000) {
-						close((*ClientInfoIt)->CgiReadEnd);
-						(*ClientInfoIt)->cgi_out.close();
-						(*ClientInfoIt)->inReadCgiOut = 0;
-						close((*ClientInfoIt)->CgiReadEnd);
-						if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
-						(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
-						(*ClientInfoIt)->served.seekg(0, std::ios::end);
-						(*ClientInfoIt)->served_size = (*ClientInfoIt)->served.tellg();
-						(*ClientInfoIt)->served.seekg(0, std::ios::beg);
+					if((*ClientInfoIt)->stillWaiting){
+						int retWait = waitpid((*ClientInfoIt)->cgiPid, NULL, WNOHANG);
+						if(retWait == 0) {
+							ClientInfoIt++;
+							continue;
+						}
+						else if (retWait == (*ClientInfoIt)->cgiPid){
+							(*ClientInfoIt)->stillWaiting = 0;
+							(*ClientInfoIt)->isFirstCgiRead = 1;
+						}
+					}
+					else{
+						if((*ClientInfoIt)->isFirstCgiRead){
+         					char buffer[1001];
+         					ssize_t n;
+         					n = read((*ClientInfoIt)->CgiReadEnd, buffer, 1000);
+         					buffer[n] = 0;
+         					std::string str_buffer(buffer);
+         					int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
+         					// std::string header_part = str_buffer.substr(0, bef_header);
+         					// std::stringstream(header_part);
+         					std::string body = str_buffer.substr(bef_header + 4);
+							(*ClientInfoIt)->cgi_out << body;
+							(*ClientInfoIt)->isFirstCgiRead = 0;
+						}
+						else{
+							char buffer[1001];
+							ssize_t n;
+							n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
+        					buffer[n] = 0;
+							(*ClientInfoIt)->cgi_out << buffer;
+							if(n < 1000) {
+								close((*ClientInfoIt)->CgiReadEnd);
+								(*ClientInfoIt)->cgi_out.close();
+								(*ClientInfoIt)->inReadCgiOut = 0;
+								close((*ClientInfoIt)->CgiReadEnd);
+								if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
+								(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
+								(*ClientInfoIt)->served.seekg(0, std::ios::end);
+								(*ClientInfoIt)->served_size = (*ClientInfoIt)->served.tellg();
+								(*ClientInfoIt)->served.seekg(0, std::ios::beg);
+							}
+						}
 					}
 				}
 			}
 		}
-		if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)))
+		else if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds)))
         {
 			if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
@@ -251,9 +279,6 @@ void	HttpServer::_serveClients( void )
             		char *s = new char[1024]();
             		(*ClientInfoIt)->served.read(s, 1024);
             		int r = (*ClientInfoIt)->served.gcount();
-					std::cout << "****************" << std::endl;
-					std::cout << "r is " << r << std::endl;
-					std::cout << "****************" << std::endl;
 					if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;

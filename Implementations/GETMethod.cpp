@@ -101,7 +101,6 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                     for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
                             CGIexecutedFile(final_path, client, serverConfig);
-                            std::cout << "AFTER CGI IS " << client->servedFileName << std::endl;
                             return ;
                         }
                         else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
@@ -123,7 +122,9 @@ void    GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfi
 	if(client->servedFileName == ""){
 		throw std::runtime_error("file path not allowed");
 	}
-    if(!client->inReadCgiOut){
+    if(client->inReadCgiOut == 0){
+
+        std::cout << "cgi is true" << std::endl;
 	    client->served.open(client->servedFileName, std::ios::binary);
 	    client->served.seekg(0, std::ios::end);
 	    client->served_size = client->served.tellg();
@@ -194,13 +195,6 @@ std::string GETMethod::directoryListing(std::string rootDirectory, std::string l
     return newFile;
 }
 
-int     cgiretIndex(char *requestHeader){
-    for(int i = 0; requestHeader[i]; i++){
-      if(!strncmp(&requestHeader[i], "\r\n\r\n", 4))
-          return i;
-    }
-    return -1;
-}
 
 std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server ){
     int     pid = 0;
@@ -234,21 +228,23 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
             return "";
         }
     }
-    if (pid > 0){
-        waitpid(pid, NULL, 0);
         close(fd[1]);
-        char buffer[1001];
-        ssize_t n;
-        n = read(fd[0], buffer, 1000);
-        buffer[n] = 0;
-        std::string str_buffer(buffer);
-        int bef_header = cgiretIndex(buffer);
-        std::string header_part = str_buffer.substr(0, bef_header);
-        // std::stringstream(header_part);
-        std::string body = str_buffer.substr(bef_header + 4);
-        client->CgiReadEnd = fd[0];
-        client->inReadCgiOut = 1;
-        client->cgi_out << body;
-    }
+    //     char buffer[1001];
+    //     ssize_t n;
+    //     n = read(fd[0], buffer, 1000);
+    //     buffer[n] = 0;
+    //     std::string str_buffer(buffer);
+    //     int bef_header = cgiretIndex(buffer);
+    //     std::string header_part = str_buffer.substr(0, bef_header);
+    //     // std::stringstream(header_part);
+    //     std::string body = str_buffer.substr(bef_header + 4);
+    //     client->CgiReadEnd = fd[0];
+    //     client->inReadCgiOut = 1;
+    //     client->cgi_out << body;
+    // }
+    client->CgiReadEnd = fd[0];
+    client->inReadCgiOut = 1;
+    client->stillWaiting = 1;
+    client->cgiPid = pid;
     return newFile;
 }
