@@ -222,7 +222,6 @@ void	HttpServer::_serveClients( void )
 								close((*ClientInfoIt)->CgiReadEnd);
 								(*ClientInfoIt)->cgi_out.close();
 								(*ClientInfoIt)->inReadCgiOut = 0;
-								close((*ClientInfoIt)->CgiReadEnd);
 								if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
 								(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
 								(*ClientInfoIt)->served.seekg(0, std::ios::end);
