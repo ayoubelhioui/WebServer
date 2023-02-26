@@ -174,11 +174,14 @@ void PostMethod::_isValidPostRequest(ClientInfo *client) {
 
 void PostMethod::_writeInTempFile(ClientInfo *client) {
     client->requestBody.write(client->parsedRequest.requestHeader, client->parsedRequest.receivedBytes);
+    if (client->requestBody.fail())
+        throw (std::runtime_error("Error Occurred In writeIntTempFile\n"));
 }
 
 void PostMethod::_receiveFromClient(ClientInfo *client){
     client->parsedRequest.bytesToReceive = (client->parsedRequest.received + MAX_REQUEST_SIZE < client->parsedRequest.contentLength) ? MAX_REQUEST_SIZE : client->parsedRequest.contentLength - client->parsedRequest.received;
-    client->parsedRequest.receivedBytes = recv(client->socket, client->parsedRequest.requestHeader, client->parsedRequest.bytesToReceive, 0);
+    if ((client->parsedRequest.receivedBytes = recv(client->socket, client->parsedRequest.requestHeader, client->parsedRequest.bytesToReceive, 0)) == -1)
+        throw (std::runtime_error("Error Occurred In ReceiveFromClient\n"));
     client->parsedRequest.received += client->parsedRequest.receivedBytes;
     client->parsedRequest.requestHeader[client->parsedRequest.receivedBytes] = 0;
 }
@@ -192,16 +195,19 @@ void PostMethod::receiveTheBody(ClientInfo *client){
 
 
 void PostMethod::preparingMovingTempFile(ClientInfo *client) {
+    int i = 0;
     this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex - 8;
     this->toWrite = 0;
     client->requestBody.close();
-    mkdir(this->_currentLocation->UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
+    struct stat st;
+    if (!(stat(this->_currentLocation->UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
+        i = mkdir(this->_currentLocation->UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
+    }
     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
     std::string filePath = this->_currentLocation->UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
     this->destinationFile.open(filePath, std::ios::binary);
-    if (!destinationFile.is_open() || !sourceFile.is_open())
-        throw (std::runtime_error("couldn't Open " + client->parsedRequest.uploadFileName));
-
+    if (i == -1 || this->destinationFile.fail())
+        throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));
 }
 
 void PostMethod::writeToUploadedFile()
@@ -211,6 +217,8 @@ void PostMethod::writeToUploadedFile()
     this->sourceFile.read(buffer, this->toWrite);
     buffer[this->toWrite] = 0;
     this->destinationFile.write(buffer, this->toWrite);
+    if (this->sourceFile.fail() || this->destinationFile.fail())
+        throw (std::runtime_error("Error Occurred in writeToUploadedFile"));
     this->totalTempFileSize -= this->toWrite;
 }
 
@@ -218,8 +226,9 @@ void  PostMethod::successfulPostRequest(ClientInfo *client){
     this->sourceFile.close();
     this->destinationFile.close();
     std::string path = "uploadSuccess.html";
-    remove((TMP_FOLDER_PATH + client->parsedRequest.uploadFileName).c_str());
-    if(client->served.is_open()) client->served.close();
+    int i = remove((TMP_FOLDER_PATH + client->parsedRequest.uploadFileName).c_str());
+    if(client->served.is_open())
+        client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
@@ -233,6 +242,6 @@ void  PostMethod::successfulPostRequest(ClientInfo *client){
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    send(client->socket, error_header.c_str(), error_header.length(), 0);
-    client->isServing = true;
+    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1 || i == -1)
+        throw (std::runtime_error("Error Occurred in successfulPostRequest"));
 }

@@ -182,7 +182,18 @@ void	HttpServer::_serveClients( void )
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST" and
                     (*ClientInfoIt)->parsedRequest.received < (*ClientInfoIt)->parsedRequest.contentLength
                     and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false)
+                {
+                    try
+                    {
 					    (*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
+                    }
+                    catch (std::exception &e)
+                    {
+						error_500(*ClientInfoIt);
+						std::cout << e.what() << std::endl;
+                        (*ClientInfoIt)->isErrorOccured = true;
+                    }
+                }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
 				and (*ClientInfoIt)->inReadCgiOut){
 					char buffer[1001];
@@ -205,11 +216,19 @@ void	HttpServer::_serveClients( void )
 				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
                 and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false)
 				{
-					(*ClientInfoIt)->postRequest->writeToUploadedFile();
-					if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
+					try{
+						(*ClientInfoIt)->postRequest->writeToUploadedFile();
+						if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
+						{
+							(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
+							(*ClientInfoIt)->isServing = true;
+						}
+					}
+					catch (std::exception &e)
 					{
-						(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
-						continue ;
+						error_500(*ClientInfoIt);
+						std::cout << e.what() << std::endl;
+                        (*ClientInfoIt)->isErrorOccured = true;
 					}
 				}
                 else if (((*ClientInfoIt)->isErrorOccured == true) or ((*ClientInfoIt)->isServing == true)){
