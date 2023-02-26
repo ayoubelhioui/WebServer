@@ -3,6 +3,9 @@
 
 # include "ServerConfiguration.hpp"
 # include "Client.hpp"
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <fcntl.h>
 //# include "HttpServer.hpp"
 # define UPLOAD_SUCCESS_FILE_PROBLEM "Couldn't Open UploadSuccess File"
 # define BODY_SIZE_EXCEPTION "body size exception"
@@ -23,14 +26,14 @@ class PostMethod{
         void _isValidPostRequest( ClientInfo* );
         void _writeInTempFile( ClientInfo* );
         void _receiveFromClient( ClientInfo* );
-        std::list<LocationBlockParse>::iterator  _isLocationExist(ClientInfo *);
+        void _searchForCurrentLocation(ClientInfo *);
         ServerConfiguration _serverConfiguration;
+        std::list<LocationBlockParse>::iterator _currentLocation;
     public :
         std::ifstream sourceFile;
         std::ofstream destinationFile;
         int totalTempFileSize;
         int toWrite;
-        bool    isErrorOccured;
         PostMethod(ServerConfiguration &);
         void writeToUploadedFile( void );
         void receiveTheBody( ClientInfo* );

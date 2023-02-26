@@ -173,17 +173,16 @@ void	HttpServer::_serveClients( void )
                              (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					 }
 					 catch (std::exception &e){
-						 (*ClientInfoIt)->postRequest->isErrorOccured = true;
+						 (*ClientInfoIt)->isErrorOccured = true;
 						 std::cout << e.what() << std::endl;
-//						 this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					 }
 				 }
 				(*ClientInfoIt)->isFirstRead = false;
 			}
 			else{
-				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST" &&
+				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST" and
                     (*ClientInfoIt)->parsedRequest.received < (*ClientInfoIt)->parsedRequest.contentLength
-                    && (*ClientInfoIt)->postRequest->isErrorOccured == false)
+                    and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false)
 					    (*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
 				&& (*ClientInfoIt)->inReadCgiOut){
@@ -237,39 +236,38 @@ void	HttpServer::_serveClients( void )
         {
 			if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
-
 				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
-                && (*ClientInfoIt)->postRequest->isErrorOccured == false)
+                and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false)
 				{
-                    (*ClientInfoIt)->postRequest->writeToUploadedFile();
+					(*ClientInfoIt)->postRequest->writeToUploadedFile();
 					if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
 					{
 						(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
-						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue ;
 					}
 				}
-                else if ((*ClientInfoIt)->postRequest->isErrorOccured == true){
+                else if (((*ClientInfoIt)->isErrorOccured == true) or ((*ClientInfoIt)->isServing == true)){
                     char *s = new char[1024]();
             		(*ClientInfoIt)->served.read(s, 1024);
-            		int r = (*ClientInfoIt)->served.gcount();
-					if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
-						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-						delete [] s;
-                        continue;
-					}
-					delete [] s;
-            		if(r < 1024){
-            		    close((*ClientInfoIt)->socket);
-            		    std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
-						// if ((*ClientInfoIt)->currentServerFile != "")
-						// 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
-						// delete *ClientInfoIt;
-						(*ClientInfoIt)->served.close();
-            		    ClientInfoIt++;
-            		    this->_clientsList.erase(temp_it);
-            		    continue;
-            		}
+                        int r = (*ClientInfoIt)->served.gcount();
+                        if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
+                            this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                            delete [] s;
+                            continue;
+                        }
+                        delete [] s;
+                        if(r < 1024)
+                        {
+                            close((*ClientInfoIt)->socket);
+                            std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
+                            // if ((*ClientInfoIt)->currentServerFile != "")
+                            // 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
+                            // delete *ClientInfoIt;
+                            (*ClientInfoIt)->served.close();
+                            ClientInfoIt++;
+                            this->_clientsList.erase(temp_it);
+                            continue;
+            		    }
                 }
 			}
 			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
