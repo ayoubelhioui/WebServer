@@ -212,7 +212,7 @@ void	HttpServer::_serveClients( void )
 			{
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 				{
-					std::cout << "Chunked being processed for the SECOND time" << std::endl;
+					// std::cout << "Chunked being processed for the SECOND time" << std::endl;
 					(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
 					// exit(EXIT_SUCCESS);
 
