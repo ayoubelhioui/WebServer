@@ -35,7 +35,6 @@ class ChunkedPostRequest {
 		void			_createUploadedFile( const char * );
 		void			_receiveRestOfChunk ( SOCKET & );
 		void			_receiveNextChunkBeginning ( SOCKET & );
-		void			_parseChunk( void );
 		void			_writeToUploadedFile( void );
 		void			_retrieveChunkSize ( void );
 };

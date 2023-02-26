@@ -43,32 +43,26 @@ void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 {
 	std::string	fileName;
 
-	fileName = "~/Desktop/" + generateRandString() + std::string(get_real_format(mimeType));
+	fileName = "/tmp/" + generateRandString() + std::string(get_real_format(mimeType));
 	this->_uploadedFile.open(fileName, std::ios::binary);
 	if (this->_uploadedFile.is_open())
 		std::cout << fileName << " is created!!" << std::endl;
 
 }
 
-void	ChunkedPostRequest::_parseChunk( void )
-{
-	
-}
-
 void	ChunkedPostRequest::_retrieveChunkSize( void )
 {
 	std::string	chunkSizeStr;
 
-	std::cout << "this->_buffer[0] " << this->_buffer[0] << std::endl;
 	size_t	end = this->_buffer.find("\r\n", 0);
 	chunkSizeStr = this->_buffer.substr(0, end);
-	// std::cout << "chunkSizeStr : " << chunkSizeStr << std::endl;
-	std::cout << "ChunkSize String : " << chunkSizeStr << std::endl;
-	this->_currentChunkSize = std::stoi(chunkSizeStr, 0, 16);
-	std::cout << "just : " << this->_currentChunkSize << std::endl;
+	try {
+		this->_currentChunkSize = std::stoi(chunkSizeStr, 0, 16);
+	}
+	catch ( const std::exception& excep) {
+		std::cerr << excep.what() << std::endl;
+	}
 	this->_currentChunkSizeStrLength = chunkSizeStr.size();
-	// std::cout << "ChunkSizeStrLen : " << this->_currentChunkSizeStrLength << std::endl;
-	// std::cout << "ChunkLen : " << this->_currentChunkSize << std::endl;
 	this->_fileSize += this->_currentChunkSize;
 }
 
@@ -90,35 +84,7 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 		this->_writtenBytes++;
 		i++;
 	}
-	// if (bufferSize < BUFFER_SIZE)
-	// 	std::cout << "oh yeah : " << this->_writtenBytes << std::endl;
 	delete [] buffer;
-}
-
-/*------------------------------------------------------------------------*/
-
-void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingRequest &request )
-{
-	unsigned int		chunkBeginningIndex;
-	unsigned int		chunkContentBeginningIndex;
-
-	std::cout << "written are " << this->_writtenBytes << std::endl;
-	this->_createUploadedFile(contentType);
-	chunkBeginningIndex = request.retIndex(request.requestHeader) + 4;
-	this->_buffer = std::string(&request.requestHeader[chunkBeginningIndex]);
-	this->_retrieveChunkSize();
-	if (this->_currentChunkSize == 0)
-		{std::cerr << "EMPTY FILE" << std::endl; exit(0);}
-	chunkContentBeginningIndex = CRLF +  this->_currentChunkSizeStrLength;
-	std::cout << "chunkBeginningIndex " <<	chunkBeginningIndex << std::endl;
-	std::cout << "chunkContentBeginningIndex " << chunkContentBeginningIndex << std::endl;
-	unsigned int i = 0;
-	while ( i < MAX_REQUEST_SIZE - chunkBeginningIndex - chunkContentBeginningIndex - 2)
-	{
-		this->_uploadedFile << request.requestHeader[chunkBeginningIndex + chunkContentBeginningIndex + i];
-		i++;
-	}
-	this->_writtenBytes = i;
 }
 
 void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
@@ -130,9 +96,7 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 
 	this->_receivedBytes = recv(clientSocket, buffer, BUFFER_SIZE, 0);
 	this->_buffer = std::string(buffer);
-	std::cout << "this->_buffer[0] " << this->_buffer[0] << std::endl;
 	this->_retrieveChunkSize();
-	std::cout << "CHUNK SIZE " << this->_currentChunkSize << std::endl;
 	std::cout << "FILE SIZE " << this->_fileSize << std::endl;
 	unsigned int	i = 0;
 
@@ -145,52 +109,48 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 	this->_writtenBytes = i;
 }
 
-// void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket )
-// {
-// 	/* done reading the current chunk */
-// 	if (this->_writtenBytes == this->_currentChunkSize)
-// 	{
+/*------------------------------------------------------------------------*/
 
-// 		this->_retrieveChunkSize();
-// 		// std::cout << "current chunk size after reading : " << this->_currentChunkSize << std::endl;
-// 	}
-// 	else
-// 		this->_receiveChunk ( clientSocket );
-// 	if (this->_currentChunkSize == 0)
-// 		this->_uploadedFile.close(); // to be removed
-// 	std::cout << "Written bytes "<<  this->_writtenBytes << std::endl;
-// }
+void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingRequest &request )
+{
+	unsigned int		chunkBeginningIndex;
+	unsigned int		chunkContentBeginningIndex;
+
+	this->_createUploadedFile(contentType);
+	chunkBeginningIndex = request.retIndex(request.requestHeader) + 4;
+	std::cout << "chunkBeginningAsci : " << (int)request.requestHeader[chunkBeginningIndex] << std::endl;
+	this->_buffer = std::string(&request.requestHeader[chunkBeginningIndex]);
+	this->_retrieveChunkSize();
+	std::cout << "chunk Size : " << this->_currentChunkSize << std::endl;
+	std::cout << "chunk Size string : " << this->_currentChunkSizeStrLength << std::endl;
+	if (this->_currentChunkSize == 0)
+		{std::cerr << "EMPTY FILE" << std::endl; exit(0);}
+	chunkContentBeginningIndex = CRLF +  this->_currentChunkSizeStrLength;
+	std::cout << "Chunk Content START : " << request.requestHeader[chunkContentBeginningIndex] << std::endl;
+	unsigned int i = 0;
+	while (i < MAX_REQUEST_SIZE - chunkBeginningIndex - chunkContentBeginningIndex)
+	{
+		this->_uploadedFile << request.requestHeader[chunkBeginningIndex + chunkContentBeginningIndex + i];
+		i++;
+	}
+	this->_writtenBytes = i;
+	std::cout << "WRITTEN BYTES : " << this->_writtenBytes << std::endl;
+}
+
 
 
 void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket )
 {
 	if (this->_writtenBytes == this->_currentChunkSize)
 	{
-		std::cout << "WRRITTTEEN ISSSSSSSSSS " << this->_writtenBytes << std::endl;
-		std::cout << "CHUNKKKK SIZZZEWEE " << this->_currentChunkSize << std::endl;
 		this->_receiveNextChunkBeginning(clientSocket);
 		this->_numberOfRecChunk++;
-		std::cout << "this->_numberOfRecChunk : " << this->_numberOfRecChunk << std::endl;
-		// if (this->_numberOfRecChunk == 2)
-			// exit(0);
-
 	}
-	else{
+	else {
 		_receiveRestOfChunk(clientSocket);
+		exit(0);
 	}
 }
-
-
-/*
-	if (Done reading the current chunk)
-		receiveNextChunkBeginning() {
-			recv bytes from socket,
-			retrieveChunkSize,
-		}
-	else
-		receiveRestOfChunk()
-
-*/
 
 
 
