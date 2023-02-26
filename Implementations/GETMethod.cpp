@@ -228,20 +228,7 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
             return "";
         }
     }
-        close(fd[1]);
-    //     char buffer[1001];
-    //     ssize_t n;
-    //     n = read(fd[0], buffer, 1000);
-    //     buffer[n] = 0;
-    //     std::string str_buffer(buffer);
-    //     int bef_header = cgiretIndex(buffer);
-    //     std::string header_part = str_buffer.substr(0, bef_header);
-    //     // std::stringstream(header_part);
-    //     std::string body = str_buffer.substr(bef_header + 4);
-    //     client->CgiReadEnd = fd[0];
-    //     client->inReadCgiOut = 1;
-    //     client->cgi_out << body;
-    // }
+    close(fd[1]);
     client->CgiReadEnd = fd[0];
     client->inReadCgiOut = 1;
     client->stillWaiting = 1;
