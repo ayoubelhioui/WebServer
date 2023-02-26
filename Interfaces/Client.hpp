@@ -29,8 +29,10 @@ class ClientInfo {
 		std::string	  currentServerFile;
 		bool			inReadCgiOut;
 		int				CgiReadEnd;
-        int				served_size;
-		// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
+		int				served_size;
+		bool    isErrorOccured;
+		int		isServing;
+	// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 		// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
 		// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);
 		// static void dropClient(int &, std::list<ClientInfo>::iterator &, std::list<ClientInfo> &);

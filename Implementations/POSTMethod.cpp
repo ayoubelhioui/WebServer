@@ -2,28 +2,14 @@
 # include "../errorsHandling/errorsHandling.hpp"
 
 PostMethod::PostMethod(ServerConfiguration &serverConfiguration)
-: _serverConfiguration(serverConfiguration), totalTempFileSize(0), toWrite(0), isErrorOccured(false)
+: _serverConfiguration(serverConfiguration), totalTempFileSize(0), toWrite(0)
 {}
 
 
-void    PostMethod::handleFirstRead(ClientInfo *client) {
-     this->_isLocationExist(client);
-     if(this->_currentLocation == this->_serverConfiguration.Locations.end()){
-         error_404(client);
-         throw std::runtime_error("Location not found");
-     }
-     if(this->_currentLocation->UploadDirectoryPath.length()){
-         client->parsedRequest._parsingMiniHeader();
-         client->postRequest->_preparingPostRequest(client);
-         client->postRequest->_isValidPostRequest(client);
-     }
-     else{
-     }
-}
-
-void    PostMethod::_isLocationExist(ClientInfo *client) {
+void    PostMethod::_searchForCurrentLocation(ClientInfo *client) {
     std::list<LocationBlockParse>::iterator beg = this->_serverConfiguration.Locations.begin();
-    for (; beg != this->_serverConfiguration.Locations.end(); beg++) {
+    for (; beg != this->_serverConfiguration.Locations.end(); beg++)
+    {
         LocationBlockParse loc = *beg;
         std::string res = loc.Location;
         std::string path =  client->parsedRequest.requestDataMap["path"];
@@ -50,6 +36,23 @@ void    PostMethod::_isLocationExist(ClientInfo *client) {
     }
     this->_currentLocation = beg;
 }
+
+void    PostMethod::handleFirstRead(ClientInfo *client) {
+     this->_searchForCurrentLocation(client);
+     if(this->_currentLocation == this->_serverConfiguration.Locations.end()){
+         error_404(client);
+         throw std::runtime_error("Location not found");
+     }
+     if(this->_currentLocation->UploadDirectoryPath.length()){
+         client->parsedRequest._parsingMiniHeader();
+         client->postRequest->_preparingPostRequest(client);
+         client->postRequest->_isValidPostRequest(client);
+     }
+     else{
+     }
+}
+
+
 void PostMethod::_preparingPostRequest(ClientInfo *client) {
     client->requestBody.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
 //    if (!client->requestBody.is_open()) // this gives a problem when trying to upload yt.mp4 video.
@@ -192,14 +195,15 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex - 8;
     this->toWrite = 0;
     client->requestBody.close();
+    mkdir(this->_currentLocation->UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-    std::string uploadFolder = this->_currentLocation->UploadDirectoryPath  + "/" + client->parsedRequest.uploadFileName;
-    this->destinationFile.open(UPLOADS_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-    std::cout << "i will upload this in :" << uploadFolder << std::endl;
+    std::string filePath = this->_currentLocation->UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
+    this->destinationFile.open(filePath, std::ios::binary);
     if (!destinationFile.is_open() || !sourceFile.is_open())
         throw (std::runtime_error("couldn't Open " + client->parsedRequest.uploadFileName));
 
 }
+
 void PostMethod::writeToUploadedFile()
 {
     this->toWrite = (this->totalTempFileSize > 1024) ? 1024 : this->totalTempFileSize;
@@ -210,30 +214,25 @@ void PostMethod::writeToUploadedFile()
     this->totalTempFileSize -= this->toWrite;
 }
 
-
 void  PostMethod::successfulPostRequest(ClientInfo *client){
     this->sourceFile.close();
     this->destinationFile.close();
     std::string path = "uploadSuccess.html";
-    std::ifstream served(path);
-    if (!served.is_open())
-        throw (std::runtime_error(UPLOAD_SUCCESS_FILE_PROBLEM));
-    served.seekg(0, std::ios::end);
-    int file_size = served.tellg();
-    served.seekg(0, std::ios::beg);
-    char *buffer = new char[file_size + 1]();
-    sprintf(buffer, "HTTP/1.1 201 Created\r\n");
-    send(client->socket, buffer, strlen(buffer), 0);
-    sprintf(buffer, "Connection: close\r\n");
-    send(client->socket, buffer, strlen(buffer), 0);
-    sprintf(buffer, "Content-Length: %d\r\n", file_size);
-    send(client->socket, buffer, strlen(buffer), 0);
-    sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-    send(client->socket, buffer, strlen(buffer), 0);
-    sprintf(buffer, "\r\n");
-    send(client->socket, buffer, strlen(buffer), 0);
-    served.read(buffer, file_size);
-    send(client->socket, buffer, strlen(buffer), 0);
-    delete [] buffer;
-    delete this;
+    remove((TMP_FOLDER_PATH + client->parsedRequest.uploadFileName).c_str());
+    if(client->served.is_open()) client->served.close();
+    client->served.open(path);
+    client->served.seekg(0, std::ios::end);
+    int file_size = client->served.tellg();
+    client->served.seekg(0, std::ios::beg);
+    std::string error_header = "";
+    error_header += "HTTP/1.1 201 Created\r\n"
+    + std::string("Connection: close\r\n")
+    + std::string("Content-Length: ")
+    + std::to_string(file_size)
+    + "\r\n"
+    +  std::string("Content-Type: ")
+    +  get_mime_format(path.c_str())
+    + "\r\n\r\n" ;
+    send(client->socket, error_header.c_str(), error_header.length(), 0);
+    client->isServing = true;
 }
