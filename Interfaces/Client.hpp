@@ -6,14 +6,15 @@
 # include <list>
 # include "../Interfaces/RequestParser.hpp"
 # include "../Interfaces/POSTMethod.hpp"
-
+# include "../Interfaces/ChunkedPostRequest.hpp"
 class PostMethod;
 
 class ClientInfo {
     public:
 		ClientInfo ( void );
 		~ClientInfo ( void );
-		PostMethod *postRequest;
+		PostMethod			*postRequest;
+		ChunkedPostRequest	*chunkedRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
         ParsingRequest parsedRequest;
