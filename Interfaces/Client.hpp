@@ -16,6 +16,7 @@ class ClientInfo {
 		PostMethod *postRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
+		std::string	CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server );
         ParsingRequest parsedRequest;
         bool isFirstRead;
         std::ofstream requestBody;

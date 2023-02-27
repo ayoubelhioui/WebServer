@@ -1,5 +1,3 @@
-#!/usr/bin/php-cgi
 <?php
-    phpinfo();
+    echo "hello world"
 ?>
-

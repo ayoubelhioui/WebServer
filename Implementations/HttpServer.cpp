@@ -182,7 +182,8 @@ void	HttpServer::_serveClients( void )
 			else{
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST" and
                     (*ClientInfoIt)->parsedRequest.received < (*ClientInfoIt)->parsedRequest.contentLength
-                    and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false)
+                    and ((*ClientInfoIt)->isErrorOccured == false) and ((*ClientInfoIt)->isServing == false)
+					and ((*ClientInfoIt)->inReadCgiOut == false))
                 {
                     try
                     {
@@ -195,8 +196,7 @@ void	HttpServer::_serveClients( void )
                         (*ClientInfoIt)->isErrorOccured = true;
                     }
                 }
-				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
-				&& (*ClientInfoIt)->inReadCgiOut){
+				else if ((*ClientInfoIt)->inReadCgiOut){
 					if((*ClientInfoIt)->stillWaiting){
 						int retWait = waitpid((*ClientInfoIt)->cgiPid, NULL, WNOHANG);
 						if(retWait == 0) {
@@ -221,6 +221,7 @@ void	HttpServer::_serveClients( void )
          					std::string body = str_buffer.substr(bef_header + 4);
 							(*ClientInfoIt)->cgi_out << body;
 							(*ClientInfoIt)->isFirstCgiRead = 0;
+							// (*ClientInfoIt)->servedFileName + extension;
 						}
 						else{
 							char buffer[1001];
@@ -229,6 +230,18 @@ void	HttpServer::_serveClients( void )
         					buffer[n] = 0;
 							(*ClientInfoIt)->cgi_out << buffer;
 							if(n < 1000) {
+								/*
+							 * //	std::string  buffer = "HTTP/1.1 200 OK\r\n"
+								//    + std::string("Connection: close\r\n")
+								//    + std::string("Content-Length: ")
+								//    + std::to_string(client->served_size)
+								//    + "\r\n"
+								//    + "Content-Type: "
+								//    + get_mime_format(client->servedFileName.c_str())
+								//    + "\r\n\r\n";
+								//	send(client->socket, buffer.c_str(), buffer.length(), 0);
+							 *
+							 */
 								close((*ClientInfoIt)->CgiReadEnd);
 								(*ClientInfoIt)->cgi_out.close();
 								(*ClientInfoIt)->inReadCgiOut = 0;
@@ -248,16 +261,25 @@ void	HttpServer::_serveClients( void )
 			if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 			{
 				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
-                and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false)
+                and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false
+				/* && (*ClientInfoIt)->inReadCgiOut == false */)
 				{
 					try{
 						(*ClientInfoIt)->postRequest->writeToUploadedFile();
 						if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
 						{
+
+                             if((*ClientInfoIt)->parsedRequest.uploadFileName){
+                             	(*ClientInfoIt)->inReadCgiOut = 1;
+                              	execute_cgi(client);
+							 }
+                            else
 							(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
 							(*ClientInfoIt)->isServing = true;
 						}
-					}
+                        // (*ClientInfoIt)->inReadCgiOut = 1;
+					    // exeuteCGI;
+                    }
 					catch (std::exception &e)
 					{
 						error_500(*ClientInfoIt);
