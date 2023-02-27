@@ -27,7 +27,7 @@ class ChunkedPostRequest {
 		std::string		_buffer;
 		ssize_t			_receivedBytes;
 		unsigned int	_currentChunkSize;
-		unsigned int	_currentChunkSizeStrLength;
+		unsigned int	_hexLength;
 		unsigned int	_fileSize;
 		unsigned int	_writtenBytes;
 		char			*_chunkContent;
@@ -36,7 +36,7 @@ class ChunkedPostRequest {
 		void			_receiveRestOfChunk ( SOCKET & );
 		void			_receiveNextChunkBeginning ( SOCKET & );
 		void			_writeToUploadedFile( void );
-		void			_retrieveChunkSize ( void );
+		void			_retrieveChunkSize ( char * );
 };
 
 #endif
