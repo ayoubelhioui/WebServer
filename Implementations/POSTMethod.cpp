@@ -37,12 +37,24 @@ void    PostMethod::_searchForCurrentLocation(ClientInfo *client) {
     this->_currentLocation = beg;
 }
 
+bool    PostMethod::_isLocationSupportPost() {
+    std::list<std::string>::iterator it = this->_currentLocation->allowedMethods.begin();
+    while (it != this->_currentLocation->allowedMethods.end()){
+        if (*it == "POST")
+            return (true);
+        it++;
+    }
+    return (false);
+}
+
 void    PostMethod::handleFirstRead(ClientInfo *client) {
      this->_searchForCurrentLocation(client);
      if(this->_currentLocation == this->_serverConfiguration.Locations.end()){
          error_404(client);
          throw std::runtime_error("Location not found");
      }
+     if (!this->_isLocationSupportPost())
+         throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and to be tested.....
      if(this->_currentLocation->UploadDirectoryPath.length()){
          client->parsedRequest._parsingMiniHeader();
          client->postRequest->_preparingPostRequest(client);

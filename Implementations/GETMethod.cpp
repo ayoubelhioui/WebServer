@@ -78,6 +78,7 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                     for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
+                            CGIexecutedFile(final_path, client, serverConfig);
                             return ;
                         }
                         else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
@@ -99,6 +100,7 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                     for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
+                            CGIexecutedFile(final_path, client, serverConfig);
                             return ;
                         }
                         else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
@@ -120,10 +122,13 @@ void    GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfi
 	if(client->servedFileName == ""){
 		throw std::runtime_error("file path not allowed");
 	}
-	client->served.open(client->servedFileName, std::ios::binary);
-	client->served.seekg(0, std::ios::end);
-	client->served_size = client->served.tellg();
-	client->served.seekg(0, std::ios::beg);
+    if(client->inReadCgiOut == 0){
+
+	    client->served.open(client->servedFileName, std::ios::binary);
+	    client->served.seekg(0, std::ios::end);
+	    client->served_size = client->served.tellg();
+	    client->served.seekg(0, std::ios::beg);
+    }
 	std::string  buffer = "HTTP/1.1 200 OK\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
@@ -189,13 +194,6 @@ std::string GETMethod::directoryListing(std::string rootDirectory, std::string l
     return newFile;
 }
 
-int     cgiretIndex(char *requestHeader){
-    for(int i = 0; requestHeader[i]; i++){
-      if(!strncmp(&requestHeader[i], "\r\n\r\n", 4))
-          return i;
-    }
-    return -1;
-}
 
 std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server ){
     int     pid = 0;
@@ -212,12 +210,13 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
     setenv("REDIRECT_STATUS", "200", 1)    ;
     int fd[2];
     pipe(fd);
-    std::string newFile = "FilesForServingGET/" + generateRandString(10);
+    std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
+    client->servedFileName = newFile;
+    std::cout << "file is " << newFile << std::endl;
     if(client->cgi_out.is_open()) client->cgi_out.close();
     client->cgi_out.open(newFile);
     pid = fork();
     if (pid == 0){
-        client->cgi_out.close();
         char  *args[3];
         dup2(fd[1], 1);
         close(fd[0]);
@@ -226,26 +225,14 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
         args[1] = (char *) php_file.c_str();
         args[2] = NULL;
         if (execve(script_name, args, NULL)){
+            std::cout << "exec problem" << std::endl;
             return "";
         }
     }
-    else if (pid > 0){
-        waitpid(pid, NULL, 0);
-        close(fd[1]);
-        char buffer[1001];
-        ssize_t n;
-        n = read(fd[0], buffer, 1000);
-        buffer[n] = 0;
-        std::string header(buffer);
-        int bef_header = cgiretIndex(buffer);
-        int body_index = bef_header + 4;
-        header = header.substr(0, bef_header);
-        std::string body = header.substr(body_index);
-        client->servedFileName = newFile;
-        std::cout << "file name is " << client->servedFileName << std::endl;
-        client->CgiReadEnd = fd[0];
-        client->inReadCgiOut = 1;
-        client->cgi_out << body;
-    }
+    close(fd[1]);
+    client->CgiReadEnd = fd[0];
+    client->inReadCgiOut = 1;
+    client->stillWaiting = 1;
+    client->cgiPid = pid;
     return newFile;
 }

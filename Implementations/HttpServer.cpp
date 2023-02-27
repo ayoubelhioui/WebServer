@@ -127,7 +127,7 @@ void	HttpServer::_serveClients( void )
 	while (ClientInfoIt != this->_clientsList.end())
 	{
 		if (FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds))
-		and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false)
+		|| (*ClientInfoIt)->inReadCgiOut)
 		{
 			if ((*ClientInfoIt)->isFirstRead)
 			{
@@ -153,6 +153,7 @@ void	HttpServer::_serveClients( void )
 						getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
 					}
 					catch(std::exception &e){
+						std::cout << e.what() << std::endl;
 						error_404((*ClientInfoIt));
 						// continue;
 					}
@@ -195,16 +196,49 @@ void	HttpServer::_serveClients( void )
                     }
                 }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
-				and (*ClientInfoIt)->inReadCgiOut){
-					char buffer[1001];
-					ssize_t n;
-					n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
-        			buffer[n] = 0;
-					(*ClientInfoIt)->cgi_out << buffer;
-					if(n < 1000) {
-						close((*ClientInfoIt)->CgiReadEnd);
-						(*ClientInfoIt)->cgi_out.close();
-						(*ClientInfoIt)->inReadCgiOut = 0;
+				&& (*ClientInfoIt)->inReadCgiOut){
+					if((*ClientInfoIt)->stillWaiting){
+						int retWait = waitpid((*ClientInfoIt)->cgiPid, NULL, WNOHANG);
+						if(retWait == 0) {
+							ClientInfoIt++;
+							continue;
+						}
+						else if (retWait == (*ClientInfoIt)->cgiPid){
+							(*ClientInfoIt)->stillWaiting = 0;
+							(*ClientInfoIt)->isFirstCgiRead = 1;
+						}
+					}
+					else{
+						if((*ClientInfoIt)->isFirstCgiRead){
+         					char buffer[1001];
+         					ssize_t n;
+         					n = read((*ClientInfoIt)->CgiReadEnd, buffer, 1000);
+         					buffer[n] = 0;
+         					std::string str_buffer(buffer);
+         					int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
+         					// std::string header_part = str_buffer.substr(0, bef_header);
+         					// std::stringstream(header_part);
+         					std::string body = str_buffer.substr(bef_header + 4);
+							(*ClientInfoIt)->cgi_out << body;
+							(*ClientInfoIt)->isFirstCgiRead = 0;
+						}
+						else{
+							char buffer[1001];
+							ssize_t n;
+							n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
+        					buffer[n] = 0;
+							(*ClientInfoIt)->cgi_out << buffer;
+							if(n < 1000) {
+								close((*ClientInfoIt)->CgiReadEnd);
+								(*ClientInfoIt)->cgi_out.close();
+								(*ClientInfoIt)->inReadCgiOut = 0;
+								if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
+								(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
+								(*ClientInfoIt)->served.seekg(0, std::ios::end);
+								(*ClientInfoIt)->served_size = (*ClientInfoIt)->served.tellg();
+								(*ClientInfoIt)->served.seekg(0, std::ios::beg);
+							}
+						}
 					}
 				}
 			}
@@ -258,6 +292,7 @@ void	HttpServer::_serveClients( void )
 			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 			{
 				if((*ClientInfoIt)->inReadCgiOut == 0){
+                    std::cout << "in read " <<  << std::endl;
             		char *s = new char[1024]();
             		(*ClientInfoIt)->served.read(s, 1024);
             		int r = (*ClientInfoIt)->served.gcount();
