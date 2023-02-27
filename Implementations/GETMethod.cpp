@@ -197,16 +197,19 @@ std::string GETMethod::directoryListing(std::string rootDirectory, std::string l
 
 std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server ){
     int     pid = 0;
-    const char * request_method = "GET";
-    const char * script_name = "CGIS/php-cgi";
+    const char * request_method = "GET"; // POST or GET
+    const char * script_name = "CGIS/php-cgi"; // php cgi inside location
 	const char * query_string = client->parsedRequest.queryString.c_str();
     const char * server_name = server.serverHost.c_str();
     const char * server_port = server.serverPort.c_str();
+    // PATH INFO
     setenv("REQUEST_METHOD", request_method, 1);
     setenv("QUERY_STRING", query_string, 1);
     setenv("SCRIPT_NAME", script_name, 1);
     setenv("SERVER_NAME", server_name, 1)   ;
     setenv("SERVER_PORT", server_port, 1)   ;
+    // CONTENT LENGTH
+    // CONTENT TYPE
     setenv("REDIRECT_STATUS", "200", 1)    ;
     int fd[2];
     pipe(fd);

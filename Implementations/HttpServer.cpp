@@ -126,8 +126,8 @@ void	HttpServer::_serveClients( void )
 	ClientInfoIt = this->_clientsList.begin();
 	while (ClientInfoIt != this->_clientsList.end())
 	{
-		if (FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds))
-		|| (*ClientInfoIt)->inReadCgiOut)
+		if ((FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)) && (*ClientInfoIt)->isErrorOccured == false
+        && (*ClientInfoIt)->isServing == false) || (*ClientInfoIt)->inReadCgiOut == true)
 		{
 			if ((*ClientInfoIt)->isFirstRead)
 			{
@@ -292,7 +292,7 @@ void	HttpServer::_serveClients( void )
 			else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 			{
 				if((*ClientInfoIt)->inReadCgiOut == 0){
-                    std::cout << "in read " <<  << std::endl;
+//                    std::cout << "in read " <<  << std::endl;
             		char *s = new char[1024]();
             		(*ClientInfoIt)->served.read(s, 1024);
             		int r = (*ClientInfoIt)->served.gcount();
