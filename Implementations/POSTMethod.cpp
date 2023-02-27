@@ -54,13 +54,14 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
          throw std::runtime_error("Location not found");
      }
      if (!this->_isLocationSupportPost())
-         throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and to be tested.....
+         throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
      if(this->_currentLocation->UploadDirectoryPath.length()){
          client->parsedRequest._parsingMiniHeader();
          client->postRequest->_preparingPostRequest(client);
          client->postRequest->_isValidPostRequest(client);
      }
      else{
+
      }
 }
 
@@ -72,92 +73,6 @@ void PostMethod::_preparingPostRequest(ClientInfo *client) {
     client->requestBody.write(client->parsedRequest.requestHeader + client->parsedRequest.bodyIndex, client->parsedRequest.received - client->parsedRequest.newBodyIndex - 4);
 }
 
-void PostMethod::_searchingForUploadFolder(ClientInfo *client) {
-    (void) client;
-//    std::string path = client->parsedRequest.requestDataMap["path"];
-//	for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++){
-//		LocationBlockParse loc = *beg;
-//		std::string res = loc.Location;
-//		int len = path.length() - 1;
-//		int	index_last = len;
-//		if(path[len] == '/')
-//			len--;
-//		bool is_file_last = 0, point = 0;
-//		for(; len >= 0; len--){
-//			if(path[len] == '.')
-//				point = 1;
-//			if(path[len] == '/' && point){
-//				is_file_last = 1;
-//				index_last = len;
-//				break;
-//			}
-//			else if (path[len] == '/' && !point) break;
-//		}
-//		if(res[res.length() - 1] != '/') res += '/';
-//		std::string full_path = path.substr(0, index_last + 1);
-//		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
-//		if(full_path != res) continue;
-//		if(loc.isDirectoryListingOn && !is_file_last){
-//            std::string root = loc.Root;
-//            if(root[root.length() - 1] != '/') root += '/';
-//            if(root[0] != '.') root = '.' + root;
-//            if(full_path[0] != '.') full_path = '.' + full_path;
-//            client->servedFileName = directoryListing(root, full_path);
-//            return ;
-//        }
-//        else{
-//		    std::string file = path.substr(index_last + 1);
-//		    if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
-//		    if(is_file_last && file[file.length() - 1] == '/') file.erase(file.length() - 1);
-//		    std::string root = loc.Root;
-//		    if(root[root.length() - 1] != '/') root += '/';
-//		    if(file == ""){
-//		    	for(std::list<std::string>::iterator index_it = loc.indexFiles.begin(); index_it != loc.indexFiles.end(); index_it++)
-//		    	{
-//		    		std::string final_path = root + (*index_it);
-//		    		if(final_path[0] == '/') final_path = '.' + final_path;
-//		    		std::ifstream check_file(final_path, std::ios::binary);
-//		    		if(check_file){
-//					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-//					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
-//                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
-//                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-//                            return ;
-//                        }
-//                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
-//                            // python cgi
-//                        }
-//                    }
-//                    client->servedFileName = final_path;
-//					return ;
-//				}
-//		    	else ;
-//		    	}
-//		    }
-//		    else{
-//		    	std::string final_path = root + file;
-//		    	if(final_path[0] == '/') final_path = '.' + final_path;
-//		    	std::ifstream check_file(final_path, std::ios::binary);
-//		    	if(check_file){
-//					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-//					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
-//                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
-//                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-//
-//                            return ;
-//                        }
-//                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
-//                            // python cgi
-//                        }
-//                    }
-//                    client->servedFileName = final_path;
-//					return ;
-//				}
-//		    	else ;
-//		    }
-//        }
-//	}
-}
 
 void PostMethod::_isValidPostRequest(ClientInfo *client) {
     if(isNotValidPostRequest(client->parsedRequest.requestDataMap))

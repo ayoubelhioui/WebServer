@@ -133,9 +133,10 @@ void	HttpServer::_serveClients( void )
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
-//				std::cout << "*************************" << std::endl;
-//				std::cout << "req header" << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-//				std::cout << "*************************" << std::endl;
+				std::cout << "*************************" << std::endl;
+				std::cout << "req header" << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+				std::cout << "*************************" << std::endl;
+                exit(1);
 				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 				size_t	foundQuery = word.find('?');
 				if(foundQuery != std::string::npos){
@@ -168,7 +169,7 @@ void	HttpServer::_serveClients( void )
 					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
 					 try
 					 {
-						 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
+						 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt); // add a return to the function for the case of no upload folder.
                          if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
                              (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					 }
@@ -244,7 +245,8 @@ void	HttpServer::_serveClients( void )
 							 */
 								close((*ClientInfoIt)->CgiReadEnd);
 								(*ClientInfoIt)->cgi_out.close();
-								(*ClientInfoIt)->inReadCgiOut = 0;
+								(*ClientInfoIt)->inReadCgiOut = false;
+								(*ClientInfoIt)->PostFinishedCgi = true;
 								if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
 								(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
 								(*ClientInfoIt)->served.seekg(0, std::ios::end);
@@ -262,20 +264,20 @@ void	HttpServer::_serveClients( void )
 			{
 				if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
                 and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false
-				/* && (*ClientInfoIt)->inReadCgiOut == false */)
+				and (*ClientInfoIt)->inReadCgiOut == false and  (*ClientInfoIt)->PostFinishedCgi == false)
 				{
 					try{
 						(*ClientInfoIt)->postRequest->writeToUploadedFile();
 						if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
 						{
-
-                             if((*ClientInfoIt)->parsedRequest.uploadFileName){
-                             	(*ClientInfoIt)->inReadCgiOut = 1;
-                              	execute_cgi(client);
+                            size_t foundPhp = (*ClientInfoIt)->parsedRequest.uploadFileName.find(".php");
+                             if(foundPhp != std::string::npos){
+//                              	execute_cgi(client);
 							 }
-                            else
-							(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
-							(*ClientInfoIt)->isServing = true;
+                            else{
+                                 (*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
+                                 (*ClientInfoIt)->isServing = true;
+                             }
 						}
                         // (*ClientInfoIt)->inReadCgiOut = 1;
 					    // exeuteCGI;
@@ -287,7 +289,8 @@ void	HttpServer::_serveClients( void )
                         (*ClientInfoIt)->isErrorOccured = true;
 					}
 				}
-                else if (((*ClientInfoIt)->isErrorOccured == true) or ((*ClientInfoIt)->isServing == true)){
+                else if ((((*ClientInfoIt)->isErrorOccured == true) or ((*ClientInfoIt)->isServing == true))
+				or ((*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == true)){
                     char *s = new char[1024]();
             		(*ClientInfoIt)->served.read(s, 1024);
                         int r = (*ClientInfoIt)->served.gcount();

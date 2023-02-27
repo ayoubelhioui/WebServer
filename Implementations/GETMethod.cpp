@@ -58,7 +58,7 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
             if(root[root.length() - 1] != '/') root += '/';
             if(root[0] != '.') root = '.' + root;
             if(full_path[0] != '.') full_path = '.' + full_path;
-            client->servedFileName = directoryListing(root, full_path);
+            client->servedFileName = directoryListing(root, full_path, client);
             return ;
         }
         else{
@@ -131,22 +131,8 @@ void    GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfi
     }
 }
 
-std::string    generateRandString ( int n )
-{
-    std::string         randString;
-
-    const std::string    chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz"
-        "0123456789";
-    
-    for (int i = 0; i < n; ++i) {
-        randString += chars[rand() % chars.size()];
-    }
-    return randString;
-}
-
-std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path){
+std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path,
+ClientInfo *client){
 	DIR* dir = opendir(rootDirectory.c_str());
     if (dir == NULL) {
         
@@ -178,7 +164,7 @@ std::string GETMethod::directoryListing(std::string rootDirectory, std::string l
 				"</body>\n"
 				"</html>\n";
 	closedir(dir);
-    std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
+    std::string newFile = "FilesForServingGET/" + client->generateRandString() + ".html";
     std::ofstream directoryListingFile(newFile);
     directoryListingFile << file_list;
     directoryListingFile.close();

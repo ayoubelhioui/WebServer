@@ -4,6 +4,7 @@
 # include <iostream>
 # include <fstream>
 # include <list>
+# include <unistd.h>
 # include "../Interfaces/RequestParser.hpp"
 # include "../Interfaces/POSTMethod.hpp"
 
@@ -17,6 +18,7 @@ class ClientInfo {
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
 		std::string	CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server );
+		std::string    generateRandString ( void );
         ParsingRequest parsedRequest;
         bool isFirstRead;
         std::ofstream requestBody;
@@ -36,6 +38,7 @@ class ClientInfo {
 		bool			stillWaiting;
 		bool			isFirstCgiRead;
 		int				cgiPid;
+        bool            PostFinishedCgi;
 	// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 		// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
 		// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);
