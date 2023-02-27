@@ -209,6 +209,9 @@ std::string		GETMethod::CGIexecutedFile( std::string php_file, ClientInfo *clien
     setenv("SERVER_NAME", server_name, 1)   ;
     setenv("SERVER_PORT", server_port, 1)   ;
     setenv("REDIRECT_STATUS", "200", 1)    ;
+    std::cout << "script name " << php_file << std::endl;
+    std::cout << "access is " << access(php_file.c_str(), X_OK) << std::endl;
+    std::cout << "errno is " << errno << std::endl;
     int fd[2];
     pipe(fd);
     std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
