@@ -23,6 +23,7 @@ class ParsingRequest{
 		std::string uploadFileName;
 		std::string		queryString;
 		std::map<std::string, std::string> requestDataMap;
+		bool	isBoundaryExist;
 		void	parse();
 		void	parsingRequestFirstLine(std::string);
 		void	parsingRequest(std::string);

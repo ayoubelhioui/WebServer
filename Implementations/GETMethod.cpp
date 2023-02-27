@@ -128,6 +128,15 @@ void    GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfi
 	    client->served.seekg(0, std::ios::end);
 	    client->served_size = client->served.tellg();
 	    client->served.seekg(0, std::ios::beg);
+        std::string  buffer = "HTTP/1.1 200 OK\r\n"
+								 + std::string("Connection: close\r\n")
+								 + std::string("Content-Length: ")
+								 + std::to_string(client->served_size)
+								 + "\r\n"
+								 + "Content-Type: "
+								 + get_mime_format(client->servedFileName.c_str())
+								 + "\r\n\r\n";
+                                send(client->socket, buffer.c_str(), buffer.length(), 0);
     }
 }
 

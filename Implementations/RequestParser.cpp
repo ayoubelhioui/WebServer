@@ -1,7 +1,7 @@
-#include "../Interfaces/RequestParser.hpp"
-
+# include "../Interfaces/RequestParser.hpp"
+# include "../Interfaces/Client.hpp"
 ParsingRequest::ParsingRequest() : bodyIndex(0), bytesToReceive(0), contentLength(0)
-, receivedBytes(0), received(0), boundarySize(0), newBodyIndex(0)
+, receivedBytes(0), received(0), boundarySize(0), newBodyIndex(0), isBoundaryExist(false)
 {
     requestHeader = new char[2001]();
 }
@@ -10,6 +10,7 @@ ParsingRequest::~ParsingRequest()
 {
     delete [] requestHeader;
 }
+
 
 void	ParsingRequest::parsingRequestFirstLine(std::string line){
 	std::stringstream str(line);
@@ -68,6 +69,11 @@ void    ParsingRequest::receiveFirstTime(int socket){
     this->received += this->receivedBytes;
     this->bodyIndex = retIndex(this->requestHeader);
     this->received -= (this->bodyIndex + 4);
+    std::string header(requestHeader);
+    header = header.substr(0, this->bodyIndex);
+    size_t  foundBoundaryWord = header.find("boundary=");
+    if(foundBoundaryWord != std::string::npos)
+        isBoundaryExist = true;
 }
 
 int     ParsingRequest::retIndex(char *requestHeader){

@@ -56,21 +56,22 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
      if (!this->_isLocationSupportPost())
          throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
      if(this->_currentLocation->UploadDirectoryPath.length()){
-         client->parsedRequest._parsingMiniHeader();
-         client->postRequest->_preparingPostRequest(client);
-         client->postRequest->_isValidPostRequest(client);
+         client->parsedRequest.uploadFileName = client->generateRandString() + ".php";
+         if(client->parsedRequest.isBoundaryExist == true)
+              client->parsedRequest._parsingMiniHeader();
+          client->postRequest->_preparingPostRequest(client);
+          client->postRequest->_isValidPostRequest(client);
      }
      else{
 
      }
 }
 
-
 void PostMethod::_preparingPostRequest(ClientInfo *client) {
+    int a = (client->parsedRequest.isBoundaryExist == true) ? 4 : 0;
+    int b = (client->parsedRequest.isBoundaryExist == true) ? 0 : 4;
     client->requestBody.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-//    if (!client->requestBody.is_open()) // this gives a problem when trying to upload yt.mp4 video.
-//        throw (std::runtime_error(TMP_FOLDER_COULDNT_OPEN));
-    client->requestBody.write(client->parsedRequest.requestHeader + client->parsedRequest.bodyIndex, client->parsedRequest.received - client->parsedRequest.newBodyIndex - 4);
+    client->requestBody.write(client->parsedRequest.requestHeader + client->parsedRequest.bodyIndex + b, client->parsedRequest.received - client->parsedRequest.newBodyIndex - a);
 }
 
 
@@ -123,7 +124,9 @@ void PostMethod::receiveTheBody(ClientInfo *client){
 
 void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     int i = 0;
-    this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex - 8;
+    this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex;
+    if (client->parsedRequest.isBoundaryExist == true)
+        totalTempFileSize -= 8; // for skipping /r/n/r/n twice.
     this->toWrite = 0;
     client->requestBody.close();
     struct stat st;
