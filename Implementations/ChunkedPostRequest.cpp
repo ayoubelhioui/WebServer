@@ -16,7 +16,8 @@ ChunkedPostRequest::ChunkedPostRequest ( void )
 	  _fileSize(0),
 	  _writtenBytes(0),
 	  _chunkContent(nullptr),
-	  _numberOfRecChunk(0)
+	  _numberOfRecChunk(0),
+	  _entered(0)
 {}
 
 ChunkedPostRequest::~ChunkedPostRequest ( void )
@@ -44,6 +45,7 @@ void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 	std::string	fileName;
 
 	fileName = "/tmp/" + generateRandString() + std::string(get_real_format(mimeType));
+	// fileName = "~/Desktop/" + generateRandString() + std::string(get_real_format(mimeType));
 	this->_uploadedFile.open(fileName, std::ios::binary);
 	if (this->_uploadedFile.is_open())
 		std::cout << fileName << " is created!!" << std::endl;
@@ -53,8 +55,12 @@ void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 void	ChunkedPostRequest::_retrieveChunkSize( char *buffer )
 {
 	std::string	hexString;
+	int		crlfPosition;
+	char	*str;
 
-	size_t	crlfPosition = strstr(buffer, "\r\n") - buffer;
+	str = strstr(buffer, "\r\n");
+	if (!str) exit(0); // * To be removed
+	crlfPosition = str - buffer;
 	hexString = std::string(buffer, buffer + crlfPosition);
 	try {
 		this->_currentChunkSize = std::stoi(hexString, 0, 16);
@@ -65,10 +71,11 @@ void	ChunkedPostRequest::_retrieveChunkSize( char *buffer )
 	this->_hexLength = hexString.size();
 	this->_fileSize += this->_currentChunkSize;
 	this->_chunkContent = &buffer[this->_hexLength + CRLF];
-	// std::cout << "_chunkContent[0] : " << (int)this->_chunkContent[0] << std::endl;
 }
 
 /*
+*/
+
 void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 {
 	unsigned int	bufferSize;
@@ -89,17 +96,11 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 	}
 	delete [] buffer;
 }
-*/
 
-void	ChunkedPostRequest::_receiveRestOfChunk ( SOCKET &clientSocket )
-{
-	
-}
-
+/*
 void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 {
 	(void)clientSocket;
-/*
 	char				buffer[BUFFER_SIZE];
 	unsigned int		chunkContentBeginningIndex;	
 	// unsigned int		chunkBeginningIndex;
@@ -120,9 +121,35 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 		i++;
 	}
 	this->_writtenBytes = i;
-*/
 }
+*/
 
+void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
+{
+	char		*buffer;
+	unsigned int i;
+
+	std::cout << "this->_writtenBytes : " << this->_writtenBytes << std::endl;
+	this->_writtenBytes = 0;
+	buffer = new char[BUFFER_SIZE]();
+	this->_receivedBytes = recv(clientSocket, buffer, BUFFER_SIZE, 0);
+	std::cout << "(int)buffer[0] : " << (int)buffer[0] << std::endl;
+	std::cout << "(int)buffer[1] : " << (int)buffer[1] << std::endl;
+	std::cout << "(int)buffer[2] : " << (int)buffer[2] << std::endl;
+	std::cout << "(int)buffer[3] : " << (int)buffer[3] << std::endl;
+	std::cout << "(int)buffer[4] : " << (int)buffer[4] << std::endl;
+	std::cout << "(int)buffer[5] : " << (int)buffer[5] << std::endl;
+	std::cout << "(int)buffer[6] : " << (int)buffer[6] << std::endl;
+	std::cout << "(int)buffer[7] : " << (int)buffer[7] << std::endl;
+	this->_retrieveChunkSize(buffer + CRLF);
+	i = 0;
+	while (i < this->_receivedBytes)
+	{
+		this->_uploadedFile << this->_chunkContent[i];
+		i++;
+	}
+	delete [] buffer;
+}
 /*------------------------------------------------------------------------*/
 
 /*
@@ -197,7 +224,6 @@ HEADER\r\n
 \r\n
 hex\r\n
 Content
-
 */
 
 

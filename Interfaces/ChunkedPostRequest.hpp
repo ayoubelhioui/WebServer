@@ -32,6 +32,7 @@ class ChunkedPostRequest {
 		unsigned int	_writtenBytes;
 		char			*_chunkContent;
 		int				_numberOfRecChunk;
+		int				_entered;
 		void			_createUploadedFile( const char * );
 		void			_receiveRestOfChunk ( SOCKET & );
 		void			_receiveNextChunkBeginning ( SOCKET & );
