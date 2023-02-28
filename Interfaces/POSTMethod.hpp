@@ -27,7 +27,8 @@ class PostMethod{
         void _writeInTempFile( ClientInfo* );
         void _receiveFromClient( ClientInfo* );
         void _searchForCurrentLocation(ClientInfo *);
-        bool _isLocationSupportPost( void );
+        bool _isLocationSupportsPost( void );
+        bool _isLocationSupportsUpload( void );
         ServerConfiguration _serverConfiguration;
         std::list<LocationBlockParse>::iterator _currentLocation;
     public :

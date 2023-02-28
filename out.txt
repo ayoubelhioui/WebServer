@@ -1,0 +1,8 @@
+HTTP/1.1 500 Internal Server Error
+Connection: close
+Content-Length: 701
+Content-Type: text/html
+
+
+Post Method is not supported !!
+********

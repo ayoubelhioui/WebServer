@@ -1,4 +1,6 @@
 # include "../errorsHandling/errorsHandling.hpp"
+
+
 bool    isBodySizeBigger(ServerConfiguration &serverConfig, unsigned int bodySize) // STATUS CODE : 403 REQUEST ENTITY TOO LARGE
 {
     std::cout << "the bodySize : " << bodySize << "and the client limit size is : " << serverConfig.clientBodyLimit << std::endl;
@@ -72,9 +74,9 @@ void    error_501(ClientInfo *client)
 
 void    error_500(ClientInfo *client)
 {
-    
     std::string path = "htmlErrorPages/error500.html";
-    if(client->served.is_open()) client->served.close();
+    if(client->served.is_open())
+        client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
@@ -84,11 +86,11 @@ void    error_500(ClientInfo *client)
     error_header += "HTTP/1.1 500 Internal Server Error\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
-    + std::to_string(file_size) 
+    + std::to_string(file_size)
     + "\r\n"
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
-    + "\r\n\r\n" ;
+    + "\r\n\r\n";
     send(client->socket, error_header.c_str(), error_header.length(), 0);
 }
 
@@ -148,7 +150,7 @@ void    error_413(ClientInfo *client)
 
 void    error_404(ClientInfo *client)
 {
-    
+
     std::string path = "htmlErrorPages/error404.html";
     if(client->served.is_open()) client->served.close();
     client->served.open(path);
