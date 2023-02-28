@@ -56,7 +56,7 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
      if (!this->_isLocationSupportPost())
          throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
      if(this->_currentLocation->UploadDirectoryPath.length()){
-         client->parsedRequest.uploadFileName = client->generateRandString() + ".php";
+         client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
          if(client->parsedRequest.isBoundaryExist == true)
               client->parsedRequest._parsingMiniHeader();
           client->postRequest->_preparingPostRequest(client);
@@ -68,7 +68,7 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
 }
 
 void PostMethod::_preparingPostRequest(ClientInfo *client) {
-    int a = (client->parsedRequest.isBoundaryExist == true) ? 4 : 0;
+    int a = (client->parsedRequest. isBoundaryExist == true) ? 4 : 0;
     int b = (client->parsedRequest.isBoundaryExist == true) ? 0 : 4;
     client->requestBody.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
     client->requestBody.write(client->parsedRequest.requestHeader + client->parsedRequest.bodyIndex + b, client->parsedRequest.received - client->parsedRequest.newBodyIndex - a);
