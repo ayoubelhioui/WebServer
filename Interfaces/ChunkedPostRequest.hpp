@@ -22,6 +22,7 @@ class ChunkedPostRequest {
 		ChunkedPostRequest	&operator= ( const ChunkedPostRequest & );
 		void	handleRecv( SOCKET & );
 		void	handleFirstRecv ( const char *, ParsingRequest & );
+		bool	uploadDone;
 	private:
 		std::ofstream	_uploadedFile;
 		std::string		_buffer;

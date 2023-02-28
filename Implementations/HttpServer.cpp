@@ -9,8 +9,7 @@
 
 HttpServer::HttpServer ( ServerConfiguration &serverConfig )
 	: _serverConfiguration(serverConfig) 
-{
-	 }
+{}
 
 HttpServer::HttpServer ( void ) { }
 HttpServer::~HttpServer ( void ) { }
@@ -214,8 +213,13 @@ void	HttpServer::_serveClients( void )
 				{
 					// std::cout << "Chunked being processed for the SECOND time" << std::endl;
 					(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
-					// exit(EXIT_SUCCESS);
-
+					if ((*ClientInfoIt)->chunkedRequest->uploadDone == true)
+					{
+						std::cout << "DONE DONE DONE "<< std::endl;
+						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+						continue;
+					}
+					
 				}
 				else
 				{
