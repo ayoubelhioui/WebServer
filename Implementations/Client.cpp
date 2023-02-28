@@ -80,7 +80,6 @@ std::string		ClientInfo::CGIexecutedFile( std::string php_file, ClientInfo *clie
         args[1] = (char *) php_file.c_str();
         args[2] = NULL;
         if (execve(script_name, args, NULL)){
-            std::cout << "exec problem" << std::endl;
             return "";
         }
     }

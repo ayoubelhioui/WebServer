@@ -119,7 +119,21 @@ void HttpServer::dropClient( SOCKET &clientSocket, std::list<ClientInfo *>::iter
     this->_clientsList.erase(tempIterator);
 }
 
+void	parseCgiHeader(ClientInfo *client, std::string header){
+	std::string	line;
+	size_t foundCRLF = header.find("\r\n");
+	if(foundCRLF != std::string::npos)
+		line = header.substr(0, foundCRLF);
+	while(line[0] != '\r'){
+		std::stringstream stream(line);
+		std::string	word;
+		while(stream >> word){
 
+		}
+
+	}
+
+}
 void	HttpServer::_serveClients( void )
 {
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
@@ -220,8 +234,8 @@ void	HttpServer::_serveClients( void )
          					buffer[n] = 0;
          					std::string str_buffer(buffer);
          					int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
-         					// std::string header_part = str_buffer.substr(0, bef_header);
-         					// std::stringstream(header_part);
+							std::string	header = str_buffer.substr(0, bef_header);
+							parseCgiHeader((*ClientInfoIt), header); 
          					std::string body = str_buffer.substr(bef_header + 4);
 							(*ClientInfoIt)->cgi_out << body;
 							(*ClientInfoIt)->isFirstCgiRead = false;
