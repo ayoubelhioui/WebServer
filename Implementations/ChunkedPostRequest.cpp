@@ -44,7 +44,7 @@ void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 {
 	std::string	fileName;
 
-	fileName = "~/Desktop/" + generateRandString() + std::string(get_real_format(mimeType));
+	fileName = "/tmp/" + generateRandString() + std::string(get_real_format(mimeType));
 	// fileName = "~/Desktop/" + generateRandString() + std::string(get_real_format(mimeType));
 	this->_uploadedFile.open(fileName, std::ios::binary);
 	if (this->_uploadedFile.is_open())
