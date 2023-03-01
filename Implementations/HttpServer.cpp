@@ -164,9 +164,6 @@ void	HttpServer::_serveClients( void )
 				// }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
-<<<<<<< HEAD
-					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
-=======
 
 					if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 					{
@@ -178,7 +175,6 @@ void	HttpServer::_serveClients( void )
 					else
 					{
 						(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
->>>>>>> 5dc16c0b540393c5fe7a1ca9fff995ecfb4aca8d
 					 try
 					 {
 						 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt); // add a return to the function for the case of no upload folder.
@@ -296,16 +292,18 @@ void	HttpServer::_serveClients( void )
 						(*ClientInfoIt)->postRequest->writeToUploadedFile();
 						if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
 						{
-//                            size_t foundPhp = (*ClientInfoIt)->parsedRequest.uploadFileName.find(".php");
-//                             if(foundPhp != std::string::npos){
-////                              	execute_cgi(client);
-//							 }
-//                            else{
+                            size_t foundPhp = (*ClientInfoIt)->parsedRequest.uploadFileName.find(".php");
+                             if(foundPhp != std::string::npos){
+                                 (*ClientInfoIt)->cgiContentType = "text/x-php";
+								 (*ClientInfoIt)->cgiContentLength = std::to_string((*ClientInfoIt)->parsedRequest.contentLength);
+								 (*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt)->parsedRequest.uploadFileName,
+																  (*ClientInfoIt), this->_serverConfiguration, );
+                             }
+                            else{
                                  (*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
                                  (*ClientInfoIt)->isServing = true;
-//                             }
-						}
-                        // (*ClientInfoIt)->inReadCgiOut = 1;
+                             }
+                        }
 					    // exeuteCGI;
                     }
 					catch (std::exception &e)

@@ -40,7 +40,9 @@ const char *get_real_format(const char *mime_type){
         if (strcmp(mime_type, "application/pdf") == 0) return ".pdf";
         if (strcmp(mime_type, "image/svg+xml") == 0) return ".svg+xml";
         if (strcmp(mime_type, "text/plain") == 0) return ".txt";
+
         if (strcmp(mime_type, "video/mp4") == 0) return ".mp4";
+        if (strcmp(mime_type, "application/x-www-form-urlencoded") == 0) return ".php";
         return "";
 }
 

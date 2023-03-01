@@ -35,6 +35,8 @@ class ClientInfo {
 		std::string	   servedFileName;	
 		std::string	  currentServerFile;
         std::map<std::string, std::string> cgiMap;
+        std::string             cgiContentLength;
+        std::string     cgiContentType;
 		bool			inReadCgiOut;
 		int				CgiReadEnd;
 		int				served_size;

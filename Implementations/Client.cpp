@@ -83,8 +83,8 @@ void    ClientInfo::CGIexecutedFile( std::string php_file, ClientInfo *client, S
     const char * server_host = server.serverHost.c_str();
     const char * server_port = server.serverPort.c_str();
     //const char * path_info ;
-    //const char * content_length;
-    // const char *content_type;
+    const char * content_length = client->cgiContentLength.c_str();
+     const char *content_type = client->cgiContentType.c_str();
 
     setenv("REQUEST_METHOD", request_method, 1);
     setenv("QUERY_STRING", query_string, 1);
@@ -93,8 +93,8 @@ void    ClientInfo::CGIexecutedFile( std::string php_file, ClientInfo *client, S
     setenv("SERVER_PORT", server_port, 1)   ;
     setenv("REDIRECT_STATUS", "200", 1)    ;
     // setenv("PATH_INFO", server_port, 1)   ;
-    //  setenv("CONTENT_LENGTH", server_port, 1)   ;
-    //  setenv("CONTENT_TYPE", server_port, 1)   ;
+      setenv("CONTENT_LENGTH", content_length, 1)   ;
+      setenv("CONTENT_TYPE", content_type, 1)   ;
     int fd[2];
     pipe(fd);
     pid = fork();

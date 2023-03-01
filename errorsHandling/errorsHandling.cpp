@@ -1,9 +1,5 @@
 # include "../errorsHandling/errorsHandling.hpp"
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 5dc16c0b540393c5fe7a1ca9fff995ecfb4aca8d
 bool    isBodySizeBigger(ServerConfiguration &serverConfig, unsigned int bodySize) // STATUS CODE : 403 REQUEST ENTITY TOO LARGE
 {
     return (bodySize > serverConfig.clientBodyLimit);
@@ -153,7 +149,6 @@ void    error_413(ClientInfo *client)
 void    error_404(ClientInfo *client)
 {
     std::cout << "path is " << client->parsedRequest.requestDataMap["path"] << std::endl;
-    std::cout << "404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 " << std::endl;
     std::string path = "htmlErrorPages/error404.html";
     if(client->served.is_open()) client->served.close();
     client->served.open(path);
