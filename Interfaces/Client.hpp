@@ -7,14 +7,15 @@
 # include <unistd.h>
 # include "../Interfaces/RequestParser.hpp"
 # include "../Interfaces/POSTMethod.hpp"
-
+# include "../Interfaces/ChunkedPostRequest.hpp"
 class PostMethod;
 
 class ClientInfo {
     public:
 		ClientInfo ( void );
 		~ClientInfo ( void );
-		PostMethod *postRequest;
+		PostMethod			*postRequest;
+		ChunkedPostRequest	*chunkedRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
 		std::string	CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server );
