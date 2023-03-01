@@ -27,7 +27,8 @@ transfer-encoding.md
 webserv.pdf
 cmake-build-debug/
 out
-php-cgi
+CGIS/php-cgi
+public/
 .idea/
 ./idea/*
 .DS_Store
