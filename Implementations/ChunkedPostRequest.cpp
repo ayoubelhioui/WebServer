@@ -136,7 +136,7 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 		this->_uploadedFile << this->_chunkContent[i];
 		i++;
 	}
-	if (this->_currentChunkSize < MAX_REQUEST_SIZE)
+	if (this->_currentChunkSize <= MAX_REQUEST_SIZE - offSet)
 		this->_finishServing();
 	this->_writtenBytes = i;
 }
