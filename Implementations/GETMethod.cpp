@@ -78,7 +78,7 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                     for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                            client->CGIexecutedFile(final_path, client, serverConfig);
+                            client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
                             return ;
                         }
                         else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
@@ -100,7 +100,7 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                     for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                            client->CGIexecutedFile(final_path, client, serverConfig);
+                            client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
                             return ;
                         }
                         else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){

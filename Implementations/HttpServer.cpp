@@ -164,6 +164,9 @@ void	HttpServer::_serveClients( void )
 				// }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
+<<<<<<< HEAD
+					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
+=======
 
 					if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 					{
@@ -175,6 +178,7 @@ void	HttpServer::_serveClients( void )
 					else
 					{
 						(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
+>>>>>>> 5dc16c0b540393c5fe7a1ca9fff995ecfb4aca8d
 					 try
 					 {
 						 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt); // add a return to the function for the case of no upload folder.
@@ -345,7 +349,6 @@ void	HttpServer::_serveClients( void )
             		(*ClientInfoIt)->served.read(s, 1024);
             		int r = (*ClientInfoIt)->served.gcount();
 					if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
-                        std::cout << "SEEEEENDDD FAAAILED" << std::endl;
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
 					} 

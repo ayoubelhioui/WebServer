@@ -18,7 +18,8 @@ class ClientInfo {
 		ChunkedPostRequest	*chunkedRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
-		std::string	CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server );
+		void	CGIexecutedFile( std::string , ClientInfo *, ServerConfiguration &
+, std::list<std::pair<std::string, std::string> >::iterator & );
 		void	parseCgiHeader(std::string &);
         void	parsingCgiLine(std::string line);
 		std::string    generateRandString ( void );
