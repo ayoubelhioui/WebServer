@@ -119,11 +119,11 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 void    GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig)
 {
 	handleGETMethod(client, serverConfig);
-	if(client->servedFileName == ""){
+    if(client->servedFileName == "" && !client->inReadCgiOut){
 		throw std::runtime_error("file path not allowed");
 	}
     if(client->inReadCgiOut == 0){
-
+//    std::cout << "in CGI CGI CGI" << std::endl;
 	    client->served.open(client->servedFileName, std::ios::binary);
 	    client->served.seekg(0, std::ios::end);
 	    client->served_size = client->served.tellg();

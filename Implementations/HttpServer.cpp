@@ -120,6 +120,7 @@ void HttpServer::dropClient( SOCKET &clientSocket, std::list<ClientInfo *>::iter
 }
 
 
+
 void	HttpServer::_serveClients( void )
 {
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
@@ -162,6 +163,9 @@ void	HttpServer::_serveClients( void )
 				// }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
+					std::cout << "***********" << std::endl;
+					std::cout << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+					std::cout << "***********" << std::endl;
 					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
 					 try
 					 {
@@ -211,43 +215,50 @@ void	HttpServer::_serveClients( void )
          					ssize_t n;
          					n = read((*ClientInfoIt)->CgiReadEnd, buffer, 1000);
          					buffer[n] = 0;
+                             std::cout << "buffer : " << std::endl;
+                             std::cout << buffer << std::endl;
          					std::string str_buffer(buffer);
          					int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
-         					// std::string header_part = str_buffer.substr(0, bef_header);
-         					// std::stringstream(header_part);
+         					 std::string header_part = str_buffer.substr(0, bef_header);
+                            (*ClientInfoIt)->parseCgiHeader(header_part);
+                             std::string contentType = (*ClientInfoIt)->cgiMap["Content-type:"];
+                            std::string mimeType = contentType.substr(0, contentType.find(";"));
          					std::string body = str_buffer.substr(bef_header + 4);
+							std::string newFile = "FilesForServingGET/" + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
+							if((*ClientInfoIt)->cgi_out.is_open()) (*ClientInfoIt)->cgi_out.close();
+							(*ClientInfoIt)->cgi_out.open(newFile, std::ios::binary);
+							(*ClientInfoIt)->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
 							(*ClientInfoIt)->cgi_out << body;
 							(*ClientInfoIt)->isFirstCgiRead = false;
-							// (*ClientInfoIt)->servedFileName + extension;
 						}
 						else{
 							char buffer[1001];
 							ssize_t n;
 							n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
         					buffer[n] = 0;
-							(*ClientInfoIt)->cgi_out << buffer;
-							if(n < 1000) {
-								/*
-							 * //	std::string  buffer = "HTTP/1.1 200 OK\r\n"
-								//    + std::string("Connection: close\r\n")
-								//    + std::string("Content-Length: ")
-								//    + std::to_string(client->served_size)
-								//    + "\r\n"
-								//    + "Content-Type: "
-								//    + get_mime_format(client->servedFileName.c_str())
-								//    + "\r\n\r\n";
-								//	send(client->socket, buffer.c_str(), buffer.length(), 0);
-							 *
-							 */
+                            std::cout << buffer << std::endl;
+                            (*ClientInfoIt)->cgi_out << buffer;
+                            if(n < 1000) {
+                                (*ClientInfoIt)->cgi_out.seekp(0, std::ios::end);
+                                (*ClientInfoIt)->served_size = (*ClientInfoIt)->cgi_out.tellp();
+                                (*ClientInfoIt)->cgi_out.seekp(0, std::ios::beg);
+                                if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
+                                std::cout << "size is " << (*ClientInfoIt)->served_size << std::endl;
+                                std::cout << "content type is " << get_mime_format((*ClientInfoIt)->servedFileName.c_str()) << std::endl;
+                                std::string headerPart = "HTTP/1.1 200 OK\r\n"
+								    + std::string("Connection: close\r\n")
+								    + std::string("Content-Length: ")
+								    + std::to_string((*ClientInfoIt)->served_size)
+								    + "\r\n"
+								    + std::string("Content-Type: ")
+								    + get_mime_format((*ClientInfoIt)->servedFileName.c_str())
+								    + "\r\n\r\n";
+                                send((*ClientInfoIt)->socket, headerPart.c_str(), headerPart.length(), 0);
+//                                exit(1);
 								close((*ClientInfoIt)->CgiReadEnd);
-								(*ClientInfoIt)->cgi_out.close();
 								(*ClientInfoIt)->inReadCgiOut = false;
 								(*ClientInfoIt)->PostFinishedCgi = true;
-								if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
 								(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
-								(*ClientInfoIt)->served.seekg(0, std::ios::end);
-								(*ClientInfoIt)->served_size = (*ClientInfoIt)->served.tellg();
-								(*ClientInfoIt)->served.seekg(0, std::ios::beg);
 							}
 						}
 					}
@@ -319,6 +330,7 @@ void	HttpServer::_serveClients( void )
             		(*ClientInfoIt)->served.read(s, 1024);
             		int r = (*ClientInfoIt)->served.gcount();
 					if (send((*ClientInfoIt)->socket, s, r, 0) == -1){
+                        std::cout << "SEEEEENDDD FAAAILED" << std::endl;
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
 					} 
