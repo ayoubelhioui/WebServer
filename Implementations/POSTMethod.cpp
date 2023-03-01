@@ -37,7 +37,7 @@ void    PostMethod::_searchForCurrentLocation(ClientInfo *client) {
     this->_currentLocation = beg;
 }
 
-bool    PostMethod::_isLocationSupportPost() {
+bool    PostMethod::_isLocationSupportsPost() {
     std::list<std::string>::iterator it = this->_currentLocation->allowedMethods.begin();
     while (it != this->_currentLocation->allowedMethods.end()){
         if (*it == "POST")
@@ -47,15 +47,28 @@ bool    PostMethod::_isLocationSupportPost() {
     return (false);
 }
 
+bool    PostMethod::_isLocationSupportsUpload( void ) {
+    return (this->_currentLocation->UploadDirectoryPath.length());
+}
 void    PostMethod::handleFirstRead(ClientInfo *client) {
      this->_searchForCurrentLocation(client);
-     if(this->_currentLocation == this->_serverConfiguration.Locations.end()){
+     if(this->_currentLocation == this->_serverConfiguration.Locations.end())
+     {
          error_404(client);
          throw std::runtime_error("Location not found");
      }
-     if (!this->_isLocationSupportPost())
+     if (!this->_isLocationSupportsPost())
+     {
+         error_500(client);
          throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
-     if(this->_currentLocation->UploadDirectoryPath.length()){
+     }
+     if (isBodySizeBigger(this->_serverConfiguration, client->parsedRequest.contentLength))
+     {
+         error_404(client);
+         throw (std::runtime_error("Body Size Too Large !!"));
+     }
+     if(this->_isLocationSupportsUpload())
+     {
          client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
          if(client->parsedRequest.isBoundaryExist == true)
               client->parsedRequest._parsingMiniHeader();

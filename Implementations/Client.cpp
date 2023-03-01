@@ -43,6 +43,36 @@ std::string    ClientInfo::generateRandString ( void )
     return randString;
 }
 
+void	ClientInfo::parsingCgiLine(std::string line){
+	std::stringstream str(line);
+    std::string word;
+    str >> word;
+    std::string save = word;
+    std::string last;
+    while (str >> word)
+    {
+        last += " ";
+        last += word;
+    }
+    last.erase(0, 1);
+    cgiMap[save] = last;
+}
+
+void	ClientInfo::parseCgiHeader(std::string &header){
+	std::string	headerPart(header), line;
+    std::size_t found = headerPart.find("\r\n");
+    while(found != std::string::npos)
+    {
+      line = headerPart.substr(0, found);
+      parsingCgiLine(line);
+      headerPart = headerPart.substr(found + 2);
+      found = headerPart.find("\r\n");
+    }
+	headerPart = headerPart.substr(found + 1);
+    found = headerPart.find("\r\n");
+    line = headerPart.substr(0, found);
+    parsingCgiLine(line);
+}
 std::string		ClientInfo::CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server){
     int     pid = 0;
     const char * request_method = client->parsedRequest.requestDataMap["method"].c_str(); // POST or GET
@@ -66,10 +96,6 @@ std::string		ClientInfo::CGIexecutedFile( std::string php_file, ClientInfo *clie
     //  setenv("CONTENT_TYPE", server_port, 1)   ;
     int fd[2];
     pipe(fd);
-    std::string newFile = "FilesForServingGET/" + generateRandString();
-    client->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
-    if(client->cgi_out.is_open()) client->cgi_out.close();
-    client->cgi_out.open(newFile);
     pid = fork();
     if (pid == 0){
         char  *args[3];
@@ -89,7 +115,7 @@ std::string		ClientInfo::CGIexecutedFile( std::string php_file, ClientInfo *clie
     client->inReadCgiOut = 1;
     client->stillWaiting = 1;
     client->cgiPid = pid;
-    return newFile;
+    return "";
 }
 
 // void	ClientInfo::clients_Setup()

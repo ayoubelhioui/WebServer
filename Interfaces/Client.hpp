@@ -19,6 +19,8 @@ class ClientInfo {
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
 		std::string	CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server );
+		void	parseCgiHeader(std::string &);
+        void	parsingCgiLine(std::string line);
 		std::string    generateRandString ( void );
         ParsingRequest parsedRequest;
         bool isFirstRead;
@@ -31,6 +33,7 @@ class ClientInfo {
 		std::ofstream cgi_out;
 		std::string	   servedFileName;	
 		std::string	  currentServerFile;
+        std::map<std::string, std::string> cgiMap;
 		bool			inReadCgiOut;
 		int				CgiReadEnd;
 		int				served_size;
