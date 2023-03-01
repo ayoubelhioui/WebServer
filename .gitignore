@@ -29,3 +29,6 @@ cmake-build-debug/
 out
 php-cgi
 
+.idea/
+./idea/*
+.DS_Store
