@@ -4,13 +4,9 @@
 /* ------------------ CANONICAL FORM ------------------- */
 /* ----------------------------------------------------- */
 
-// ChunkedPostRequest::ChunkedPostRequest ( ARGS )
-// {
-	
-// }
-
 ChunkedPostRequest::ChunkedPostRequest ( void )
-	: _receivedBytes(0),
+	: uploadDone(false),
+	  _receivedBytes(0),
 	  _currentChunkSize(0),
 	  _hexLength(0),
 	  _fileSize(0),
@@ -66,22 +62,14 @@ void	ChunkedPostRequest::_retrieveChunkSize( char *buffer )
 	hexString = std::string(buffer, buffer + crlfPosition);
 	try {
 		this->_currentChunkSize = std::stoi(hexString, 0, 16);
-		//std::cout << "this->_currentChunkSize : " << this->_currentChunkSize << std::endl;
 	}
 	catch ( const std::exception& excep) {
 		std::cerr << excep.what() << std::endl;
-	}
-	if (this->_currentChunkSize == 0)
-	{
-		this->_uploadedFile.close();
 	}
 	this->_hexLength = hexString.size();
 	this->_fileSize += this->_currentChunkSize;
 	this->_chunkContent = &buffer[this->_hexLength + CRLF];
 }
-
-/*
-*/
 
 void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 {
@@ -104,32 +92,6 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 	delete [] buffer;
 }
 
-/*
-void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
-{
-	(void)clientSocket;
-	char				buffer[BUFFER_SIZE];
-	unsigned int		chunkContentBeginningIndex;	
-	// unsigned int		chunkBeginningIndex;
-
-	this->_writtenBytes = 0;
-	this->_receivedBytes = recv(clientSocket, buffer, BUFFER_SIZE, 0);
-	this->_buffer = std::string(buffer);
-	this->_retrieveChunkSize();
-	//std::cout << "this->_currentChunkSize : " << this->_currentChunkSize << std::endl;
-	exit(0);
-	//std::cout << "FILE SIZE " << this->_fileSize << std::endl;
-	unsigned int	i = 0;
-
-	chunkContentBeginningIndex = CRLF +  this->_currentChunkSizeStrLength;
-	while (i < BUFFER_SIZE - chunkContentBeginningIndex )
-	{
-		this->_uploadedFile << this->_buffer[chunkContentBeginningIndex + i];
-		i++;
-	}
-	this->_writtenBytes = i;
-}
-*/
 
 void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 {
@@ -137,10 +99,15 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 	unsigned int i;
 
 	this->_writtenBytes = 0;
-	// buffer = new char[BUFFER_SIZE]();
 	char buffer[BUFFER_SIZE];
 	this->_receivedBytes = recv(clientSocket, buffer, BUFFER_SIZE, 0);
 	this->_retrieveChunkSize(buffer + CRLF);
+	if (this->_currentChunkSize == 0)
+	{
+		this->_uploadedFile.close();
+		this->uploadDone = true;;
+		std::cout << "DONE WRITTING TO THE FIEL" << std::endl;
+	}
 	i = 0;
 	while (i < this->_receivedBytes - this->_hexLength - DOUBLE_CRLF)
 	{
@@ -148,39 +115,8 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 		this->_writtenBytes++;
 		i++;
 	}
-	//std::cout << "this->_writtenBytes : " << this->_writtenBytes << std::endl;
-	// delete [] buffer;
 }
 /*------------------------------------------------------------------------*/
-
-/*
-void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingRequest &request )
-{
-	unsigned int		chunkBeginningIndex;
-	unsigned int		chunkContentBeginningIndex;
-
-	this->_createUploadedFile(contentType);
-	chunkBeginningIndex = request.retIndex(request.requestHeader) + DOUBLE_CRLF;
-	//std::cout << "chunkBeginningAsci : " << (int)request.requestHeader[chunkBeginningIndex] << std::endl;
-	// this->_buffer = std::string(&request.requestHeader[chunkBeginningIndex]);
-	this->_retrieveChunkSize(request.requestHeader);
-	//std::cout << "chunk Size : " << this->_currentChunkSize << std::endl;
-	//std::cout << "chunk Size string : " << this->_currentChunkSizeStrLength << std::endl;
-	if (this->_currentChunkSize == 0)
-		{std::cerr << "EMPTY FILE" << std::endl; exit(0);}
-	chunkContentBeginningIndex = CRLF +  this->_currentChunkSizeStrLength;
-	//std::cout << "Chunk Content START : " << request.requestHeader[chunkContentBeginningIndex] << std::endl;
-	unsigned int i = 0;
-	while (i < MAX_REQUEST_SIZE - chunkBeginningIndex - chunkContentBeginningIndex)
-	{
-		this->_uploadedFile << request.requestHeader[chunkBeginningIndex + chunkContentBeginningIndex + i];
-		i++;
-	}
-	//std::cout << "--> "<<static_cast<int>(request.requestHeader[chunkBeginningIndex + chunkContentBeginningIndex + i]) << std::endl;
-	this->_writtenBytes = i;
-	//std::cout << "WRITTEN BYTES : " << this->_writtenBytes << std::endl;
-}
-*/
 
 void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingRequest &request )
 {
@@ -207,83 +143,10 @@ void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket )
 {
 	if (this->_writtenBytes == this->_currentChunkSize)
 	{
-		// char buffer[1024];
-		// recv(clientSocket, buffer, 1024, 0);
-		// //std::cout << "buffer first " << (int)buffer[0] << std::endl;
-		// //std::cout << "buffer first " << (int)buffer[1] << std::endl;
-		// //std::cout << "DONE" << std::endl;
-		// exit(0);
 		this->_receiveNextChunkBeginning(clientSocket);
-		
-		// this->_numberOfRecChunk++;
 	}
 	else 
 	{
 		this->_receiveRestOfChunk(clientSocket);
 	}
 }
-
-// retindex
-/*
-HEADER
-HEADER
-HEADER
-HEADER\r\
-\r\n
-hex\r\n
-Content/r/n
-hex/r/n
-Content/r/n
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-void	ChunkedPostRequest::simulatePostReq ( std::ifstream &infile )
-{
-
-	(void)infile;
-
-	//std::cout << "\r\n" << std::endl;
-
-	char	buffer[BUFFER_SIZE + 1];
-
-	infile.read(buffer, BUFFER_SIZE);
-	buffer[BUFFER_SIZE] = 0;
-	//std::cout << buffer << std::endl;
-	//std::cout << "\n\n\n\n" ;
-	infile.read(buffer, BUFFER_SIZE);
-	buffer[BUFFER_SIZE] = 0;
-	//std::cout << buffer << std::endl;
-}
-*/
