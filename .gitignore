@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 *.dSYM/
 post.html
 webserv
@@ -33,3 +34,35 @@ public/
 ./idea/*
 .DS_Store
 file.conf
+=======
+ *.dSYM/
+ post.html
+ webserv
+ test.cpp
+ main.cpp
+ server_test.cpp
+ test.png
+ webserver
+ /.vscode
+ file.html
+ image.png
+ a.out
+ nginx.conf
+ # README.md
+ cmake-build-debug/
+ ./CMakeLists.txt
+ .idea/
+ *.mp4
+ *.png
+ *.jpeg
+ *.jpg
+ *.o
+ CMakeLists.txt
+ exampleOfHeadMethod.txt
+ transfer-encoding.md
+ webserv.pdf
+ cmake-build-debug/
+ out
+ php-cgi
+
+>>>>>>> f99dd6235d02e0ef60a5342edcad9b1a55685ade

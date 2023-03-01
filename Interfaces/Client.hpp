@@ -4,6 +4,7 @@
 # include <iostream>
 # include <fstream>
 # include <list>
+# include <unistd.h>
 # include "../Interfaces/RequestParser.hpp"
 # include "../Interfaces/POSTMethod.hpp"
 # include "../Interfaces/ChunkedPostRequest.hpp"
@@ -17,6 +18,10 @@ class ClientInfo {
 		ChunkedPostRequest	*chunkedRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
+		std::string	CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server );
+		void	parseCgiHeader(std::string &);
+        void	parsingCgiLine(std::string line);
+		std::string    generateRandString ( void );
         ParsingRequest parsedRequest;
         bool isFirstRead;
         std::ofstream requestBody;
@@ -25,9 +30,20 @@ class ClientInfo {
         char address_buffer[128];
         SOCKET socket;
         std::ifstream served;
+		std::ofstream cgi_out;
+		std::string	   servedFileName;	
 		std::string	  currentServerFile;
-        int served_size;
-		// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
+        std::map<std::string, std::string> cgiMap;
+		bool			inReadCgiOut;
+		int				CgiReadEnd;
+		int				served_size;
+		bool    		isErrorOccured;
+		int				isServing;
+		bool			stillWaiting;
+		bool			isFirstCgiRead;
+		int				cgiPid;
+        bool            PostFinishedCgi;
+	// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 		// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
 		// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);
 		// static void dropClient(int &, std::list<ClientInfo>::iterator &, std::list<ClientInfo> &);

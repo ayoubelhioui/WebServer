@@ -29,7 +29,7 @@ bool ifLocationSupportUpload(locationBlock &location)
 //    std::list<std::string>::iterator allowedMethods = postRequest.configFileData.
 //}
 
-void receiveFromClient(client_info *client, int &received)
+void _receiveFromClient(client_info *client, int &received)
 {
     client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->parsedRequest.contentLength) ? MAX_REQUEST_SIZE : client->parsedRequest.contentLength - client->received;
     received = recv(client->socket, client->parsedRequest.requestHeader, client->bytesToReceive, 0);
@@ -38,7 +38,7 @@ void receiveFromClient(client_info *client, int &received)
     client->parsedRequest.requestHeader[received] = 0;
 }
 
-void isValidPostRequest(postRequestStruct &postRequest)
+void _isValidPostRequest(postRequestStruct &postRequest)
 {
     if(isNotValidPostRequest(postRequest.client->parsedRequest.request_data))
     {

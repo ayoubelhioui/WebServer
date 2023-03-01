@@ -3,6 +3,9 @@
 
 # include "ServerConfiguration.hpp"
 # include "Client.hpp"
+# include <sys/types.h>
+# include <sys/stat.h>
+# include <fcntl.h>
 //# include "HttpServer.hpp"
 # define UPLOAD_SUCCESS_FILE_PROBLEM "Couldn't Open UploadSuccess File"
 # define BODY_SIZE_EXCEPTION "body size exception"
@@ -15,23 +18,30 @@
 
 
 
-class PostMethodExceptions : std::runtime_error{
-    public:
-        PostMethodExceptions( const std::string & );
-};
 class ClientInfo;
 class PostMethod{
     private :
-        void writeInTempFile( ClientInfo* );
-        void receiveFromClient( ClientInfo* );
-        void moveFileToUploads( ClientInfo* );
+        void _searchingForUploadFolder( ClientInfo* );
+        void _preparingPostRequest( ClientInfo* );
+        void _isValidPostRequest( ClientInfo* );
+        void _writeInTempFile( ClientInfo* );
+        void _receiveFromClient( ClientInfo* );
+        void _searchForCurrentLocation(ClientInfo *);
+        bool _isLocationSupportsPost( void );
+        bool _isLocationSupportsUpload( void );
         ServerConfiguration _serverConfiguration;
-public :
+        std::list<LocationBlockParse>::iterator _currentLocation;
+    public :
+        std::ifstream sourceFile;
+        std::ofstream destinationFile;
+        int totalTempFileSize;
+        int toWrite;
         PostMethod(ServerConfiguration &);
-        void preparingPostRequest( ClientInfo* );
-        void isValidPostRequest( ClientInfo* );
-        void serveClient( ClientInfo* );
-        void  successfulPostRequest( ClientInfo* );
+        void writeToUploadedFile( void );
+        void receiveTheBody( ClientInfo* );
+        void successfulPostRequest( ClientInfo* );
+        void preparingMovingTempFile( ClientInfo* );
+        void handleFirstRead( ClientInfo* );
 };
 
 #endif
