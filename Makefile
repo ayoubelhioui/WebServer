@@ -17,7 +17,9 @@ SOURCES = main.cpp \
 		Implementations/Client.cpp \
 		Implementations/HttpServer.cpp \
 		Implementations/RequestParser.cpp \
+		Implementations/ChunkedPostRequest.cpp \
 		errorsHandling/errorsHandling.cpp \
+		Utils/stringManip.cpp \
 		getFormat.cpp \
 
 DIR_LISTING_FILE = directoryListing.html

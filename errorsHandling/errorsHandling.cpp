@@ -1,6 +1,5 @@
 # include "../errorsHandling/errorsHandling.hpp"
 
-
 bool    isBodySizeBigger(ServerConfiguration &serverConfig, unsigned int bodySize) // STATUS CODE : 403 REQUEST ENTITY TOO LARGE
 {
     return (bodySize > serverConfig.clientBodyLimit);
