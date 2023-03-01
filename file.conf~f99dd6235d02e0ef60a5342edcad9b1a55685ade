@@ -1,11 +1,11 @@
 server {
-    listen                    10.11.1.7:8080
-    max_client_body_size  100000000
+    listen                    10.11.1.9:8080
+    max_client_body_size  1000000000
     server_name server_2 server_32
     error_page 400 htmlErrorPages/error400.html
     error_page 404 htmlErrorPages/error404.html
 	location / {
-        allow_methods GET POST DELETE
+        allow_methods GET DELETE
         index index.html index.php
         autoindex on
         root /public
@@ -18,7 +18,7 @@ server {
         allow_methods POST GET DELETE
         index index.html index.php aa.txt
         autoindex on
-        upload_pass uploading
+        upload_pass testing
         root /root/others
         cgi_pass php ./cgi-bin/php-cgi
         cgi_pass py /usr/local/bin/python3
@@ -28,6 +28,7 @@ server {
         index aa.txt locationparse.cpp
     }
     location /parsing {
+    	upload_pass helloWorld
         root /parsing
         index locationparse.cpp struct_methods_implementation.cpp
     }
