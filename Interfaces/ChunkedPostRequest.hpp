@@ -11,6 +11,7 @@
 # define MAX_REQUEST_SIZE 2000
 # define CRLF 2
 # define DOUBLE_CRLF 4
+# define MAX_CHUNK_SIZE 0x10000
 # define SOCKET int
 
 class ChunkedPostRequest {
@@ -39,6 +40,7 @@ class ChunkedPostRequest {
 		void			_receiveNextChunkBeginning ( SOCKET & );
 		void			_writeToUploadedFile( void );
 		void			_retrieveChunkSize ( char * );
+		void			_finishServing ( void );
 };
 
 #endif

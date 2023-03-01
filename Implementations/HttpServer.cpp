@@ -213,6 +213,7 @@ void	HttpServer::_serveClients( void )
 				{
 					// std::cout << "Chunked being processed for the SECOND time" << std::endl;
 					(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
+					std::cout << "hellooo" << std::endl;
 					if ((*ClientInfoIt)->chunkedRequest->uploadDone == true)
 					{
 						std::cout << "DONE DONE DONE "<< std::endl;
