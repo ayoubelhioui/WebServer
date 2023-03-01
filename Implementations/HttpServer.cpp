@@ -163,9 +163,6 @@ void	HttpServer::_serveClients( void )
 				// }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
-					std::cout << "***********" << std::endl;
-					std::cout << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-					std::cout << "***********" << std::endl;
 					(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
 					 try
 					 {
@@ -215,8 +212,6 @@ void	HttpServer::_serveClients( void )
          					ssize_t n;
          					n = read((*ClientInfoIt)->CgiReadEnd, buffer, 1000);
          					buffer[n] = 0;
-                             std::cout << "buffer : " << std::endl;
-                             std::cout << buffer << std::endl;
          					std::string str_buffer(buffer);
          					int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
          					 std::string header_part = str_buffer.substr(0, bef_header);
@@ -236,15 +231,12 @@ void	HttpServer::_serveClients( void )
 							ssize_t n;
 							n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
         					buffer[n] = 0;
-                            std::cout << buffer << std::endl;
                             (*ClientInfoIt)->cgi_out << buffer;
                             if(n < 1000) {
                                 (*ClientInfoIt)->cgi_out.seekp(0, std::ios::end);
                                 (*ClientInfoIt)->served_size = (*ClientInfoIt)->cgi_out.tellp();
                                 (*ClientInfoIt)->cgi_out.seekp(0, std::ios::beg);
                                 if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
-                                std::cout << "size is " << (*ClientInfoIt)->served_size << std::endl;
-                                std::cout << "content type is " << get_mime_format((*ClientInfoIt)->servedFileName.c_str()) << std::endl;
                                 std::string headerPart = "HTTP/1.1 200 OK\r\n"
 								    + std::string("Connection: close\r\n")
 								    + std::string("Content-Length: ")
@@ -254,7 +246,6 @@ void	HttpServer::_serveClients( void )
 								    + get_mime_format((*ClientInfoIt)->servedFileName.c_str())
 								    + "\r\n\r\n";
                                 send((*ClientInfoIt)->socket, headerPart.c_str(), headerPart.length(), 0);
-//                                exit(1);
 								close((*ClientInfoIt)->CgiReadEnd);
 								(*ClientInfoIt)->inReadCgiOut = false;
 								(*ClientInfoIt)->PostFinishedCgi = true;
