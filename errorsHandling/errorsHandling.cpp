@@ -148,7 +148,6 @@ void    error_413(ClientInfo *client)
 
 void    error_404(ClientInfo *client)
 {
-    std::cout << "path is " << client->parsedRequest.requestDataMap["path"] << std::endl;
     std::string path = "htmlErrorPages/error404.html";
     if(client->served.is_open()) client->served.close();
     client->served.open(path);

@@ -1,8 +1,7 @@
 #include "../Interfaces/LocationBlockParse.hpp"
 
 LocationBlockParse::LocationBlockParse( void ) 
-	: Root("RootFiles"), 
-	  isDirectoryListingOn(false) 
+	: isDirectoryListingOn(false)
 {}
 
 void	LocationBlockParse::getPath(std::vector<std::string> &vec)
@@ -39,8 +38,11 @@ void	LocationBlockParse::setRoot(std::vector<std::string> &vec){
 }
 
 void	LocationBlockParse::setIndexes(std::vector<std::string> &vec){
-    for(size_t i = 1; i < vec.size(); i++)
+    for(size_t i = 1; i < vec.size(); i++){
+        if(vec[i][0] == '/')
+            errorPrinting("indexes must be pure without slash at the beginning");
         this->indexFiles.push_back(vec[i]);
+    }
 }
 
 void	LocationBlockParse::setCgi(std::vector<std::string> &vec){

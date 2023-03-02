@@ -44,71 +44,156 @@ void    locationSplit(std::string &currentPath, std::string &pathOffset){
 
 bool    isThereFileLast(std::string &path,
                         bool &is_file_last,
-                        int &index_last,
-                        int len)
+                        int &index_last)
 {
     bool point = 0;
-    for(int temp_len = len; temp_len >= 0; temp_len--) {
-        if (path[temp_len] == '.')
+    for(int len = index_last; len >= 0; len--) {
+        if (path[len] == '.')
             point = 1;
-        if (path[temp_len] == '/' && point) {
+        if (path[len] == '/' && point) {
             is_file_last = 1;
-            index_last = temp_len;
+            index_last = len;
             break;
         }
-        else if (path[temp_len] == '/' && !point)
+        else if (path[len] == '/' && !point){
             return 0;
+        }
     }
+    if(!point) return 0;
     return 1;
 }
 
-void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serverConfig){
-    (void) serverConfig;
+void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serverConfig) {
     std::string currentPath = client->parsedRequest.requestDataMap["path"], pathOffset = "";
-    if(currentPath.back() == '/')
+    if (currentPath.back() == '/') {
         currentPath.pop_back();
-    int SlashCounter = std::count_if(currentPath.begin()
-            , currentPath.end(), isSlash) + 1;
-    for(int i = 0; i < SlashCounter; i++)
+    }
+    if (currentPath.front() != '/') {
+        currentPath = '/' + currentPath;
+    }
+    int SlashCounter = std::count_if(currentPath.begin(), currentPath.end(), isSlash) + 1;
+    for (int i = 0; i < SlashCounter; i++) // looping through every splitted part of the path
     {
-        for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++)
-        {
+        for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin();
+             beg != serverConfig.Locations.end(); beg++) {
             LocationBlockParse currentLocation = *beg;
             std::string insideLocationPath = currentLocation.Location;
-            if(insideLocationPath.back() == '/')
+            if (insideLocationPath.back() == '/') {
                 insideLocationPath.pop_back();
-            if(insideLocationPath != currentPath)
+            }
+            if (insideLocationPath.front() != '/') {
+                insideLocationPath = '/' + insideLocationPath;
+            }
+            if (insideLocationPath != currentPath) {
                 continue;
+            }
             bool is_file_last = 0;
             int len = currentPath.length() - 1;
             int index_last = len;
-            if(isThereFileLast(currentPath, is_file_last, index_last, len))
+            if (isThereFileLast(currentPath, is_file_last, index_last)) // checking the case where the path is already a file and the location exists
             {
+                if (currentPath.front() != '.')
+                    currentPath = '.' + currentPath;
+                std::ifstream fileCheck(currentPath);
+                if (fileCheck) { // checking if the file exists and capable to be read
+                    std::cout << "ALREADY FOUND FILE " << currentPath << std::endl;
+                    exit(1);
+                    const char *cgi_format = currentPath.substr(index_last + 1).c_str();
+                    std::list<std::pair<std::string, std::string> >::iterator CGIit = currentLocation.CGI.begin();
+                    for (; CGIit !=
+                           currentLocation.CGI.end(); CGIit++) { // looping through all the existing CGIS in the current found location
+                        if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
+//                            client->cgiContentLength = "0";
+//                            client->cgiContentType = "";
+//                            client->CGIexecutedFile(currentPath, client, serverConfig, CGIit);
+                            return;
+                        } else if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
+                            // python cgi
+                        }
+                    }
+                    client->servedFileName = currentPath;
+                    return;
+                } else {
+                    std::cout << "file not found" << std::endl;
+                    exit(1);
+                }
+                break;
+            }
+            else { // the case where the path is directory and must be joined with the offset (file or dir)
+                
+                if (currentLocation.Root.back() == '/')
+                    currentLocation.Root.pop_back();
+                currentPath = currentLocation.Root + pathOffset;
+                int rootLength = currentPath.length() - 1;
+                if (isThereFileLast(currentPath, is_file_last, rootLength))
+                {
+                    std::cout << "the wanted case is " << currentPath << std::endl;
+                    exit(1);
+                    if (currentPath.front() != '/'){
+                        currentPath = '/' + currentPath;
+                        index_last++;
+                    }
+                    if (currentPath.front() != '.'){
+                        currentPath = '.' + currentPath;
+                        index_last++;
+                    }
+                    std::ifstream fileCheck(currentPath);
+                    if (fileCheck) {
+                        const char *cgi_format = currentPath.substr(index_last + 1).c_str();
+                        std::list<std::pair<std::string, std::string> >::iterator CGIit = currentLocation.CGI.begin();
+                        for (; CGIit != currentLocation.CGI.end(); CGIit++) {
+                            if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
+//                                client->cgiContentLength =  "0";
+//                                client->cgiContentType = "";
+//                                client->CGIexecutedFile(currentPath, client, serverConfig, CGIit);
+                                return;
+                            } else if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
+                                // python cgi
+                                return;
+                            }
+                        }
+                        client->servedFileName = currentPath;
+                        return;
+                    } else {
+                        std::cout << "file not found" << std::endl;
+                        exit(1);
+                    }
+                    break;
+                }
+                else // handle the case where the path + offset is a directory (must loop through indexes and check if there is a valid path)
+                {
+                    if (currentPath.front() != '/')
+                        currentPath = '/' + currentPath;
+                    if (currentPath.front() != '.')
+                        currentPath = '.' + currentPath;
+                    for (std::list<std::string>::iterator index_it = currentLocation.indexFiles.begin();
+                         index_it != currentLocation.indexFiles.end(); index_it++) 
+                    {
+                        std::string final_path = currentPath + '/' + (*index_it);
+                        std::ifstream check_file(final_path, std::ios::binary);
+                        if (check_file) {
+                            const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
+                            std::list<std::pair<std::string, std::string> >::iterator CGIit = currentLocation.CGI.begin();
+                            for (; CGIit != currentLocation.CGI.end(); CGIit++) {
+                                if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
+//                                    client->cgiContentLength = "0";
+//                                    client->cgiContentType = "";
+//                                    client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
+                                    return;
+                                } else if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
+                                    // python cgi
+                                }
+                            }
+                            client->servedFileName = final_path;
+                            return;
+                        }
+                    }
+                }
 
             }
-//            std::string full_path = currentPath;
-//            int len = currentPath.length() - 1;
-//            int index_last = len;
-//            bool is_file_last = 0, point = 0;
-//            for(int temp_len = len; temp_len >= 0; temp_len--){
-//			    if(currentPath[temp_len] == '.')
-//			    	point = 1;
-//			    if(currentPath[temp_len] == '/' && point){
-//			    	is_file_last = 1;
-//			    	index_last = temp_len;
-//			    	break;
-//			    }
-//			    else if (currentPath[temp_len] == '/' && !point) break;
-//		    }
-//            if(index_last != len)
-//		        full_path = currentPath.substr(0, index_last + 1);
-//		    if(full_path != res) continue;
-
+            locationSplit(currentPath, pathOffset);
         }
-        locationSplit(currentPath, pathOffset);
-    }
-    exit(1);
-    //	std::string path = client->parsedRequest.requestDataMap["path"];
+        //	std::string path = client->parsedRequest.requestDataMap["path"];
 //	for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++){
 //		LocationBlockParse loc = *beg;
 //		std::string res = loc.Location;
@@ -194,70 +279,70 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 //		    }
 //        }
 //	}
-}
-
-void    GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig)
-{
-	handleGETMethod(client, serverConfig);
-    if(client->servedFileName == "" && !client->inReadCgiOut){
-		throw std::runtime_error("file path not allowed");
-	}
-    if(client->inReadCgiOut == 0){
-//    std::cout << "in CGI CGI CGI" << std::endl;
-	    client->served.open(client->servedFileName, std::ios::binary);
-	    client->served.seekg(0, std::ios::end);
-	    client->served_size = client->served.tellg();
-	    client->served.seekg(0, std::ios::beg);
-        std::string  buffer = "HTTP/1.1 200 OK\r\n"
-								 + std::string("Connection: close\r\n")
-								 + std::string("Content-Length: ")
-								 + std::to_string(client->served_size)
-								 + "\r\n"
-								 + "Content-Type: "
-								 + get_mime_format(client->servedFileName.c_str())
-								 + "\r\n\r\n";
-                                send(client->socket, buffer.c_str(), buffer.length(), 0);
     }
 }
 
-std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path,
-ClientInfo *client){
-	DIR* dir = opendir(rootDirectory.c_str());
-    if (dir == NULL) {
-        
-    }
-    std::string file_list = "<!DOCTYPE html>\n"
-                             "<html>\n"
-                             "<head><title>Index of /</title></head>\n"
-                             "<body>\n"
-                             "<h1>Index of /</h1>\n"
-                             "<table>\n"
-                             "<tr><th>Name</th><th>Size</th><th>Last modified</th><th>Type</th></tr>\n";
-
-    struct dirent *entry;
-    struct stat filestat;
-    while ((entry = readdir(dir)) != NULL) {
-        char path[1024];
-        snprintf(path, sizeof(path), "%s%s", rootDirectory.c_str(), entry->d_name);
-        if(stat(path, &filestat) == -1){
-            continue;
+    void GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig) {
+        handleGETMethod(client, serverConfig);
+        if (client->servedFileName == "" && !client->inReadCgiOut) {
+            throw std::runtime_error("file path not allowed");
         }
-        std::string filename = std::string(entry->d_name);
-        std::string filesize = std::to_string(filestat.st_size);
-        std::string filemodtime = format_date(filestat.st_mtime);
-        std::string filetype = get_file_type(filestat.st_mode);
+        if (client->inReadCgiOut == 0) {
+//    std::cout << "in CGI CGI CGI" << std::endl;
+            client->served.open(client->servedFileName, std::ios::binary);
+            client->served.seekg(0, std::ios::end);
+            client->served_size = client->served.tellg();
+            client->served.seekg(0, std::ios::beg);
+            std::string buffer = "HTTP/1.1 200 OK\r\n"
+                                 + std::string("Connection: close\r\n")
+                                 + std::string("Content-Length: ")
+                                 + std::to_string(client->served_size)
+                                 + "\r\n"
+                                 + "Content-Type: "
+                                 + get_mime_format(client->servedFileName.c_str())
+                                 + "\r\n\r\n";
+            send(client->socket, buffer.c_str(), buffer.length(), 0);
+        }
+    }
 
-        file_list += "<tr><td><a href=\"" + linking_path + filename + "\">" + filename + "</a></td><td>" + filesize + "</td><td>" + filemodtime + "</td><td>" + filetype + "</td></tr>\n";
-	}
-	file_list += "</table>\n"
-				"</body>\n"
-				"</html>\n";
-	closedir(dir);
-    std::string newFile = "FilesForServingGET/" + client->generateRandString() + ".html";
-    std::ofstream directoryListingFile(newFile);
-    directoryListingFile << file_list;
-    directoryListingFile.close();
-    return newFile;
-}
+    std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path,
+                                            ClientInfo *client) {
+        DIR *dir = opendir(rootDirectory.c_str());
+        if (dir == NULL) {
 
+        }
+        std::string file_list = "<!DOCTYPE html>\n"
+                                "<html>\n"
+                                "<head><title>Index of /</title></head>\n"
+                                "<body>\n"
+                                "<h1>Index of /</h1>\n"
+                                "<table>\n"
+                                "<tr><th>Name</th><th>Size</th><th>Last modified</th><th>Type</th></tr>\n";
 
+        struct dirent *entry;
+        struct stat filestat;
+        while ((entry = readdir(dir)) != NULL) {
+            char path[1024];
+            snprintf(path, sizeof(path), "%s%s", rootDirectory.c_str(), entry->d_name);
+            if (stat(path, &filestat) == -1) {
+                continue;
+            }
+            std::string filename = std::string(entry->d_name);
+            std::string filesize = std::to_string(filestat.st_size);
+            std::string filemodtime = format_date(filestat.st_mtime);
+            std::string filetype = get_file_type(filestat.st_mode);
+
+            file_list +=
+                    "<tr><td><a href=\"" + linking_path + filename + "\">" + filename + "</a></td><td>" + filesize +
+                    "</td><td>" + filemodtime + "</td><td>" + filetype + "</td></tr>\n";
+        }
+        file_list += "</table>\n"
+                     "</body>\n"
+                     "</html>\n";
+        closedir(dir);
+        std::string newFile = "FilesForServingGET/" + client->generateRandString() + ".html";
+        std::ofstream directoryListingFile(newFile);
+        directoryListingFile << file_list;
+        directoryListingFile.close();
+        return newFile;
+    }
