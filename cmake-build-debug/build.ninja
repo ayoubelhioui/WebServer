@@ -94,6 +94,12 @@ build CMakeFiles/NewWebServer.dir/Implementations/Client.cpp.o: CXX_COMPILER__Ne
   OBJECT_DIR = CMakeFiles/NewWebServer.dir
   OBJECT_FILE_DIR = CMakeFiles/NewWebServer.dir/Implementations
 
+build CMakeFiles/NewWebServer.dir/test.c.o: C_COMPILER__NewWebServer_Debug /Users/ael-hiou/Desktop/NewWebServer/test.c || cmake_object_order_depends_target_NewWebServer
+  DEP_FILE = CMakeFiles/NewWebServer.dir/test.c.o.d
+  FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14 -fcolor-diagnostics
+  OBJECT_DIR = CMakeFiles/NewWebServer.dir
+  OBJECT_FILE_DIR = CMakeFiles/NewWebServer.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target NewWebServer
@@ -102,7 +108,7 @@ build CMakeFiles/NewWebServer.dir/Implementations/Client.cpp.o: CXX_COMPILER__Ne
 #############################################
 # Link the executable NewWebServer
 
-build NewWebServer: CXX_EXECUTABLE_LINKER__NewWebServer_Debug CMakeFiles/NewWebServer.dir/main.cpp.o CMakeFiles/NewWebServer.dir/Implementations/HttpServer.cpp.o CMakeFiles/NewWebServer.dir/Implementations/POSTMethod.cpp.o CMakeFiles/NewWebServer.dir/errorsHandling/errorsHandling.cpp.o CMakeFiles/NewWebServer.dir/Implementations/GETMethod.cpp.o CMakeFiles/NewWebServer.dir/Implementations/ServerConfiguration.cpp.o CMakeFiles/NewWebServer.dir/Implementations/RequestParser.cpp.o CMakeFiles/NewWebServer.dir/Implementations/Client.cpp.o
+build NewWebServer: CXX_EXECUTABLE_LINKER__NewWebServer_Debug CMakeFiles/NewWebServer.dir/main.cpp.o CMakeFiles/NewWebServer.dir/Implementations/HttpServer.cpp.o CMakeFiles/NewWebServer.dir/Implementations/POSTMethod.cpp.o CMakeFiles/NewWebServer.dir/errorsHandling/errorsHandling.cpp.o CMakeFiles/NewWebServer.dir/Implementations/GETMethod.cpp.o CMakeFiles/NewWebServer.dir/Implementations/ServerConfiguration.cpp.o CMakeFiles/NewWebServer.dir/Implementations/RequestParser.cpp.o CMakeFiles/NewWebServer.dir/Implementations/Client.cpp.o CMakeFiles/NewWebServer.dir/test.c.o
   FLAGS = -g -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -mmacosx-version-min=10.14
   OBJECT_DIR = CMakeFiles/NewWebServer.dir
   POST_BUILD = :

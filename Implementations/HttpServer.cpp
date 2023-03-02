@@ -1,15 +1,22 @@
 # include "../webserver.hpp"
 # include "../Interfaces/HttpServer.hpp"
 # include "../Interfaces/ChunkedPostRequest.hpp"
+#   include <algorithm>
 // # include "../parsing/parsing.hpp"
 // std::cout
 /* ----------------------------------------------------- */
 /* ------------------ CANONICAL FORM ------------------- */
 /* ----------------------------------------------------- */
 
+bool    reverseSort(LocationBlockParse &a, LocationBlockParse &b){
+    return (a.Location > b.Location);
+
+}
 HttpServer::HttpServer ( ServerConfiguration &serverConfig )
 	: _serverConfiguration(serverConfig) 
-{}
+{
+	_serverConfiguration.Locations.sort(reverseSort);
+}
 
 HttpServer::HttpServer ( void ) { }
 HttpServer::~HttpServer ( void ) { }
@@ -296,8 +303,8 @@ void	HttpServer::_serveClients( void )
                              if(foundPhp != std::string::npos){
                                  (*ClientInfoIt)->cgiContentType = "text/x-php";
 								 (*ClientInfoIt)->cgiContentLength = std::to_string((*ClientInfoIt)->parsedRequest.contentLength);
-								 (*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt)->parsedRequest.uploadFileName,
-																  (*ClientInfoIt), this->_serverConfiguration, );
+//								 (*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt)->parsedRequest.uploadFileName,
+//																  (*ClientInfoIt), this->_serverConfiguration);
                              }
                             else{
                                  (*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);

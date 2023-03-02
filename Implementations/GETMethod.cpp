@@ -29,93 +29,125 @@ std::string GETMethod::format_date(time_t t) {
     return std::string(buf);
 }
 
+bool    isSlash(char a){
+    return (a == '/');
+
+}
+
+void    locationSplit(std::string &currentPath, std::string &pathOffset){
+   std::string  splittedOffset;
+    size_t foundSlash = currentPath.rfind('/');
+    splittedOffset = currentPath.substr(foundSlash);
+    currentPath = currentPath.substr(0, foundSlash);
+    pathOffset = splittedOffset + pathOffset;
+}
+
 void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serverConfig){
-	std::string path = client->parsedRequest.requestDataMap["path"];
-	for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++){
-		LocationBlockParse loc = *beg;
-		std::string res = loc.Location;
-		int len = path.length() - 1; 
-		int	index_last = len;
-		if(path[len] == '/')
-			len--;
-		bool is_file_last = 0, point = 0;
-		for(; len >= 0; len--){
-			if(path[len] == '.')
-				point = 1;
-			if(path[len] == '/' && point){
-				is_file_last = 1;
-				index_last = len;
-				break;
-			}
-			else if (path[len] == '/' && !point) break;
-		}
-		if(res[res.length() - 1] != '/') res += '/';
-		std::string full_path = path.substr(0, index_last + 1);
-		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
-		if(full_path != res) continue;
-		if(loc.isDirectoryListingOn && !is_file_last){
-            std::string root = loc.Root;
-            if(root[root.length() - 1] != '/') root += '/';
-            if(root[0] != '.') root = '.' + root;
-            if(full_path[0] != '.') full_path = '.' + full_path;
-            client->servedFileName = directoryListing(root, full_path, client);
-            return ;
+    (void) serverConfig;
+    std::string currentPath = client->parsedRequest.requestDataMap["path"], pathOffset = "";
+    if(currentPath.back() == '/')
+        currentPath.pop_back();
+    int SlashCounter = std::count_if(currentPath.begin()
+            , currentPath.end(), isSlash) + 1;
+    for(int i = 0; i < SlashCounter; i++){
+        for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++) {
+            LocationBlockParse currentLocation = *beg;
+            std::string insideLocationPath = currentLocation.Location;
+            if(insideLocationPath.back() == '/')
+                insideLocationPath.pop_back();
+
+
         }
-        else{
-		    std::string file = path.substr(index_last + 1);
-		    if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
-		    if(is_file_last && file[file.length() - 1] == '/') file.erase(file.length() - 1);
-		    std::string root = loc.Root;
-		    if(root[root.length() - 1] != '/') root += '/';
-		    if(file == ""){
-		    	for(std::list<std::string>::iterator index_it = loc.indexFiles.begin(); index_it != loc.indexFiles.end(); index_it++)
-		    	{
-		    		std::string final_path = root + (*index_it);
-		    		if(final_path[0] == '/') final_path = '.' + final_path;
-		    		std::ifstream check_file(final_path, std::ios::binary);
-		    		if(check_file){
-					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
-                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
-                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                            client->cgiContentLength =  "0";
-                            client->cgiContentType = "";
-                            client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
-                            return ;
-                        }
-                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
-                            // python cgi 
-                        }
-                    }
-                    client->servedFileName = final_path;
-					return ;
-				}
-		    	else ;
-		    	}
-		    }
-		    else{
-		    	std::string final_path = root + file;
-		    	if(final_path[0] == '/') final_path = '.' + final_path;
-		    	std::ifstream check_file(final_path, std::ios::binary);
-		    	if(check_file){
-					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
-                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
-                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                            client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
-                            return ;
-                        }
-                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
-                            // python cgi 
-                        }
-                    }
-                    client->servedFileName = final_path;
-					return ;
-				}
-		    	else ;
-		    }
-        }
-	}
+        locationSplit(currentPath, pathOffset);
+        std::cout << "*****************************************************************************************" << std::endl;
+    }
+    exit(1);
+    //	std::string path = client->parsedRequest.requestDataMap["path"];
+//	for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++){
+//		LocationBlockParse loc = *beg;
+//		std::string res = loc.Location;
+//		int len = path.length() - 1;
+//		int	index_last = len;
+//		if(path[len] == '/')
+//			len--;
+//		bool is_file_last = 0, point = 0;
+//		for(; len >= 0; len--){
+//			if(path[len] == '.')
+//				point = 1;
+//			if(path[len] == '/' && point){
+//				is_file_last = 1;
+//				index_last = len;
+//				break;
+//			}
+//			else if (path[len] == '/' && !point) break;
+//		}
+//		if(res[res.length() - 1] != '/') res += '/';
+//		std::string full_path = path.substr(0, index_last + 1);
+//		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
+//		if(full_path != res) continue;
+//		if(loc.isDirectoryListingOn && !is_file_last){
+//            std::string root = loc.Root;
+//            if(root[root.length() - 1] != '/') root += '/';
+//            if(root[0] != '.') root = '.' + root;
+//            if(full_path[0] != '.') full_path = '.' + full_path;
+//            client->servedFileName = directoryListing(root, full_path, client);
+//            return ;
+//        }
+//        else{
+//		    std::string file = path.substr(index_last + 1);
+//		    if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
+//		    if(is_file_last && file[file.length() - 1] == '/') file.erase(file.length() - 1);
+//		    std::string root = loc.Root;
+//		    if(root[root.length() - 1] != '/') root += '/';
+//		    if(file == ""){
+//		    	for(std::list<std::string>::iterator index_it = loc.indexFiles.begin(); index_it != loc.indexFiles.end(); index_it++)
+//		    	{
+//		    		std::string final_path = root + (*index_it);
+//		    		if(final_path[0] == '/') final_path = '.' + final_path;
+//		    		std::ifstream check_file(final_path, std::ios::binary);
+//		    		if(check_file){
+//					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
+//					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
+//                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
+//                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
+//                            client->cgiContentLength =  "0";
+//                            client->cgiContentType = "";
+//                            client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
+//                            return ;
+//                        }
+//                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
+//                            // python cgi
+//                        }
+//                    }
+//                    client->servedFileName = final_path;
+//					return ;
+//				}
+//		    	else ;
+//		    	}
+//		    }
+//		    else{
+//		    	std::string final_path = root + file;
+//		    	if(final_path[0] == '/') final_path = '.' + final_path;
+//		    	std::ifstream check_file(final_path, std::ios::binary);
+//		    	if(check_file){
+//					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
+//					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
+//                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
+//                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
+//                            client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
+//                            return ;
+//                        }
+//                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
+//                            // python cgi
+//                        }
+//                    }
+//                    client->servedFileName = final_path;
+//					return ;
+//				}
+//		    	else ;
+//		    }
+//        }
+//	}
 }
 
 void    GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig)
