@@ -34,6 +34,19 @@ void	LocationBlockParse::setDirlisting(std::vector<std::string> &vec){
 
 void	LocationBlockParse::setRoot(std::vector<std::string> &vec){
     if(vec.size() > 2) errorPrinting("error : too many roots for this location block");
+    if(vec[1].length() > 1 && vec[1][0] == '/')
+    {
+        vec[1] = '.' + vec[1];
+    }
+    if(vec[1].length() > 1 && vec[1][0] != '/' && vec[1][0] != '.')
+    {
+        vec[1] = "./" + vec[1];
+    }
+    if(vec[1].length() > 2 && vec[1][0] == '.' && vec[1][1] != '/')
+    {
+        vec[1].insert(1, "/");
+    }
+    std::cout << "out is " << vec[1] << std::endl;
     this->Root = vec[1];
 }
 
@@ -88,8 +101,8 @@ void	LocationBlockParse::locationParse( std::list<std::string>::iterator &it)
             vec.push_back(word);
         if (vec[0] == "#" || vec[0][0] == '#')
         {
-            if ((vec[0] == "#" && vec[1] == "location") || vec[0] == "#location")
-                errorPrinting("error in location keyword");
+//            if ((vec[0] == "#" && vec[1] == "location") || vec[0] == "#location")
+//                errorPrinting("error in location keyword");
             continue ;
         }
         if (vec[0].compare("location") == 0)

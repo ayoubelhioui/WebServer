@@ -128,8 +128,7 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                     client->servedFileName = currentPath;
                     return;
                 } else {
-                    std::cout << "NOT FOUND 1" << std::endl;
-                    exit(1);
+                    std::cout << "NOT FOUND 1 WAS " << currentPath << std::endl;
                 }
                 break;
             }
@@ -142,14 +141,14 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                 //std::cout << "the wanted case is " << currentPath << std::endl;
                 if (isThereFileLast(currentPath, is_file_last, rootLength))
                 {
-                    if (currentPath.front() != '/'){
-                        currentPath = '/' + currentPath;
-                        index_last++;
-                    }
-                    if (currentPath.front() != '.'){
-                        currentPath = '.' + currentPath;
-                        index_last++;
-                    }
+//                    if (currentPath.front() != '/'){
+//                        currentPath = '/' + currentPath;
+//                        index_last++;
+//                    }
+//                    if (currentPath.front() != '.'){
+//                        currentPath = '.' + currentPath;
+//                        index_last++;
+//                    }
                     std::ifstream fileCheck(currentPath);
                     if (fileCheck) {
                         const char *cgi_format = currentPath.substr(index_last + 1).c_str();
@@ -168,17 +167,16 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                         client->servedFileName = currentPath;
                         return;
                     } else {
-                        std::cout << "FILE NOT FOUND 2" << std::endl;
-                        exit(1);
+                        std::cout << "NOT FOUND 2 WAS " << currentPath << std::endl;
                     }
                     break;
                 }
                 else // handle the case where the path + offset is a directory (must loop through indexes and check if there is a valid path)
                 {
-                    if (currentPath.front() != '/')
-                        currentPath = '/' + currentPath;
-                    if (currentPath.front() != '.')
-                        currentPath = '.' + currentPath;
+//                    if (currentPath.front() != '/')
+//                        currentPath = '/' + currentPath;
+//                    if (currentPath.front() != '.')
+//                        currentPath = '.' + currentPath;
                     for (std::list<std::string>::iterator index_it = currentLocation.indexFiles.begin();
                          index_it != currentLocation.indexFiles.end(); index_it++) 
                     {
