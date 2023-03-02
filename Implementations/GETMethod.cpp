@@ -42,6 +42,26 @@ void    locationSplit(std::string &currentPath, std::string &pathOffset){
     pathOffset = splittedOffset + pathOffset;
 }
 
+bool    isThereFileLast(std::string &path,
+                        bool &is_file_last,
+                        int &index_last,
+                        int len)
+{
+    bool point = 0;
+    for(int temp_len = len; temp_len >= 0; temp_len--) {
+        if (path[temp_len] == '.')
+            point = 1;
+        if (path[temp_len] == '/' && point) {
+            is_file_last = 1;
+            index_last = temp_len;
+            break;
+        }
+        else if (path[temp_len] == '/' && !point)
+            return 0;
+    }
+    return 1;
+}
+
 void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serverConfig){
     (void) serverConfig;
     std::string currentPath = client->parsedRequest.requestDataMap["path"], pathOffset = "";
@@ -49,17 +69,43 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
         currentPath.pop_back();
     int SlashCounter = std::count_if(currentPath.begin()
             , currentPath.end(), isSlash) + 1;
-    for(int i = 0; i < SlashCounter; i++){
-        for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++) {
+    for(int i = 0; i < SlashCounter; i++)
+    {
+        for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++)
+        {
             LocationBlockParse currentLocation = *beg;
             std::string insideLocationPath = currentLocation.Location;
             if(insideLocationPath.back() == '/')
                 insideLocationPath.pop_back();
+            if(insideLocationPath != currentPath)
+                continue;
+            bool is_file_last = 0;
+            int len = currentPath.length() - 1;
+            int index_last = len;
+            if(isThereFileLast(currentPath, is_file_last, index_last, len))
+            {
 
+            }
+//            std::string full_path = currentPath;
+//            int len = currentPath.length() - 1;
+//            int index_last = len;
+//            bool is_file_last = 0, point = 0;
+//            for(int temp_len = len; temp_len >= 0; temp_len--){
+//			    if(currentPath[temp_len] == '.')
+//			    	point = 1;
+//			    if(currentPath[temp_len] == '/' && point){
+//			    	is_file_last = 1;
+//			    	index_last = temp_len;
+//			    	break;
+//			    }
+//			    else if (currentPath[temp_len] == '/' && !point) break;
+//		    }
+//            if(index_last != len)
+//		        full_path = currentPath.substr(0, index_last + 1);
+//		    if(full_path != res) continue;
 
         }
         locationSplit(currentPath, pathOffset);
-        std::cout << "*****************************************************************************************" << std::endl;
     }
     exit(1);
     //	std::string path = client->parsedRequest.requestDataMap["path"];
