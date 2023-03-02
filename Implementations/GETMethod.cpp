@@ -37,8 +37,17 @@ bool    isSlash(char a){
 void    locationSplit(std::string &currentPath, std::string &pathOffset){
    std::string  splittedOffset;
     size_t foundSlash = currentPath.rfind('/');
-    splittedOffset = currentPath.substr(foundSlash);
-    currentPath = currentPath.substr(0, foundSlash);
+    if(foundSlash)
+    {
+        splittedOffset = currentPath.substr(foundSlash);
+        currentPath = currentPath.substr(0, foundSlash);
+    }
+    else
+    {
+        splittedOffset = currentPath;
+        currentPath = "/";
+
+    }
     pathOffset = splittedOffset + pathOffset;
 }
 
@@ -51,15 +60,21 @@ bool    isThereFileLast(std::string &path,
         if (path[len] == '.')
             point = 1;
         if (path[len] == '/' && point) {
+            //std::cout << "LOCATION FOUND\n";
             is_file_last = 1;
             index_last = len;
             break;
         }
         else if (path[len] == '/' && !point){
+            //std::cout << "LOCATION FILE NOT FOUND\n";
             return 0;
         }
     }
-    if(!point) return 0;
+    if(!point){
+        //std::cout << "LOCATION FILE NOT FOUND\n";
+        return 0;
+    }
+    //std::cout << "LOCATION FOUND\n";
     return 1;
 }
 
@@ -75,7 +90,8 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
     for (int i = 0; i < SlashCounter; i++) // looping through every splitted part of the path
     {
         for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin();
-             beg != serverConfig.Locations.end(); beg++) {
+             beg != serverConfig.Locations.end(); beg++)
+        {
             LocationBlockParse currentLocation = *beg;
             std::string insideLocationPath = currentLocation.Location;
             if (insideLocationPath.back() == '/') {
@@ -96,8 +112,6 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                     currentPath = '.' + currentPath;
                 std::ifstream fileCheck(currentPath);
                 if (fileCheck) { // checking if the file exists and capable to be read
-                    std::cout << "ALREADY FOUND FILE " << currentPath << std::endl;
-                    exit(1);
                     const char *cgi_format = currentPath.substr(index_last + 1).c_str();
                     std::list<std::pair<std::string, std::string> >::iterator CGIit = currentLocation.CGI.begin();
                     for (; CGIit !=
@@ -114,21 +128,20 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                     client->servedFileName = currentPath;
                     return;
                 } else {
-                    std::cout << "file not found" << std::endl;
+                    std::cout << "NOT FOUND 1" << std::endl;
                     exit(1);
                 }
                 break;
             }
             else { // the case where the path is directory and must be joined with the offset (file or dir)
                 
-                if (currentLocation.Root.back() == '/')
+                if (currentLocation.Root.back() == '/' && currentLocation.Root.length() > 1)
                     currentLocation.Root.pop_back();
                 currentPath = currentLocation.Root + pathOffset;
                 int rootLength = currentPath.length() - 1;
+                //std::cout << "the wanted case is " << currentPath << std::endl;
                 if (isThereFileLast(currentPath, is_file_last, rootLength))
                 {
-                    std::cout << "the wanted case is " << currentPath << std::endl;
-                    exit(1);
                     if (currentPath.front() != '/'){
                         currentPath = '/' + currentPath;
                         index_last++;
@@ -155,7 +168,7 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                         client->servedFileName = currentPath;
                         return;
                     } else {
-                        std::cout << "file not found" << std::endl;
+                        std::cout << "FILE NOT FOUND 2" << std::endl;
                         exit(1);
                     }
                     break;
@@ -171,7 +184,9 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                     {
                         std::string final_path = currentPath + '/' + (*index_it);
                         std::ifstream check_file(final_path, std::ios::binary);
-                        if (check_file) {
+                        if (check_file)
+                        {
+                            //std::cout << "I;M the winnnnnnnnnerrrr" << std::endl;
                             const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
                             std::list<std::pair<std::string, std::string> >::iterator CGIit = currentLocation.CGI.begin();
                             for (; CGIit != currentLocation.CGI.end(); CGIit++) {
@@ -188,11 +203,12 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                             return;
                         }
                     }
+                    std::cout << "FILE NOT FOOUND 3" << std::endl;
                 }
 
             }
-            locationSplit(currentPath, pathOffset);
         }
+        locationSplit(currentPath, pathOffset);
         //	std::string path = client->parsedRequest.requestDataMap["path"];
 //	for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++){
 //		LocationBlockParse loc = *beg;
@@ -284,11 +300,12 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 
     void GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig) {
         handleGETMethod(client, serverConfig);
+        std::cout << "FINAL PATH is " << client->servedFileName << std::endl;
         if (client->servedFileName == "" && !client->inReadCgiOut) {
             throw std::runtime_error("file path not allowed");
         }
         if (client->inReadCgiOut == 0) {
-//    std::cout << "in CGI CGI CGI" << std::endl;
+//    //std::cout << "in CGI CGI CGI" << std::endl;
             client->served.open(client->servedFileName, std::ios::binary);
             client->served.seekg(0, std::ios::end);
             client->served_size = client->served.tellg();
