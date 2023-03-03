@@ -1,7 +1,7 @@
 NAME=webserv
 CC=c++
 CPPFLAGS= -Wall -Wextra -Werror -std=c++98
-FS=-fsanitize=address -g
+FS= -fsanitize=address -g
 RM=rm -rf
 
 HEADERS = Interfaces/ConfigFileParser.hpp \

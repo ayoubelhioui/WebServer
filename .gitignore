@@ -27,4 +27,5 @@
  cmake-build-debug/
  out
  php-cgi
-
+public/html/*
+public/global-master/*
