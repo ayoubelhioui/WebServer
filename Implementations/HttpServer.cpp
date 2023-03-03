@@ -3,7 +3,7 @@
 # include "../Interfaces/ChunkedPostRequest.hpp"
 #   include <algorithm>
 // # include "../parsing/parsing.hpp"
-// std::cout
+// //std::cout
 /* ----------------------------------------------------- */
 /* ------------------ CANONICAL FORM ------------------- */
 /* ----------------------------------------------------- */
@@ -49,7 +49,7 @@ void	HttpServer::_setUpListeningSocket( void )
 	_serverHints.ai_family = AF_INET;
 	_serverHints.ai_socktype = SOCK_STREAM;
 	_serverHints.ai_flags = AI_PASSIVE;
-	// std::cout << "_serverConfig host is " << _serverConfiguration.serverHost << std::endl;
+	// //std::cout << "_serverConfig host is " << _serverConfiguration.serverHost << std::endl;
 	getaddrinfo(_serverConfiguration.serverHost.c_str(),
 				_serverConfiguration.serverPort.c_str(),
 				&_serverHints, &bindAddress);
@@ -57,16 +57,16 @@ void	HttpServer::_setUpListeningSocket( void )
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
 	if (_listeningSocket < 0)
 		exit (EXIT_FAILURE); // to be replaced by sth else
-	// std::cout << "Socket Created Successfully" << std::endl;
+	// //std::cout << "Socket Created Successfully" << std::endl;
 	optval = 1;
     setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 	if (bind(_listeningSocket, bindAddress->ai_addr, bindAddress->ai_addrlen))
 		exit (EXIT_FAILURE); // to be replaced by sth else
-	// std::cout << "Binded Successfully" << std::endl;
+	// //std::cout << "Binded Successfully" << std::endl;
 	freeaddrinfo(bindAddress);
 	if (listen(_listeningSocket, MAXQUEUESIZE) < 0)
 		exit (EXIT_FAILURE); // to be replaced by sth else
-	// std::cout << "Set Up for LISTENING Successfully" << std::endl;
+	// //std::cout << "Set Up for LISTENING Successfully" << std::endl;
 }
 
 void	HttpServer::_selectClients ( void )
@@ -134,8 +134,12 @@ void	HttpServer::_serveClients( void )
 	ClientInfoIt = this->_clientsList.begin();
 	while (ClientInfoIt != this->_clientsList.end())
 	{
-		std::cout << "the client socket is :" << (*ClientInfoIt)->socket << std::endl;
-		std::cout << FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)) << std::endl;
+//		//std::cout << "*********************************" << std::endl;
+//		//std::cout << "FD ISSET READ " << FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)) << std::endl;
+//		//std::cout << "is error " << (*ClientInfoIt)->isErrorOccured << std::endl;
+//		//std::cout << "is serving " << (*ClientInfoIt)->isServing << std::endl;
+//		//std::cout << "is read cgi " << (*ClientInfoIt)->inReadCgiOut << std::endl;
+//		//std::cout << "*********************************" << std::endl;
 		if ((FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)) && (*ClientInfoIt)->isErrorOccured == false
         && (*ClientInfoIt)->isServing == false) || (*ClientInfoIt)->inReadCgiOut == true)
 		{
@@ -145,7 +149,8 @@ void	HttpServer::_serveClients( void )
 				(*ClientInfoIt)->parsedRequest.parse();
 				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 				size_t	foundQuery = word.find('?');
-				if(foundQuery != std::string::npos){
+				if(foundQuery != std::string::npos)
+				{
 					(*ClientInfoIt)->parsedRequest.requestDataMap["path"] = word.substr(0, foundQuery);
 					(*ClientInfoIt)->parsedRequest.queryString = word.substr(foundQuery + 1);
 				}
@@ -159,15 +164,16 @@ void	HttpServer::_serveClients( void )
 					try
 					{
 						getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
-                        if((*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation->CGI.end())
+						if((*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation->CGI.end())
                         {
                             (*ClientInfoIt)->cgiContentType = "";
 							(*ClientInfoIt)->cgiContentLength = "0";
 							(*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt), this->_serverConfiguration);
 						}
 					}
-					catch(std::exception &e){
-						std::cout << "callGet exception : " << e.what() << std::endl;
+					catch(std::exception &e)
+					{
+						//std::cout << "callGet exception : " << e.what() << std::endl;
 						error_404((*ClientInfoIt));
 						// continue;
 					}
@@ -182,7 +188,7 @@ void	HttpServer::_serveClients( void )
 
 					if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 					{
-						// std::cout << "REQUEST HEADER : " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+						// //std::cout << "REQUEST HEADER : " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
 						(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
 						(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
 														, (*ClientInfoIt)->parsedRequest);
@@ -196,9 +202,10 @@ void	HttpServer::_serveClients( void )
                          if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
                              (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					 }
-					 catch (std::exception &e){
+					 catch (std::exception &e)
+					 {
 						 (*ClientInfoIt)->isErrorOccured = true;
-						 std::cout << e.what() << std::endl;
+						 //std::cout << e.what() << std::endl;
 					 }
 					}
 				 }
@@ -218,36 +225,41 @@ void	HttpServer::_serveClients( void )
                     catch (std::exception &e)
                     {
 						error_500(*ClientInfoIt);
-						std::cout << e.what() << std::endl;
+						//std::cout << e.what() << std::endl;
                         (*ClientInfoIt)->isErrorOccured = true;
                     }
                 }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 				{
-					// std::cout << "Chunked being processed for the SECOND time" << std::endl;
+					// //std::cout << "Chunked being processed for the SECOND time" << std::endl;
 					(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
 					if ((*ClientInfoIt)->chunkedRequest->uploadDone == true)
 					{
-						std::cout << "DONE DONE DONE "<< std::endl;
 						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
 					}
 					
 				}
-				else if ((*ClientInfoIt)->inReadCgiOut){
-					if((*ClientInfoIt)->stillWaiting){
+				else if ((*ClientInfoIt)->inReadCgiOut)
+				{
+					if((*ClientInfoIt)->stillWaiting)
+					{
 						int retWait = waitpid((*ClientInfoIt)->cgiPid, NULL, WNOHANG);
-						if(retWait == 0) {
+						if(retWait == 0)
+						{
 							ClientInfoIt++;
 							continue;
 						}
-						else if (retWait == (*ClientInfoIt)->cgiPid){
+						else if (retWait == (*ClientInfoIt)->cgiPid)
+						{
 							(*ClientInfoIt)->stillWaiting = 0;
 							(*ClientInfoIt)->isFirstCgiRead = 1;
 						}
 					}
-					else{
-						if((*ClientInfoIt)->isFirstCgiRead){
+					else
+					{
+						if((*ClientInfoIt)->isFirstCgiRead)
+						{
          					char buffer[1001];
          					ssize_t n;
          					n = read((*ClientInfoIt)->CgiReadEnd, buffer, 1000);
@@ -259,24 +271,29 @@ void	HttpServer::_serveClients( void )
                              std::string contentType = (*ClientInfoIt)->cgiMap["Content-type:"];
                             std::string mimeType = contentType.substr(0, contentType.find(";"));
          					std::string body = str_buffer.substr(bef_header + 4);
-							std::string newFile = "FilesForServingGET/" + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
+							std::string newFile = "FilesForServing/" + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
 							if((*ClientInfoIt)->cgi_out.is_open()) (*ClientInfoIt)->cgi_out.close();
 							(*ClientInfoIt)->cgi_out.open(newFile, std::ios::binary);
+							//std::cout << "newFile is " << newFile << std::endl;
+							//std::cout << "errno is " << errno << std::endl;
+							if((*ClientInfoIt)->cgi_out.is_open()) //std::cout << "SUCCCCES FILE OPEN" << std::endl;
 							(*ClientInfoIt)->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
 							(*ClientInfoIt)->cgi_out << body;
 							(*ClientInfoIt)->isFirstCgiRead = false;
+
 						}
-						else{
+						else
+						{
 							char buffer[1001];
 							ssize_t n;
 							n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
         					buffer[n] = 0;
                             (*ClientInfoIt)->cgi_out << buffer;
-                            if(n < 1000) {
+                            if(n < 1000)
+							{
                                 (*ClientInfoIt)->cgi_out.seekp(0, std::ios::end);
                                 (*ClientInfoIt)->served_size = (*ClientInfoIt)->cgi_out.tellp();
                                 (*ClientInfoIt)->cgi_out.seekp(0, std::ios::beg);
-                                if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
                                 std::string headerPart = "HTTP/1.1 200 OK\r\n"
 								    + std::string("Connection: close\r\n")
 								    + std::string("Content-Length: ")
@@ -285,10 +302,11 @@ void	HttpServer::_serveClients( void )
 								    + std::string("Content-Type: ")
 								    + get_mime_format((*ClientInfoIt)->servedFileName.c_str())
 								    + "\r\n\r\n";
-                                send((*ClientInfoIt)->socket, headerPart.c_str(), headerPart.length(), 0);
+								send((*ClientInfoIt)->socket, headerPart.c_str(), headerPart.length(), 0);
 								close((*ClientInfoIt)->CgiReadEnd);
 								(*ClientInfoIt)->inReadCgiOut = false;
 								(*ClientInfoIt)->PostFinishedCgi = true;
+								if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
 								(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
 							}
 						}
@@ -296,50 +314,61 @@ void	HttpServer::_serveClients( void )
 				}
 			}
 		}
-		else if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))) {
-			try
-			{
-				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST") {
+		else if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))) 
+		{
+				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST") 
+				{
 					if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
 						and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false
-						and (*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == false) {
-						try {
+						and (*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == false) 
+					{
+						try 
+						{
 							(*ClientInfoIt)->postRequest->writeToUploadedFile();
-							if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0) {
+							if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
+							{
 								size_t foundPhp = (*ClientInfoIt)->parsedRequest.uploadFileName.find(".php");
-								if (foundPhp != std::string::npos) {
+								if (foundPhp != std::string::npos)
+								{
 									(*ClientInfoIt)->cgiContentType = "text/x-php";
 									(*ClientInfoIt)->cgiContentLength = std::to_string(
 											(*ClientInfoIt)->parsedRequest.contentLength);
 //								 (*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt)->parsedRequest.uploadFileName,
 //																  (*ClientInfoIt), this->_serverConfiguration);
-								} else {
+								}
+								else
+								{
 									(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
 									(*ClientInfoIt)->isServing = true;
 								}
 							}
 							// exeuteCGI;
 						}
-						catch (std::exception &e) {
+						catch (std::exception &e)
+						{
 							error_500(*ClientInfoIt);
-							std::cout << e.what() << std::endl;
+							//std::cout << e.what() << std::endl;
 							(*ClientInfoIt)->isErrorOccured = true;
 						}
-					} else if ((((*ClientInfoIt)->isErrorOccured == true) or ((*ClientInfoIt)->isServing == true))
+					}
+					else if ((((*ClientInfoIt)->isErrorOccured == true) or ((*ClientInfoIt)->isServing == true))
 							   or
-							   ((*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == true)) {
+							   ((*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == true))
+					{
 						char *s = new char[1024]();
 						(*ClientInfoIt)->served.read(s, 1024);
 						int r = (*ClientInfoIt)->served.gcount();
-//                        std::cout << "i will write : " << r << std::endl;
-						if (send((*ClientInfoIt)->socket, s, r, 0) == -1) {
+//                        //std::cout << "i will write : " << r << std::endl;
+						if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
+						{
 							this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 							delete[] s;
 							continue;
 						}
 						delete[] s;
-						if (r < 1024) {
-//						    std::cout << "helloWorld" << std::endl;
+						if (r < 1024)
+						{
+//						    //std::cout << "helloWorld" << std::endl;
 							std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
 							// if ((*ClientInfoIt)->currentServerFile != "")
 							// 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
@@ -351,37 +380,26 @@ void	HttpServer::_serveClients( void )
 							continue;
 						}
 					}
-				} else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET") {
-					if ((*ClientInfoIt)->inReadCgiOut == 0) {
-						char *s = new char[1024]();
+				} 
+				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
+				{
+					if ((*ClientInfoIt)->inReadCgiOut == false) 
+					{
+						char *s = new char[1025]();
 						(*ClientInfoIt)->served.read(s, 1024);
 						int r = (*ClientInfoIt)->served.gcount();
-//						std::cout << "i will write : " << r << std::endl;
 						if (send((*ClientInfoIt)->socket, s, r, 0) == -1) {
 							this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 							continue;
 						}
 						delete[] s;
-						if (r < 1024) {
-							close((*ClientInfoIt)->socket);
-							std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
-							// if ((*ClientInfoIt)->currentServerFile != "")
-							// 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
-							// delete *ClientInfoIt;
-							(*ClientInfoIt)->served.close();
-							ClientInfoIt++;
-							this->_clientsList.erase(temp_it);
+						if (r < 1024) 
+						{
+							this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 							continue;
 						}
 					}
 				}
-			}
-			catch (std::exception &e)
-			{
-				std::cout << "Problem is" << std::endl;
-				std::cout << e.what() << std::endl;
-				exit(1);
-			}
 		}
 		ClientInfoIt++;
 	}
@@ -397,7 +415,7 @@ void	HttpServer::setUpMultiplexing ( void )
 
 void	HttpServer::setUpHttpServer( void )
 {
-	// std::cout << this->_serverConfiguration.serverHost << std::endl;
-	// std::cout << this->_serverConfiguration.serverPort << std::endl;
+	// //std::cout << this->_serverConfiguration.serverHost << std::endl;
+	// //std::cout << this->_serverConfiguration.serverPort << std::endl;
 	this->_setUpListeningSocket();
 }

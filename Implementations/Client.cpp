@@ -83,14 +83,8 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     const char * server_host = server.serverHost.c_str();
     const char * server_port = server.serverPort.c_str();
     //const char * path_info ;
-    std::cout << "request_method is " << request_method << std::endl;
-    std::cout << "query_string is " << query_string << std::endl;
-    std::cout << "server_host is " << server_host << std::endl;
-    std::cout << "server_post is " << server_port << std::endl;
     const char * content_length = client->cgiContentLength.c_str();
     const char *content_type = client->cgiContentType.c_str();
-    std::cout << "content_length is " << content_length << std::endl;
-    std::cout << "content_type is " << content_type << std::endl;
     setenv("REQUEST_METHOD", request_method, 1);
     setenv("QUERY_STRING", query_string, 1);
     setenv("SCRIPT_NAME", script_name, 1);
@@ -117,7 +111,6 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     }
     close(fd[1]);
     client->CgiReadEnd = fd[0];
-    client->inReadCgiOut = 1;
     client->stillWaiting = 1;
     client->cgiPid = pid;
 }
