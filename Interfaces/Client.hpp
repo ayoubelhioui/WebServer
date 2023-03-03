@@ -18,8 +18,7 @@ class ClientInfo {
 		ChunkedPostRequest	*chunkedRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
-		void	CGIexecutedFile( std::string , ClientInfo *, ServerConfiguration &
-, std::list<std::pair<std::string, std::string> >::iterator & );
+		void	CGIexecutedFile( ClientInfo *, ServerConfiguration & );
 		void	parseCgiHeader(std::string &);
         void	parsingCgiLine(std::string line);
 		std::string    generateRandString ( void );
@@ -35,6 +34,8 @@ class ClientInfo {
 		std::string	   servedFileName;	
 		std::string	  currentServerFile;
         std::map<std::string, std::string> cgiMap;
+		std::list<std::pair<std::string, std::string> >::iterator cgiIterator;
+		std::list<LocationBlockParse>::iterator					   _currentLocation;
         std::string             cgiContentLength;
         std::string     cgiContentType;
 		bool			inReadCgiOut;

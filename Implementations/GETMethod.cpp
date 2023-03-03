@@ -103,6 +103,7 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
             if (insideLocationPath != currentPath) {
                 continue;
             }
+            client->cgiIterator = (*beg).CGI.end();
             bool is_file_last = 0;
             int len = currentPath.length() - 1;
             int index_last = len;
@@ -111,26 +112,25 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                 if (currentPath.front() != '.')
                     currentPath = '.' + currentPath;
                 std::ifstream fileCheck(currentPath);
-                if (fileCheck) { // checking if the file exists and capable to be read
-                    const char *cgi_format = currentPath.substr(index_last + 1).c_str();
+                if (fileCheck)
+                { // checking if the file exists and capable to be read
+                    client->_currentLocation = beg;
+                    const char *cgi_format = strrchr(currentPath.c_str(), '.') + 1;
+                    std::cout << "1cgi_format is " << cgi_format << std::endl;
                     std::list<std::pair<std::string, std::string> >::iterator CGIit = currentLocation.CGI.begin();
-                    for (; CGIit !=
-                           currentLocation.CGI.end(); CGIit++) { // looping through all the existing CGIS in the current found location
+                    for (; CGIit != currentLocation.CGI.end(); CGIit++) { // looping through all the existing CGIS in the current found location
                         if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
-//                            client->cgiContentLength = "0";
-//                            client->cgiContentType = "";
-//                            client->CGIexecutedFile(currentPath, client, serverConfig, CGIit);
+                            client->servedFileName = currentPath;
+                            client->cgiIterator = CGIit;
+                            std::cout << "HERE ! 1" << std::endl;
                             return;
                         } else if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
                             // python cgi
                         }
                     }
                     client->servedFileName = currentPath;
-                    return;
-                } else {
-                    std::cout << "NOT FOUND 1 WAS " << currentPath << std::endl;
                 }
-                break;
+                return ;
             }
             else { // the case where the path is directory and must be joined with the offset (file or dir)
                 
@@ -141,23 +141,17 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                 //std::cout << "the wanted case is " << currentPath << std::endl;
                 if (isThereFileLast(currentPath, is_file_last, rootLength))
                 {
-//                    if (currentPath.front() != '/'){
-//                        currentPath = '/' + currentPath;
-//                        index_last++;
-//                    }
-//                    if (currentPath.front() != '.'){
-//                        currentPath = '.' + currentPath;
-//                        index_last++;
-//                    }
                     std::ifstream fileCheck(currentPath);
                     if (fileCheck) {
-                        const char *cgi_format = currentPath.substr(index_last + 1).c_str();
+                        client->_currentLocation = beg;
+                        std::cout << "is equal : " << (client->cgiIterator != client->_currentLocation->CGI.end()) << std::endl;
+                        const char *cgi_format = strrchr(currentPath.c_str(), '.') + 1;
+                        std::cout << "2cgi_format is " << cgi_format << std::endl;
                         std::list<std::pair<std::string, std::string> >::iterator CGIit = currentLocation.CGI.begin();
                         for (; CGIit != currentLocation.CGI.end(); CGIit++) {
                             if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
-//                                client->cgiContentLength =  "0";
-//                                client->cgiContentType = "";
-//                                client->CGIexecutedFile(currentPath, client, serverConfig, CGIit);
+                                client->servedFileName = currentPath;
+                                client->cgiIterator = CGIit;
                                 return;
                             } else if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
                                 // python cgi
@@ -165,43 +159,44 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
                             }
                         }
                         client->servedFileName = currentPath;
-                        return;
-                    } else {
-                        std::cout << "NOT FOUND 2 WAS " << currentPath << std::endl;
                     }
-                    break;
+//                    std::cout << "is equal : " << (client->cgiIterator != client->_currentLocation->CGI.end()) << std::endl;
+                    std::cout << "222" << std::endl;
+                    return ;
                 }
                 else // handle the case where the path + offset is a directory (must loop through indexes and check if there is a valid path)
                 {
-//                    if (currentPath.front() != '/')
-//                        currentPath = '/' + currentPath;
-//                    if (currentPath.front() != '.')
-//                        currentPath = '.' + currentPath;
-                    for (std::list<std::string>::iterator index_it = currentLocation.indexFiles.begin();
-                         index_it != currentLocation.indexFiles.end(); index_it++) 
+                    if(currentLocation.isDirectoryListingOn && client->parsedRequest.requestDataMap["method"] == "GET")
+                        client->servedFileName = directoryListing(currentLocation.Root, currentPath, client);
+                    else
                     {
-                        std::string final_path = currentPath + '/' + (*index_it);
-                        std::ifstream check_file(final_path, std::ios::binary);
-                        if (check_file)
+                        for (std::list<std::string>::iterator index_it = currentLocation.indexFiles.begin();
+                             index_it != currentLocation.indexFiles.end(); index_it++)
                         {
-                            //std::cout << "I;M the winnnnnnnnnerrrr" << std::endl;
-                            const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-                            std::list<std::pair<std::string, std::string> >::iterator CGIit = currentLocation.CGI.begin();
-                            for (; CGIit != currentLocation.CGI.end(); CGIit++) {
-                                if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
-//                                    client->cgiContentLength = "0";
-//                                    client->cgiContentType = "";
-//                                    client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
-                                    return;
-                                } else if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
-                                    // python cgi
+                            std::string final_path = currentPath + '/' + (*index_it);
+                            std::ifstream check_file(final_path, std::ios::binary);
+                            if (check_file)
+                            {
+                                client->_currentLocation = beg;
+                                //std::cout << "I;M the winnnnnnnnnerrrr" << std::endl;
+                                const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
+                                std::cout << "3cgi_format is " << cgi_format << std::endl;
+                                std::list<std::pair<std::string, std::string> >::iterator CGIit = currentLocation.CGI.begin();
+                                for (; CGIit != currentLocation.CGI.end(); CGIit++) {
+                                    if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
+                                        client->servedFileName = final_path;
+                                        client->cgiIterator = CGIit;
+                                        std::cout << "HERE ! 3" << std::endl;
+                                        return;
+                                    } else if (!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
+                                        // python cgi
+                                    }
                                 }
+                                client->servedFileName = final_path;
                             }
-                            client->servedFileName = final_path;
-                            return;
                         }
                     }
-                    std::cout << "FILE NOT FOOUND 3" << std::endl;
+                    return ;
                 }
 
             }
@@ -298,7 +293,6 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
 
     void GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig) {
         handleGETMethod(client, serverConfig);
-        std::cout << "FINAL PATH is " << client->servedFileName << std::endl;
         if (client->servedFileName == "" && !client->inReadCgiOut) {
             throw std::runtime_error("file path not allowed");
         }

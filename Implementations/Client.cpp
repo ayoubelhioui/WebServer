@@ -73,19 +73,24 @@ void	ClientInfo::parseCgiHeader(std::string &header){
     line = headerPart.substr(0, found);
     parsingCgiLine(line);
 }
-void    ClientInfo::CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server
-, std::list<std::pair<std::string, std::string> >::iterator &CGIit){
+void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &server )
+{
     int     pid = 0;
-
+    
     const char * request_method = client->parsedRequest.requestDataMap["method"].c_str(); // POST or GET
-    const char * script_name = CGIit->second.c_str(); // php cgi inside location
+    const char * script_name = client->cgiIterator->second.c_str(); // php cgi inside location
 	const char * query_string = client->parsedRequest.queryString.length() == 0 ? "" : client->parsedRequest.queryString.c_str();
     const char * server_host = server.serverHost.c_str();
     const char * server_port = server.serverPort.c_str();
     //const char * path_info ;
+    std::cout << "request_method is " << request_method << std::endl;
+    std::cout << "query_string is " << query_string << std::endl;
+    std::cout << "server_host is " << server_host << std::endl;
+    std::cout << "server_post is " << server_port << std::endl;
     const char * content_length = client->cgiContentLength.c_str();
-     const char *content_type = client->cgiContentType.c_str();
-
+    const char *content_type = client->cgiContentType.c_str();
+    std::cout << "content_length is " << content_length << std::endl;
+    std::cout << "content_type is " << content_type << std::endl;
     setenv("REQUEST_METHOD", request_method, 1);
     setenv("QUERY_STRING", query_string, 1);
     setenv("SCRIPT_NAME", script_name, 1);
@@ -104,7 +109,7 @@ void    ClientInfo::CGIexecutedFile( std::string php_file, ClientInfo *client, S
         close(fd[0]);
         close(fd[1]);
         args[0] = (char *) script_name;
-        args[1] = (char *) php_file.c_str();
+        args[1] = (char *) client->servedFileName.c_str();
         args[2] = NULL;
         if (execve(script_name, args, NULL) == -1){
             exit(1);

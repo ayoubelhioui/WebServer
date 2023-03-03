@@ -31,9 +31,9 @@ PostMethod::PostMethod(ServerConfiguration &serverConfiguration)
 //        std::string full_path = path.substr(0, index_last + 1);
 //        if (!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
 //        if (full_path != res) continue;
-//        this->_currentLocation = beg;
+//        client->_currentLocation = beg;
 ////        std::list<std::pair<std::string, std::string> >::iterator CGIit = this->.CGI.begin();
-////        for(std::list<> ; CGIit != this->_currentLocation.CGI.end(); CGIit++ ){
+////        for(std::list<> ; CGIit != client->_currentLocation.CGI.end(); CGIit++ ){
 ////                if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
 ////                    client->cgiContentLength =  "0";
 ////                    client->cgiContentType = "";
@@ -46,12 +46,12 @@ PostMethod::PostMethod(ServerConfiguration &serverConfiguration)
 ////        }
 //        return ;
 //    }
-//    this->_currentLocation = beg;
+//    client->_currentLocation = beg;
 //}
 
-bool    PostMethod::_isLocationSupportsPost() {
-    std::list<std::string>::iterator it = this->_currentLocation->allowedMethods.begin();
-    while (it != this->_currentLocation->allowedMethods.end()){
+bool    PostMethod::_isLocationSupportsPost(ClientInfo *client) {
+    std::list<std::string>::iterator it = client->_currentLocation->allowedMethods.begin();
+    while (it != client->_currentLocation->allowedMethods.end()){
         if (*it == "POST")
             return (true);
         it++;
@@ -59,17 +59,17 @@ bool    PostMethod::_isLocationSupportsPost() {
     return (false);
 }
 
-bool    PostMethod::_isLocationSupportsUpload( void ) {
-    return (this->_currentLocation->UploadDirectoryPath.length());
+bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
+    return (client->_currentLocation->UploadDirectoryPath.length());
 }
 void    PostMethod::handleFirstRead(ClientInfo *client) {
 //     this->_searchForCurrentLocation(client);
-     if(this->_currentLocation == this->_serverConfiguration.Locations.end())
+     if(client->_currentLocation == this->_serverConfiguration.Locations.end())
      {
          error_404(client);
          throw std::runtime_error("Location not found");
      }
-     if (!this->_isLocationSupportsPost())
+     if (!this->_isLocationSupportsPost(client))
      {
          error_500(client);
          throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
@@ -79,7 +79,7 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
 //         error_404(client); 413
          throw (std::runtime_error("Body Size Too Large !!"));
      }
-     if(this->_isLocationSupportsUpload())
+     if(this->_isLocationSupportsUpload(client))
      {
          client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
          if(client->parsedRequest.isBoundaryExist == true)
@@ -155,11 +155,11 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     this->toWrite = 0;
     client->requestBody.close();
     struct stat st;
-    if (!(stat(this->_currentLocation->UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
-        i = mkdir(this->_currentLocation->UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
+    if (!(stat(client->_currentLocation->UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
+        i = mkdir(client->_currentLocation->UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
     }
     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-    std::string filePath = this->_currentLocation->UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
+    std::string filePath = client->_currentLocation->UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
     this->destinationFile.open(filePath, std::ios::binary);
     if (i == -1 || this->destinationFile.fail())
         throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));

@@ -46,7 +46,6 @@ void	LocationBlockParse::setRoot(std::vector<std::string> &vec){
     {
         vec[1].insert(1, "/");
     }
-    std::cout << "out is " << vec[1] << std::endl;
     this->Root = vec[1];
 }
 
