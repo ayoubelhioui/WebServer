@@ -53,9 +53,25 @@ void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serv
         for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++) {
             LocationBlockParse currentLocation = *beg;
             std::string insideLocationPath = currentLocation.Location;
+            std::string full_path = currentLocation.Location;
             if(insideLocationPath.back() == '/')
                 insideLocationPath.pop_back();
-
+            int len = currentPath.length() - 1;
+            int index_last = len;
+            bool is_file_last = 0, point = 0;
+            for(int temp_len = len; temp_len >= 0; temp_len--){
+			    if(currentPath[temp_len] == '.')
+			    	point = 1;
+			    if(currentPath[temp_len] == '/' && point){
+			    	is_file_last = 1;
+			    	index_last = temp_len;
+			    	break;
+			    }
+			    else if (currentPath[temp_len] == '/' && !point) break;
+		    }
+            if(index_last != len)
+		        full_path = currentPath.substr(0, index_last + 1);
+		    if(full_path != res) continue;
 
         }
         locationSplit(currentPath, pathOffset);
