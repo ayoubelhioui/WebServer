@@ -80,14 +80,15 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
      }
      if(this->_isLocationSupportsUpload(client))
      {
-         client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
          if(client->parsedRequest.isBoundaryExist == true)
-              client->parsedRequest._parsingMiniHeader();
-          client->postRequest->_preparingPostRequest(client);
+             client->parsedRequest._parsingMiniHeader();
+         else
+            client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
+         client->postRequest->_preparingPostRequest(client);
           client->postRequest->_isValidPostRequest(client);
      }
-     else{
-
+     else
+     {
      }
 }
 

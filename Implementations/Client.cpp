@@ -118,9 +118,36 @@ bool    isThereFileLast(std::string &path,
     return 1;
 }
 
-void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration &serverConfig)
+void    ClientInfo::searchForCgi(ClientInfo *client, std::list<LocationBlockParse>::iterator &beg,
+                                 std::string &currentPath)
 {
-    std::string currentPath = client->parsedRequest.requestDataMap["path"], pathOffset = "";
+    client->_currentLocation = beg;
+    const char *cgi_format = strrchr(currentPath.c_str(), '.') + 1;
+    client->cgiIterator = (*beg).CGI.begin();
+    for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++)
+    {
+        if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "php"))
+        {
+            client->inReadCgiOut = 1;
+            client->servedFileName = currentPath;
+            return;
+        }
+        else if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "py"))
+        {
+            // python cgi
+        }
+    }
+    client->servedFileName = currentPath;
+}
+
+bool isCgi(std::pair<std::string, std::string> cgi)
+{
+    return (cgi.first == "php");
+}
+
+void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration &serverConfig, std::string &currentPath)
+{
+    std::string pathOffset = "";
     if (currentPath.back() == '/') {
         currentPath.pop_back();
     }
@@ -143,65 +170,41 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
             if (insideLocationPath != currentPath) {
                 continue;
             }
+            if(client->parsedRequest.requestDataMap["method"] == "POST")
+            {
+                client->_currentLocation = beg;
+                client->cgiIterator = std::find_if((*beg).CGI.begin(), (*beg).CGI.end(), isCgi);
+                return ;
+//                for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++)
+//                    if (client->cgiIterator->first == "php")
+//                        return;
+            }
             client->cgiIterator = (*beg).CGI.end();
             bool is_file_last = 0;
             int len = currentPath.length() - 1;
             int index_last = len;
-            if (isThereFileLast(currentPath, is_file_last, index_last)) // checking the case where the path is already a file and the location exists
+            if (/*client`->parsedRequest.requestDataMap["method"] != "POST"
+                    &&*/ isThereFileLast(currentPath, is_file_last, index_last)) // checking the case where the path is already a file and the location exists
             {
                 if (currentPath.front() != '.')
                     currentPath = '.' + currentPath;
                 std::ifstream fileCheck(currentPath);
                 if (fileCheck)
-                { // checking if the file exists and capable to be read
-                    client->_currentLocation = beg;
-                    const char *cgi_format = strrchr(currentPath.c_str(), '.') + 1;
-//                    std::cout << "1cgi_format is " << cgi_format << std::endl;
-                    client->cgiIterator = (*beg).CGI.begin();
-                    for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++) { // looping through all the existing CGIS in the current found location
-                        if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
-                            client->inReadCgiOut = 1;
-                            client->servedFileName = currentPath;
-//                            std::cout << "server name 1 " << client->servedFileName << std::endl;
-                            return;
-                        } else if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
-                            // python cgi
-                        }
-                    }
-                }
+                    this->searchForCgi(client, beg, currentPath);
                 return ;
             }
-            else { // the case where the path is directory and must be joined with the offset (file or dir)
+            else
+            { // the case where the path is directory and must be joined with the offset (file or dir)
 
                 if ((*beg).Root.back() == '/' && (*beg).Root.length() > 1)
                     (*beg).Root.pop_back();
                 currentPath = (*beg).Root + pathOffset;
                 int rootLength = currentPath.length() - 1;
-//                //std::cout << "the wanted case is " << currentPath << std::endl;
                 if (isThereFileLast(currentPath, is_file_last, rootLength))
                 {
                     std::ifstream fileCheck(currentPath);
-                    if (fileCheck) {
-                        client->_currentLocation = beg;
-                        const char *cgi_format = strrchr(currentPath.c_str(), '.') + 1;
-                        client->cgiIterator = (*beg).CGI.begin();
-                        for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++) {
-                            if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
-////                                std::cout << "first is " << client->cgiIterator->first << std::endl;
-////                                std::cout << "second is " << client->cgiIterator->second << std::endl;
-////                                std::cout << "i;m successssss" << std::endl;
-                                client->inReadCgiOut = 1;
-                                client->servedFileName = currentPath;
-//                                std::cout << "server name 2 " << client->servedFileName << std::endl;
-                                return;
-                            } else if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
-                                // python cgi
-                                return;
-                            }
-                        }
-                        client->servedFileName = currentPath;
-                    }
-////                    std::cout << "is equal : " << (client->cgiIterator != client->_currentLocation->CGI.end()) << std::endl;
+                    if (fileCheck)
+                        this->searchForCgi(client, beg, currentPath);
                     return ;
                 }
                 else // handle the case where the path + offset is a directory (must loop through indexes and check if there is a valid path)
@@ -217,26 +220,11 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                             std::ifstream check_file(final_path, std::ios::binary);
                             if (check_file)
                             {
-                                client->_currentLocation = beg;
-//                                //std::cout << "I;M the winnnnnnnnnerrrr" << std::endl;
-                                const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-                                client->cgiIterator = (*beg).CGI.begin();
-                                for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++) {
-                                    if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")) {
-                                        client->inReadCgiOut = 1;
-                                        client->servedFileName = final_path;
-//                                        std::cout << "server name 3 " << client->servedFileName << std::endl;
-                                        return;
-                                    } else if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")) {
-                                        // python cgi
-                                    }
-                                }
-                                client->servedFileName = final_path;
-
+                                this->searchForCgi(client, beg, currentPath);
+                                return ;
                             }
                         }
-                    // }
-                    return ;
+                        return ;
                 }
 
             }
@@ -329,7 +317,27 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
 //        }
 //	}
     }
-    
+}
+
+void			ClientInfo::retPathWithoutFile(std::string &TempPath)
+{
+    if(TempPath.back() == '/')
+        TempPath.pop_back();
+    bool point = 0;
+    for(int len = TempPath.length() - 1; len >= 0; len--) {
+        if (TempPath[len] == '.')
+            point = 1;
+        if (TempPath[len] == '/' && point) {
+            if(len == 0)
+                len++;
+            TempPath = TempPath.substr(0, len);
+            return ;
+        }
+        else if (TempPath[len] == '/' && !point){
+            return ;
+        }
+    }
+    return ;
 }
 
 void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &server )
@@ -370,6 +378,7 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     }
     close(fd[1]);
     client->CgiReadEnd = fd[0];
+    client->inReadCgiOut = 1;
     client->stillWaiting = 1;
     client->cgiPid = pid;
 }

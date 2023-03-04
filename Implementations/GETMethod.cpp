@@ -30,7 +30,8 @@ std::string GETMethod::format_date(time_t t) {
 }
 
 void GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig) {
-    client->checkPathValidation(client, serverConfig);
+    client->checkPathValidation(client, serverConfig, client->parsedRequest.requestDataMap["path"]);
+    std::cout << "path is " << client->servedFileName << std::endl;
     if (client->servedFileName == "" && !client->inReadCgiOut) {
         throw std::runtime_error("file path not allowed");
     }
@@ -80,6 +81,7 @@ std::string GETMethod::directoryListing(std::string rootDirectory, std::string l
                 "<tr><td><a href=\"" + linking_path + filename + "\">" + filename + "</a></td><td>" + filesize +
                 "</td><td>" + filemodtime + "</td><td>" + filetype + "</td></tr>\n";
     }
+
     file_list += "</table>\n"
                  "</body>\n"
                  "</html>\n";

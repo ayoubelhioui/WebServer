@@ -18,11 +18,14 @@ class ClientInfo {
 		ChunkedPostRequest	*chunkedRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
-		void	CGIexecutedFile( ClientInfo *, ServerConfiguration & );
-		void	parseCgiHeader(std::string &);
-        void	parsingCgiLine(std::string line);
-		std::string    generateRandString ( void );
-		void    checkPathValidation(ClientInfo *client, ServerConfiguration &serverConfig);
+		void            CGIexecutedFile( ClientInfo *, ServerConfiguration & );
+		void	        parseCgiHeader(std::string &);
+        void	        parsingCgiLine(std::string line);
+		std::string     generateRandString ( void );
+		void            checkPathValidation(ClientInfo *client, ServerConfiguration &serverConfig, std::string &);
+        void            searchForIndexFiles();
+		void			searchForCgi(ClientInfo *, std::list<LocationBlockParse>::iterator &, std::string &);
+		void			retPathWithoutFile(std::string &);
         ParsingRequest parsedRequest;
         bool isFirstRead;
         std::ofstream requestBody;
@@ -34,6 +37,7 @@ class ClientInfo {
 		std::ofstream cgi_out;
 		std::string	   servedFileName;	
 		std::string	  currentServerFile;
+		std::string	  tempPathForLocation;
         std::map<std::string, std::string> cgiMap;
 		std::list<std::pair<std::string, std::string> >::iterator cgiIterator;
 		std::list<LocationBlockParse>::iterator					   _currentLocation;

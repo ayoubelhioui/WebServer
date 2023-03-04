@@ -71,7 +71,7 @@ void    ParsingRequest::receiveFirstTime(int socket){
     this->received -= (this->bodyIndex + 4);
     std::string header(requestHeader);
     header = header.substr(0, this->bodyIndex);
-    size_t  foundBoundaryWord = header.find("boundary=");
+    size_t  foundBoundaryWord = header.find("multipart/form-data");
     if(foundBoundaryWord != std::string::npos)
         isBoundaryExist = true;
 }
@@ -92,13 +92,11 @@ void ParsingRequest::gettingNewBodyIndex(std::string &boundarySavior)
     this->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
 
-void ParsingRequest::gettingFileName(std::string &newString)
-{
+void ParsingRequest::gettingFileName(std::string &newString) {
     int newContentIndex = newString.find("filename=");
     int DoubleQuotePosition = newString.find("\"", newContentIndex + 11);
     uploadFileName = newString.substr(newContentIndex + 10, DoubleQuotePosition - newContentIndex - 10);
 }
-
 
 void ParsingRequest::_parsingMiniHeader( void )
 {

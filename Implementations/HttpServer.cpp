@@ -107,7 +107,7 @@ void	HttpServer::_acceptNewConnection( void )
     {
 		ClientInfo	*newClient = new ClientInfo;
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
-		// fcntl(client->socket, F_SETFL, O_NONBLOCK); // need to be understood.
+//		 fcntl(newClient->socket, F_SETFL, O_NONBLOCK); // need to be understood.
         FD_SET(newClient->socket, &(this->_readFds));
         FD_SET(newClient->socket, &(this->_writeFds));
         _maxSocket = std::max(_maxSocket, newClient->socket);
@@ -148,12 +148,6 @@ void	HttpServer::_serveClients( void )
 					(*ClientInfoIt)->parsedRequest.requestDataMap["path"] = word.substr(0, foundQuery);
 					(*ClientInfoIt)->parsedRequest.queryString = word.substr(foundQuery + 1);
 				}
-				if((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST"){
-				std::cout << "************************************" << std::endl;
-				std::cout << "header is  " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-				std::cout << "************************************" << std::endl;
-				exit(1);
-				}
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 				{
 					error_414(*ClientInfoIt);
@@ -185,7 +179,9 @@ void	HttpServer::_serveClients( void )
 				// }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
-					(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration);
+                    (*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
+					(*ClientInfoIt)->retPathWithoutFile((*ClientInfoIt)->tempPathForLocation);
+					(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);
 					if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 					{
 						// //std::cout << "REQUEST HEADER : " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
@@ -275,8 +271,7 @@ void	HttpServer::_serveClients( void )
 							if((*ClientInfoIt)->cgi_out.is_open()) (*ClientInfoIt)->cgi_out.close();
 							(*ClientInfoIt)->cgi_out.open(newFile, std::ios::binary);
 							//std::cout << "newFile is " << newFile << std::endl;
-							//std::cout << "errno is " << errno << std::endl;
-							if((*ClientInfoIt)->cgi_out.is_open()) //std::cout << "SUCCCCES FILE OPEN" << std::endl;
+							//std::cout << errno is " << errno << std::endl;
 							(*ClientInfoIt)->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
 							(*ClientInfoIt)->cgi_out << body;
 							(*ClientInfoIt)->isFirstCgiRead = false;
@@ -328,13 +323,12 @@ void	HttpServer::_serveClients( void )
 							if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
 							{
 								size_t foundPhp = (*ClientInfoIt)->parsedRequest.uploadFileName.find(".php");
-								if (foundPhp != std::string::npos)
+								if (foundPhp != std::string::npos
+								&& (*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation->CGI.end())
 								{
 									(*ClientInfoIt)->cgiContentType = "text/x-php";
-									(*ClientInfoIt)->cgiContentLength = std::to_string(
-											(*ClientInfoIt)->parsedRequest.contentLength);
-//								 (*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt)->parsedRequest.uploadFileName,
-//																  (*ClientInfoIt), this->_serverConfiguration);
+									(*ClientInfoIt)->cgiContentLength = std::to_string((*ClientInfoIt)->parsedRequest.contentLength);
+								 	(*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt), this->_serverConfiguration);
 								}
 								else
 								{
