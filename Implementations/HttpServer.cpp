@@ -134,6 +134,8 @@ void	HttpServer::_serveClients( void )
 	ClientInfoIt = this->_clientsList.begin();
 	while (ClientInfoIt != this->_clientsList.end())
 	{
+		std::cout << "read is " << ((FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)) && (*ClientInfoIt)->isErrorOccured == false
+        && (*ClientInfoIt)->isServing == false) || (*ClientInfoIt)->inReadCgiOut == true) << std::endl;
 		if ((FD_ISSET((*ClientInfoIt)->socket, &(this->_readFds)) && (*ClientInfoIt)->isErrorOccured == false
         && (*ClientInfoIt)->isServing == false) || (*ClientInfoIt)->inReadCgiOut == true)
 		{
@@ -181,7 +183,7 @@ void	HttpServer::_serveClients( void )
 				{
                     (*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 					(*ClientInfoIt)->retPathWithoutFile((*ClientInfoIt)->tempPathForLocation);
-					(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);
+                    (*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);
 					if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 					{
 						// //std::cout << "REQUEST HEADER : " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
@@ -195,8 +197,10 @@ void	HttpServer::_serveClients( void )
 					 try
 					 {
 						 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt); // add a return to the function for the case of no upload folder.
-                         if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
-                             (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
+						 if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength) {
+							 std::cout << "was here is WHAAAATTTT" << std::endl;
+							 (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
+						 }
 					 }
 					 catch (std::exception &e)
 					 {
@@ -209,14 +213,22 @@ void	HttpServer::_serveClients( void )
 			}
 			else
 			{
+				std::cout << "***************" << std::endl;
+				std::cout << "method " << ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST") << std::endl;
+				std::cout << "received " << ((*ClientInfoIt)->parsedRequest.received) << std::endl;
+				std::cout << "content length " << (*ClientInfoIt)->parsedRequest.contentLength <<  std::endl;
+				std::cout << "error is " << (((*ClientInfoIt)->isErrorOccured == false) and ((*ClientInfoIt)->isServing == false)) << std::endl;
+				std::cout << "in read " << ((*ClientInfoIt)->inReadCgiOut) << std::endl;
+				std::cout << "***************" << std::endl;
+				exit(1);
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST" and
                     (*ClientInfoIt)->parsedRequest.received < (*ClientInfoIt)->parsedRequest.contentLength
                     and ((*ClientInfoIt)->isErrorOccured == false) and ((*ClientInfoIt)->isServing == false)
 					and ((*ClientInfoIt)->inReadCgiOut == false))
                 {
-                    try
+					try
                     {
-					    (*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
+						(*ClientInfoIt)->postRequest->receiveTheBody(*ClientInfoIt);
 					}
                     catch (std::exception &e)
                     {

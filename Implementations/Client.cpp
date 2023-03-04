@@ -183,7 +183,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
             bool is_file_last = 0;
             int len = currentPath.length() - 1;
             int index_last = len;
-            if (/*client`->parsedRequest.requestDataMap["method"] != "POST"
+            if (/*client->parsedRequest.requestDataMap["method"] != "POST"
                     &&*/ isThereFileLast(currentPath, is_file_last, index_last)) // checking the case where the path is already a file and the location exists
             {
                 if (currentPath.front() != '.')

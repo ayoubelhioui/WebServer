@@ -73,19 +73,21 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
          error_500(client);
          throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
      }
-     if (isBodySizeBigger(this->_serverConfiguration, client->parsedRequest.contentLength))
+    if (isBodySizeBigger(this->_serverConfiguration, client->parsedRequest.contentLength))
      {
 //         error_404(client); 413
-         throw (std::runtime_error("Body Size Too Large !!"));
-     }
-     if(this->_isLocationSupportsUpload(client))
+        throw (std::runtime_error("Body Size Too Large !!"));
+    }
+    if(this->_isLocationSupportsUpload(client))
      {
-         if(client->parsedRequest.isBoundaryExist == true)
+         if(client->parsedRequest.isBoundaryExist == true) {
              client->parsedRequest._parsingMiniHeader();
-         else
-            client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
+         }
+         else {
+             client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
+         }
          client->postRequest->_preparingPostRequest(client);
-          client->postRequest->_isValidPostRequest(client);
+         client->postRequest->_isValidPostRequest(client);
      }
      else
      {
