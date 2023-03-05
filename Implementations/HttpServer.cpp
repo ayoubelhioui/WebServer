@@ -141,6 +141,11 @@ void	HttpServer::_serveClients( void )
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
+//                 std::cout << "*******************************" << std::endl;
+//                    std::cout << "request header " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
+//                    std::cout << "*******************************" << std::endl;
+//                    exit(1);
+//
 				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 				size_t	foundQuery = word.find('?');
 				if(foundQuery != std::string::npos)
@@ -196,14 +201,13 @@ void	HttpServer::_serveClients( void )
 					 {
 						 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt); // add a return to the function for the case of no upload folder.
 						 if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength) {
-							 std::cout << "was here is WHAAAATTTT" << std::endl;
 							 (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 						 }
 					 }
 					 catch (std::exception &e)
 					 {
 						 (*ClientInfoIt)->isErrorOccured = true;
-						 //std::cout << e.what() << std::endl;
+						 std::cout << e.what() << std::endl;
 					 }
 					}
 				 }
@@ -327,17 +331,19 @@ void	HttpServer::_serveClients( void )
 								(*ClientInfoIt)->postRequest->sourceFile.close();
     							(*ClientInfoIt)->postRequest->destinationFile.close();
 								size_t foundPhp = (*ClientInfoIt)->parsedRequest.uploadFileName.find(".php");
+
 								if (foundPhp != std::string::npos
 								&& (*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation->CGI.end())
 								{
-									int acc = access((*ClientInfoIt)->servedFileName.c_str(), X_OK | F_OK);
-									std::cout << "acc is " << acc << std::endl;
-									if(acc == -1)
+									chmod((*ClientInfoIt)->postFilePath.c_str(),  S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
+                                    (*ClientInfoIt)->servedFileName = (*ClientInfoIt)->postFilePath;
+                                    (*ClientInfoIt)->cgiContentType = "text/php";
+                                    int acc = access((*ClientInfoIt)->servedFileName.c_str(), X_OK | F_OK);
+                                    if(acc == -1)
 									{
-										error_404(*ClientInfoIt);
-										throw std::runtime_error("executed path was not found");
-									}
-									(*ClientInfoIt)->cgiContentType = "text/php";
+                                        error_404(*ClientInfoIt);
+                                        throw std::runtime_error("executed path was not found");
+                                    }
 									(*ClientInfoIt)->cgiContentLength = std::to_string((*ClientInfoIt)->postRequest->cgiContentLength);
 									(*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt), this->_serverConfiguration);
 								}

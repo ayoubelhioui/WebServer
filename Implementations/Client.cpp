@@ -95,7 +95,7 @@ void    locationSplit(std::string &currentPath, std::string &pathOffset){
     pathOffset = splittedOffset + pathOffset;
 }
 
-bool    isThereFileLast(std::string &path,
+bool    ClientInfo::isThereFileLast(std::string &path,
                         bool &is_file_last,
                         int &index_last)
 {
@@ -202,8 +202,9 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 if(client->parsedRequest.requestDataMap["method"] == "POST")
                 {
                     client->servedFileName = currentPath;
-                    if(client->servedFileName.back() != '/')
+                    if(client->servedFileName.back() != '/') {
                         client->servedFileName += '/';
+                    }
                     client->_currentLocation = beg;
                     client->cgiIterator = std::find_if((*beg).CGI.begin(), (*beg).CGI.end(), isCgi);
                     return ;
@@ -339,6 +340,7 @@ void			ClientInfo::retPathWithoutFile(std::string &TempPath)
         if (TempPath[len] == '/' && point) {
             if(len == 0)
                 len++;
+            this->cgiFileEnd = TempPath.substr(len + 1);
             TempPath = TempPath.substr(0, len);
             return ;
         }
@@ -358,24 +360,28 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     const char * query_string = client->parsedRequest.queryString.length() == 0 ? "" : client->parsedRequest.queryString.c_str();
     const char * server_host = server.serverHost.c_str();
     const char * server_port = server.serverPort.c_str();
-    //const char * path_info ;
+    const char * path_info = client->parsedRequest.requestDataMap["path"].c_str();
     const char * content_length = client->cgiContentLength.c_str();
     const char *content_type = client->cgiContentType.c_str();
     setenv("REQUEST_METHOD", request_method, 1);
     setenv("QUERY_STRING", query_string, 1);
     setenv("SCRIPT_NAME", script_name, 1);
-    setenv("SERVER_NAME", server_host, 1)   ;
-    setenv("SERVER_PORT", server_port, 1)   ;
-    setenv("REDIRECT_STATUS", "200", 1)    ;
-    // setenv("PATH_INFO", server_port, 1)   ;
-      setenv("CONTENT_LENGTH", content_length, 1)   ;
-      setenv("CONTENT_TYPE", content_type, 1)   ;
+    setenv("SERVER_NAME", server_host, 1);
+    setenv("SERVER_PORT", server_port, 1);
+    setenv("REDIRECT_STATUS", "200", 1);
+    setenv("PATH_INFO", path_info, 1);
+    setenv("CONTENT_LENGTH", content_length, 1);
+    setenv("CONTENT_TYPE", content_type, 1);
+    /*
+     * int fdup = open (client->uploadFileNamem, std::ios::binary);
+     */
     int fd[2];
     pipe(fd);
     pid = fork();
     if (pid == 0){
         char  *args[3];
         dup2(fd[1], 1);
+        // dup2(fdup, 0);
         close(fd[0]);
         close(fd[1]);
         args[0] = (char *) script_name;

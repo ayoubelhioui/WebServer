@@ -12,7 +12,7 @@
 # define TRANSFER_ENCODING_EXCEPTION "Transfer Encoding Exception"
 # define BAD_REQUEST_EXCEPTION "Bad Request Exception"
 # define TMP_FOLDER_PATH "/tmp/."
-# define UPLOADS_FOLDER_PATH "uploads/"
+# define DEFAULT_UPLOAD_FOLDER "./uploads/"
 # define TMP_FOLDER_COULDNT_OPEN "Couldn't Open /Tmp Folder"
 # define UPLOAD_FOLDER_COULDNT_OPEN "Couldn't Open Uploads Folder"
 

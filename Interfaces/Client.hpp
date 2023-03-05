@@ -8,6 +8,7 @@
 # include "../Interfaces/RequestParser.hpp"
 # include "../Interfaces/POSTMethod.hpp"
 # include "../Interfaces/ChunkedPostRequest.hpp"
+
 class PostMethod;
 
 class ClientInfo {
@@ -26,6 +27,7 @@ class ClientInfo {
         void            searchForIndexFiles();
 		void			searchForCgi(ClientInfo *, std::list<LocationBlockParse>::iterator &, std::string &);
 		void			retPathWithoutFile(std::string &);
+		bool    		isThereFileLast(std::string &, bool &, int &);
         ParsingRequest parsedRequest;
         bool isFirstRead;
         std::ofstream requestBody;
@@ -38,6 +40,9 @@ class ClientInfo {
 		std::string	   servedFileName;	
 		std::string	  currentServerFile;
 		std::string	  tempPathForLocation;
+        std::string   postFilePath;
+        std::string   cgiEnd;
+		std::string	  cgiFileEnd;
         std::map<std::string, std::string> cgiMap;
 		std::list<std::pair<std::string, std::string> >::iterator cgiIterator;
 		std::list<LocationBlockParse>::iterator					   _currentLocation;

@@ -64,6 +64,12 @@ void	LocationBlockParse::setCgi(std::vector<std::string> &vec){
 
 void	LocationBlockParse::setUploadFolder(std::vector<std::string> &vec){
     if(vec.size() > 2) errorPrinting("only the upload file is allowed as argument");
+     if(vec[1].length() > 1 && vec[1][0] == '/')
+        vec[1] = '.' + vec[1];
+    if(vec[1].length() > 1 && vec[1][0] != '/' && vec[1][0] != '.')
+        vec[1] = "./" + vec[1];
+    if(vec[1].length() > 2 && vec[1][0] == '.' && vec[1][1] != '/')
+        vec[1].insert(1, "/");
     this->UploadDirectoryPath = vec[1];
 }
 
