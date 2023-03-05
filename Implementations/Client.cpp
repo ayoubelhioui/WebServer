@@ -1,7 +1,7 @@
 #include "../Interfaces/Client.hpp"
 	
 ClientInfo::ClientInfo( void ) : isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
-, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0)
+, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0)
 {
 }
 
@@ -170,6 +170,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
             if (insideLocationPath != currentPath) {
                 continue;
             }
+        
 //            if(client->parsedRequest.requestDataMap["method"] == "POST")
 //            {
 //                client->_currentLocation = beg;
@@ -190,7 +191,9 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     currentPath = '.' + currentPath;
                 std::ifstream fileCheck(currentPath);
                 if (fileCheck)
+                {
                     this->searchForCgi(client, beg, currentPath);
+                }
                 return ;
             }
             else
@@ -214,7 +217,9 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 {
                     std::ifstream fileCheck(currentPath);
                     if (fileCheck)
+                    {
                         this->searchForCgi(client, beg, currentPath);
+                    }
                     return ;
                 }
                 else // handle the case where the path + offset is a directory (must loop through indexes and check if there is a valid path)
@@ -372,9 +377,12 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     setenv("PATH_INFO", path_info, 1);
     setenv("CONTENT_LENGTH", content_length, 1);
     setenv("CONTENT_TYPE", content_type, 1);
-    /*
-     * int fdup = open (client->uploadFileNamem, std::ios::binary);
-     */
+    if(client->actionPath.length())
+    {
+        std::cout << "action path " << client->actionPath << std::endl;
+        exit(1);
+    }
+    exit(1);
     int fd[2];
     pipe(fd);
     pid = fork();

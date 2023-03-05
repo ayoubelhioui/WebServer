@@ -63,33 +63,6 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
     return (client->_currentLocation->UploadDirectoryPath.length());
 }
 
-bool    iThereFileLast(std::string &path,
-                        bool &is_file_last,
-                        int &index_last)
-{
-    bool point = 0;
-    for(int len = index_last; len >= 0; len--) {
-        if (path[len] == '.')
-        {
-            std::cout << "path is point" << std::endl;
-            point = 1;
-        }
-        if (path[len] == '/' && point)
-        {
-            std::cout << "path is leennnnn" << std::endl;
-            is_file_last = 1;
-            index_last = len;
-            break;
-        }
-        else if (path[len] == '/' && !point){
-            return 0;
-        }
-    }
-    if(!point){
-        return 0;
-    }
-    return 1;
-}
 
 void    PostMethod::handleFirstRead(ClientInfo *client) {
      if(client->_currentLocation == this->_serverConfiguration.Locations.end())
@@ -123,6 +96,7 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
      }
      else
      {
+        
          if(client->cgiIterator == client->_currentLocation->CGI.end())
          {
              error_500(client);
@@ -131,13 +105,15 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
          bool isFileLast = 0;
          client->servedFileName += client->cgiFileEnd;
          int len = client->servedFileName.length() - 1;
-         iThereFileLast(client->servedFileName, isFileLast, len);
+         client->isThereFileLast(client->servedFileName, isFileLast, len);
          if(isFileLast)
          {
              std::ifstream fileFound (client->servedFileName.c_str(), std::ios::binary);
              if(fileFound)
              {
-
+                client->isNotUpload = true;
+                client->actionPath = client->servedFileName.c_str();
+                return ;
              }
          }
          else
@@ -151,7 +127,9 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
                  std::ifstream inFile(fileLast);
                 if(inFile)
                 {
-
+                    client->isNotUpload = true;
+                    client->actionPath = fileLast;
+                    return ;
                 }
              }
          }
@@ -229,6 +207,7 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     }
     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
     client->postFilePath = client->_currentLocation->UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
+    client->postFilePath.pop_back();
     this->destinationFile.open(client->postFilePath, std::ios::binary);
     if (i == -1 || this->destinationFile.fail())
         throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));
