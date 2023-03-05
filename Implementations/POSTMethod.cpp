@@ -2,7 +2,7 @@
 # include "../errorsHandling/errorsHandling.hpp"
 
 PostMethod::PostMethod(ServerConfiguration &serverConfiguration)
-: _serverConfiguration(serverConfiguration), totalTempFileSize(0), toWrite(0)
+: _serverConfiguration(serverConfiguration), totalTempFileSize(0), toWrite(0), cgiContentLength(0)
 {}
 
 
@@ -70,7 +70,7 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
      }
      if (!this->_isLocationSupportsPost(client))
      {
-         error_500(client);
+         error_500(client); // IT MUST BE ERROR 405 NOT ERROR 500
          throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
      }
     if (isBodySizeBigger(this->_serverConfiguration, client->parsedRequest.contentLength))
@@ -82,9 +82,11 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
      {
          if(client->parsedRequest.isBoundaryExist == true) {
              client->parsedRequest._parsingMiniHeader();
+             client->servedFileName += client->parsedRequest.uploadFileName;
          }
          else {
              client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
+             client->servedFileName += client->parsedRequest.uploadFileName;
          }
          client->postRequest->_preparingPostRequest(client);
          client->postRequest->_isValidPostRequest(client);
@@ -154,6 +156,7 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex;
     if (client->parsedRequest.isBoundaryExist == true)
         totalTempFileSize -= 8; // for skipping /r/n/r/n twice.
+    this->cgiContentLength = totalTempFileSize;
     this->toWrite = 0;
     client->requestBody.close();
     struct stat st;
@@ -167,7 +170,7 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
         throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));
 }
 
-void PostMethod::writeToUploadedFile()
+void PostMethod::writeToUploadedFile(ClientInfo *client)
 {
     this->toWrite = (this->totalTempFileSize > 1024) ? 1024 : this->totalTempFileSize;
     char buffer[this->toWrite + 1];
@@ -175,13 +178,14 @@ void PostMethod::writeToUploadedFile()
     buffer[this->toWrite] = 0;
     this->destinationFile.write(buffer, this->toWrite);
     if (this->sourceFile.fail() || this->destinationFile.fail())
+    {
+        error_500(client);
         throw (std::runtime_error("Error Occurred in writeToUploadedFile"));
+    }
     this->totalTempFileSize -= this->toWrite;
 }
 
 void  PostMethod::successfulPostRequest(ClientInfo *client){
-    this->sourceFile.close();
-    this->destinationFile.close();
     std::string path = "uploadSuccess.html";
     int i = remove((TMP_FOLDER_PATH + client->parsedRequest.uploadFileName).c_str());
     if(client->served.is_open())

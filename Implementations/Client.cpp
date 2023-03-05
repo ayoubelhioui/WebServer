@@ -170,21 +170,21 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
             if (insideLocationPath != currentPath) {
                 continue;
             }
-            if(client->parsedRequest.requestDataMap["method"] == "POST")
-            {
-                client->_currentLocation = beg;
-                client->cgiIterator = std::find_if((*beg).CGI.begin(), (*beg).CGI.end(), isCgi);
-                return ;
-//                for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++)
-//                    if (client->cgiIterator->first == "php")
-//                        return;
-            }
+//            if(client->parsedRequest.requestDataMap["method"] == "POST")
+//            {
+//                client->_currentLocation = beg;
+//                client->cgiIterator = std::find_if((*beg).CGI.begin(), (*beg).CGI.end(), isCgi);
+//                return ;
+////                for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++)
+////                    if (client->cgiIterator->first == "php")
+////                        return;
+//            }
             client->cgiIterator = (*beg).CGI.end();
             bool is_file_last = 0;
             int len = currentPath.length() - 1;
             int index_last = len;
-            if (/*client->parsedRequest.requestDataMap["method"] != "POST"
-                    &&*/ isThereFileLast(currentPath, is_file_last, index_last)) // checking the case where the path is already a file and the location exists
+            if (client->parsedRequest.requestDataMap["method"] != "POST"
+                    && isThereFileLast(currentPath, is_file_last, index_last)) // checking the case where the path is already a file and the location exists
             {
                 if (currentPath.front() != '.')
                     currentPath = '.' + currentPath;
@@ -199,6 +199,15 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 if ((*beg).Root.back() == '/' && (*beg).Root.length() > 1)
                     (*beg).Root.pop_back();
                 currentPath = (*beg).Root + pathOffset;
+                if(client->parsedRequest.requestDataMap["method"] == "POST")
+                {
+                    client->servedFileName = currentPath;
+                    if(client->servedFileName.back() != '/')
+                        client->servedFileName += '/';
+                    client->_currentLocation = beg;
+                    client->cgiIterator = std::find_if((*beg).CGI.begin(), (*beg).CGI.end(), isCgi);
+                    return ;
+                }
                 int rootLength = currentPath.length() - 1;
                 if (isThereFileLast(currentPath, is_file_last, rootLength))
                 {
@@ -346,7 +355,7 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     
     const char * request_method = client->parsedRequest.requestDataMap["method"].c_str(); // POST or GET
     const char * script_name = client->cgiIterator->second.c_str(); // php cgi inside location
-	const char * query_string = client->parsedRequest.queryString.length() == 0 ? "" : client->parsedRequest.queryString.c_str();
+    const char * query_string = client->parsedRequest.queryString.length() == 0 ? "" : client->parsedRequest.queryString.c_str();
     const char * server_host = server.serverHost.c_str();
     const char * server_port = server.serverPort.c_str();
     //const char * path_info ;
@@ -372,6 +381,7 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
         args[0] = (char *) script_name;
         args[1] = (char *) client->servedFileName.c_str();
         args[2] = NULL;
+        std::cerr << "served is " << client->servedFileName << std::endl;
         if (execve(script_name, args, NULL) == -1){
             exit(1);
         }

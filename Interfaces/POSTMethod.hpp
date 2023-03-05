@@ -35,8 +35,9 @@ class PostMethod{
         std::ofstream destinationFile;
         int totalTempFileSize;
         int toWrite;
+        int cgiContentLength;
         PostMethod(ServerConfiguration &);
-        void writeToUploadedFile( void );
+        void writeToUploadedFile( ClientInfo * );
         void receiveTheBody( ClientInfo* );
         void successfulPostRequest( ClientInfo* );
         void preparingMovingTempFile( ClientInfo* );
