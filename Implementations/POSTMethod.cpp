@@ -63,7 +63,23 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
     return (client->_currentLocation->UploadDirectoryPath.length());
 }
 
+ void   PostMethod::startPostRequest(ClientInfo *client, bool k)
+{
+    (void) k;
+        if(client->parsedRequest.isBoundaryExist == true) {
+            client->parsedRequest._parsingMiniHeader();
+            client->actionPath = client->servedFileName;
+            client->servedFileName += client->parsedRequest.uploadFileName;
 
+        }
+        else {
+            client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
+            client->actionPath = client->servedFileName;
+            client->servedFileName += client->parsedRequest.uploadFileName;
+        }
+        client->postRequest->_preparingPostRequest(client);
+        client->postRequest->_isValidPostRequest(client);
+}
 void    PostMethod::handleFirstRead(ClientInfo *client) {
      if(client->_currentLocation == this->_serverConfiguration.Locations.end())
      {
@@ -81,54 +97,49 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
         throw (std::runtime_error("Body Size Too Large !!"));
     }
     if(this->_isLocationSupportsUpload(client))
-     {
-        std::cout << "HERE up" << std::endl;
-         if(client->parsedRequest.isBoundaryExist == true) {
-             client->parsedRequest._parsingMiniHeader();
-             client->servedFileName += client->parsedRequest.uploadFileName;
-         }
-         else {
-             client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
-             client->servedFileName += client->parsedRequest.uploadFileName;
-         }
-         client->postRequest->_preparingPostRequest(client);
-         client->postRequest->_isValidPostRequest(client);
-     }
+    {
+        std::cout << "I'M IN THE FIRST" << std::endl;
+        startPostRequest(client, 1);
+    }
      else
      {
-        
+        startPostRequest(client, 0);
          if(client->cgiIterator == client->_currentLocation->CGI.end())
          {
              error_500(client);
              throw std::runtime_error("Location doesn't support either CGI nor upload");
          }
          bool isFileLast = 0;
-         client->servedFileName += client->cgiFileEnd;
-         int len = client->servedFileName.length() - 1;
-         client->isThereFileLast(client->servedFileName, isFileLast, len);
+         client->actionPath += client->cgiFileEnd;
+         int len = client->actionPath.length() - 1;
+         client->isThereFileLast(client->actionPath, isFileLast, len);
          if(isFileLast)
          {
-             std::ifstream fileFound (client->servedFileName.c_str(), std::ios::binary);
+             std::ifstream fileFound (client->actionPath.c_str(), std::ios::binary);
              if(fileFound)
              {
+                std::cout << "ISSSSS BIG SUCCESS 1" << std::endl;
                 client->isNotUpload = true;
-                client->actionPath = client->servedFileName.c_str();
+                client->actionPath = client->actionPath.c_str();
                 return ;
              }
+             fileFound.close();
          }
          else
          {
-             if(client->servedFileName.back() != '/')
-                 client->servedFileName += '/';
+             if(client->actionPath.back() != '/')
+                 client->actionPath += '/';
              for(std::list<std::string>::iterator indexIt = client->_currentLocation->indexFiles.begin();
              indexIt != client->_currentLocation->indexFiles.end(); indexIt++)
              {
-                 std::string fileLast = client->servedFileName + (*indexIt);
+                 std::string fileLast = client->actionPath + (*indexIt);
                  std::ifstream inFile(fileLast);
                 if(inFile)
                 {
+                    std::cout << "ISSSSS BIG SUCCESS 2" << std::endl;
                     client->isNotUpload = true;
                     client->actionPath = fileLast;
+                    inFile.close();
                     return ;
                 }
              }
@@ -200,14 +211,16 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     this->toWrite = 0;
     client->requestBody.close();
     struct stat st;
-    if (!(stat(client->_currentLocation->UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
         if (client->_currentLocation->UploadDirectoryPath.empty())
             client->_currentLocation->UploadDirectoryPath = DEFAULT_UPLOAD_FOLDER;
+    if (!(stat(client->_currentLocation->UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
+        std::cout << "upload dir is " << client->_currentLocation->UploadDirectoryPath  << std::endl;
         i = mkdir(client->_currentLocation->UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
     }
     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
     client->postFilePath = client->_currentLocation->UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
-    client->postFilePath.pop_back();
+    if(this->destinationFile.is_open())
+        this->destinationFile.close();
     this->destinationFile.open(client->postFilePath, std::ios::binary);
     if (i == -1 || this->destinationFile.fail())
         throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));

@@ -23,4 +23,5 @@ void    error_405(std::list<client_info *> &clients_list, std::list<client_info 
     close((*client)->socket);
     clients_list.erase(client);
     delete [] buffer;
+    served.close();
 }

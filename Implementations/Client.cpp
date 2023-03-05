@@ -194,6 +194,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 {
                     this->searchForCgi(client, beg, currentPath);
                 }
+                fileCheck.close();
                 return ;
             }
             else
@@ -220,6 +221,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     {
                         this->searchForCgi(client, beg, currentPath);
                     }
+                    fileCheck.close();
                     return ;
                 }
                 else // handle the case where the path + offset is a directory (must loop through indexes and check if there is a valid path)
@@ -238,6 +240,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                                 this->searchForCgi(client, beg, currentPath);
                                 return ;
                             }
+                            check_file.close();
                         }
                         return ;
                 }
@@ -377,29 +380,37 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     setenv("PATH_INFO", path_info, 1);
     setenv("CONTENT_LENGTH", content_length, 1);
     setenv("CONTENT_TYPE", content_type, 1);
-    if(client->actionPath.length())
+    int fdup = 0;
+    if(client->isNotUpload)
     {
-        std::cout << "action path " << client->actionPath << std::endl;
-        exit(1);
+        fdup = open(client->servedFileName.c_str(), O_RDONLY);
+        std::cout << "fdup is " << fdup << std::endl;
     }
-    exit(1);
     int fd[2];
     pipe(fd);
     pid = fork();
     if (pid == 0){
         char  *args[3];
         dup2(fd[1], 1);
-        // dup2(fdup, 0);
+        if(fdup > 0)
+        {
+            std::cerr << "dupped" << std::endl;
+            dup2(fdup, 0);
+            close(fdup);
+        }
         close(fd[0]);
         close(fd[1]);
         args[0] = (char *) script_name;
-        args[1] = (char *) client->servedFileName.c_str();
+        if(client->actionPath.length())
+            args[1] = (char *) client->actionPath.c_str();
+        else
+            args[1] = (char *) client->servedFileName.c_str();
         args[2] = NULL;
-        std::cerr << "served is " << client->servedFileName << std::endl;
-        if (execve(script_name, args, NULL) == -1){
+        if (execve(script_name, args, NULL) == -1)
             exit(1);
-        }
     }
+    if(fdup > 0)
+        close(fdup);
     close(fd[1]);
     client->CgiReadEnd = fd[0];
     client->inReadCgiOut = 1;

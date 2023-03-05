@@ -141,10 +141,7 @@ void	HttpServer::_serveClients( void )
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
-//                 std::cout << "*******************************" << std::endl;
-//                    std::cout << "request header " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-//                    std::cout << "*******************************" << std::endl;
-//                    exit(1);
+				
 //
 				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 				size_t	foundQuery = word.find('?');
@@ -278,7 +275,6 @@ void	HttpServer::_serveClients( void )
 							if((*ClientInfoIt)->cgi_out.is_open()) (*ClientInfoIt)->cgi_out.close();
 							(*ClientInfoIt)->cgi_out.open(newFile, std::ios::binary);
 							//std::cout << "newFile is " << newFile << std::endl;
-							//std::cout << errno is " << errno << std::endl;
 							(*ClientInfoIt)->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
 							(*ClientInfoIt)->cgi_out << body;
 							(*ClientInfoIt)->isFirstCgiRead = false;
@@ -304,6 +300,7 @@ void	HttpServer::_serveClients( void )
 								    + std::string("Content-Type: ")
 								    + get_mime_format((*ClientInfoIt)->servedFileName.c_str())
 								    + "\r\n\r\n";
+								std::cout << "" << std::endl;
 								send((*ClientInfoIt)->socket, headerPart.c_str(), headerPart.length(), 0);
 								close((*ClientInfoIt)->CgiReadEnd);
 								(*ClientInfoIt)->inReadCgiOut = false;
@@ -335,7 +332,7 @@ void	HttpServer::_serveClients( void )
 								if((*ClientInfoIt)->isNotUpload)
 								{
 									chmod((*ClientInfoIt)->actionPath.c_str(),  S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-	
+									(*ClientInfoIt)->servedFileName = (*ClientInfoIt)->actionPath;
 									int acc = access((*ClientInfoIt)->actionPath.c_str(), X_OK | F_OK);
                                     if(acc == -1)
 									{
@@ -346,6 +343,7 @@ void	HttpServer::_serveClients( void )
 									actionPathFile.seekg(0, std::ios::end);
     								int file_size = actionPathFile.tellg();
     								actionPathFile.seekg(0, std::ios::beg);
+									actionPathFile.close();
 									(*ClientInfoIt)->cgiContentType = "text/php";
 									(*ClientInfoIt)->cgiContentLength = std::to_string(file_size);
 									(*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt), this->_serverConfiguration);
@@ -401,6 +399,8 @@ void	HttpServer::_serveClients( void )
 							// if ((*ClientInfoIt)->currentServerFile != "")
 							// 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
 							// delete *ClientInfoIt;
+							if((*ClientInfoIt)->_currentLocation->UploadDirectoryPath.length())
+								(*ClientInfoIt)->_currentLocation->UploadDirectoryPath = "";
 							close((*ClientInfoIt)->socket);
 							(*ClientInfoIt)->served.close();
 							ClientInfoIt++;

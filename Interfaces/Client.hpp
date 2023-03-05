@@ -38,7 +38,7 @@ class ClientInfo {
         std::ifstream served;
 		std::ofstream cgi_out;
 		std::string	   servedFileName;	
-		std::string	  currentServerFile;
+		std::string	   cgiInput;
 		std::string	  tempPathForLocation;
         std::string   postFilePath;
         std::string   cgiEnd;
