@@ -15,9 +15,9 @@ SOURCES = main.cpp \
 		Implementations/ServerConfiguration.cpp \
 		Implementations/MultiHttpServer.cpp \
 		Implementations/Client.cpp \
+		Implementations/ChunkedPostRequest.cpp \
 		Implementations/HttpServer.cpp \
 		Implementations/RequestParser.cpp \
-		Implementations/ChunkedPostRequest.cpp \
 		errorsHandling/errorsHandling.cpp \
 		Utils/stringManip.cpp \
 		getFormat.cpp \

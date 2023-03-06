@@ -391,6 +391,8 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     int fd[2];
     pipe(fd);
     pid = fork();
+    if(pid == -1)
+        throw std::runtime_error("fork failed");
     if (pid == 0){
         char  *args[3];
         dup2(fd[1], 1);
