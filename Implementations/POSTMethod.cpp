@@ -70,12 +70,14 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
             client->parsedRequest._parsingMiniHeader();
             client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
+            std::cout << "upload is " << client->servedFileName << std::endl; 
 
         }
         else {
             client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
             client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
+            std::cout << "upload is " << client->servedFileName << std::endl; 
         }
         client->postRequest->_preparingPostRequest(client);
         client->postRequest->_isValidPostRequest(client);
@@ -99,7 +101,6 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
     if(this->_isLocationSupportsUpload(client))
     {
         startPostRequest(client, 1);
-        std::cout << "served is  " << client->servedFileName << std::endl;
     }
      else
      {
@@ -112,8 +113,6 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
          bool isFileLast = 0;
          client->actionPath += client->cgiFileEnd;
          int len = client->actionPath.length() - 1;
-         std::cout << "actionPath is " << client->actionPath << std::endl;
-         std::cout << "served is " << client->servedFileName << std::endl;
          client->isThereFileLast(client->actionPath, isFileLast, len);
          if(isFileLast)
          {
@@ -213,8 +212,8 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     this->toWrite = 0;
     client->requestBody.close();
     struct stat st;
-        if (client->_currentLocation.UploadDirectoryPath.empty())
-            client->_currentLocation.UploadDirectoryPath = DEFAULT_UPLOAD_FOLDER;
+    if (client->_currentLocation.UploadDirectoryPath.empty())
+        client->_currentLocation.UploadDirectoryPath = DEFAULT_UPLOAD_FOLDER;
     if (!(stat(client->_currentLocation.UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
         i = mkdir(client->_currentLocation.UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
     }

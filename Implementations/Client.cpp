@@ -129,8 +129,8 @@ void    ClientInfo::searchForCgi(ClientInfo *client, std::list<LocationBlockPars
 {
     client->_currentLocation = *beg;
     const char *cgi_format = strrchr(currentPath.c_str(), '.') + 1;
-    client->cgiIterator = (*beg).CGI.begin();
-    for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++)
+    client->cgiIterator = client->_currentLocation.CGI.begin();
+    for (; client->cgiIterator != client->_currentLocation.CGI.end(); client->cgiIterator++)
     {
         if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "php"))
         {
@@ -197,7 +197,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 std::ifstream fileCheck(currentPath);
                 if (fileCheck)
                 {
-                    std::cout << "1current path is " << currentPath << std::endl;
                     this->searchForCgi(client, beg, currentPath);
                 }
                 fileCheck.close();
@@ -225,7 +224,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     std::ifstream fileCheck(currentPath);
                     if (fileCheck)
                     {
-                        std::cout << "2current path is " << currentPath << std::endl;
                         this->searchForCgi(client, beg, currentPath);
                     }
                     fileCheck.close();
@@ -244,7 +242,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                             std::ifstream check_file(final_path, std::ios::binary);
                             if (check_file)
                             {
-                                std::cout << "3current path is " << final_path << std::endl;
                                 this->searchForCgi(client, beg, currentPath);
                                 return ;
                             }
@@ -399,7 +396,6 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
         dup2(fd[1], 1);
         if(fdup > 0)
         {
-            std::cerr << "dupped" << std::endl;
             dup2(fdup, 0);
             close(fdup);
         }
@@ -410,7 +406,7 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
             args[1] = (char *) client->actionPath.c_str();
         else
             args[1] = (char *) client->servedFileName.c_str();
-        std::cerr << "args[1] is : " << args[1] << std::endl;
+        std::cerr << "args[1] is " << args[1] << std::endl;
         args[2] = NULL;
         if (execve(script_name, args, NULL) == -1)
             exit(1);

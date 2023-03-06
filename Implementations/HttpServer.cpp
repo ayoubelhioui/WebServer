@@ -56,6 +56,7 @@ void	HttpServer::_setUpListeningSocket( void )
 				&_serverHints, &bindAddress);
 	
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
+	fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
 	if (_listeningSocket < 0)
 		exit (EXIT_FAILURE); // to be replaced by sth else
 	// //std::cout << "Socket Created Successfully" << std::endl;
@@ -108,7 +109,6 @@ void	HttpServer::_acceptNewConnection( void )
     {
 		ClientInfo	*newClient = new ClientInfo;
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
-//		 fcntl(newClient->socket, F_SETFL, O_NONBLOCK); // need to be understood.
         FD_SET(newClient->socket, &(this->_readFds));
         FD_SET(newClient->socket, &(this->_writeFds));
         _maxSocket = std::max(_maxSocket, newClient->socket);
@@ -188,7 +188,10 @@ void	HttpServer::_serveClients( void )
 					 	{
 							 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
 							 if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+							 {
+								
 								(*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
+							 }
 					 	}
 					 	catch (std::exception &e)
 					 	{
@@ -338,7 +341,7 @@ void	HttpServer::_serveClients( void )
 								&& (*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation.CGI.end())
 								{
 									chmod((*ClientInfoIt)->postFilePath.c_str(),  S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-                                    (*ClientInfoIt)->servedFileName = (*ClientInfoIt)->postFilePath;
+                                    // (*ClientInfoIt)->servedFileName = (*ClientInfoIt)->postFilePath;
                                     int acc = access((*ClientInfoIt)->servedFileName.c_str(), X_OK | F_OK);
                                     if(acc == -1)
 									{
