@@ -127,7 +127,7 @@ bool    ClientInfo::isThereFileLast(std::string &path,
 void    ClientInfo::searchForCgi(ClientInfo *client, std::list<LocationBlockParse>::iterator &beg,
                                  std::string &currentPath)
 {
-    client->_currentLocation = beg;
+    client->_currentLocation = *beg;
     const char *cgi_format = strrchr(currentPath.c_str(), '.') + 1;
     client->cgiIterator = (*beg).CGI.begin();
     for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++)
@@ -197,6 +197,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 std::ifstream fileCheck(currentPath);
                 if (fileCheck)
                 {
+                    std::cout << "1current path is " << currentPath << std::endl;
                     this->searchForCgi(client, beg, currentPath);
                 }
                 fileCheck.close();
@@ -214,7 +215,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     if(client->servedFileName.back() != '/') {
                         client->servedFileName += '/';
                     }
-                    client->_currentLocation = beg;
+                    client->_currentLocation = *beg;
                     client->cgiIterator = std::find_if((*beg).CGI.begin(), (*beg).CGI.end(), isCgi);
                     return ;
                 }
@@ -224,6 +225,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     std::ifstream fileCheck(currentPath);
                     if (fileCheck)
                     {
+                        std::cout << "2current path is " << currentPath << std::endl;
                         this->searchForCgi(client, beg, currentPath);
                     }
                     fileCheck.close();
@@ -242,6 +244,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                             std::ifstream check_file(final_path, std::ios::binary);
                             if (check_file)
                             {
+                                std::cout << "3current path is " << final_path << std::endl;
                                 this->searchForCgi(client, beg, currentPath);
                                 return ;
                             }

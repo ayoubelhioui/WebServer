@@ -151,7 +151,7 @@ void	HttpServer::_serveClients( void )
 					try
 					{
 						getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
-						if((*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation->CGI.end())
+						if((*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation.CGI.end())
                         {
                             (*ClientInfoIt)->cgiContentType = "";
 							(*ClientInfoIt)->cgiContentLength = "0";
@@ -335,7 +335,7 @@ void	HttpServer::_serveClients( void )
 									(*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt), this->_serverConfiguration);
 								}
 								else if (foundPhp != std::string::npos
-								&& (*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation->CGI.end())
+								&& (*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation.CGI.end())
 								{
 									chmod((*ClientInfoIt)->postFilePath.c_str(),  S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
                                     (*ClientInfoIt)->servedFileName = (*ClientInfoIt)->postFilePath;
@@ -385,8 +385,6 @@ void	HttpServer::_serveClients( void )
 							// if ((*ClientInfoIt)->currentServerFile != "")
 							// 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
 							// delete *ClientInfoIt;
-							if((*ClientInfoIt)->_currentLocation->UploadDirectoryPath.length())
-								(*ClientInfoIt)->_currentLocation->UploadDirectoryPath = "";
 							close((*ClientInfoIt)->socket);
 							(*ClientInfoIt)->served.close();
 							ClientInfoIt++;
