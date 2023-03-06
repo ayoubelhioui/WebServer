@@ -2,6 +2,7 @@
 # include "../Interfaces/HttpServer.hpp"
 # include "../Interfaces/ChunkedPostRequest.hpp"
 #   include <algorithm>
+//# define RECEIVING_FINISHED (received, contentLength) (received == contentLength) ? (true) : (false);
 // # include "../parsing/parsing.hpp"
 // //std::cout
 /* ----------------------------------------------------- */
@@ -141,19 +142,9 @@ void	HttpServer::_serveClients( void )
 			{
 				(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
 				(*ClientInfoIt)->parsedRequest.parse();
-				
-//
-				std::string	word = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
-				size_t	foundQuery = word.find('?');
-				if(foundQuery != std::string::npos)
-				{
-					(*ClientInfoIt)->parsedRequest.requestDataMap["path"] = word.substr(0, foundQuery);
-					(*ClientInfoIt)->parsedRequest.queryString = word.substr(foundQuery + 1);
-				}
+				(*ClientInfoIt)->parseQueryString();
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
-				{
 					error_414(*ClientInfoIt);
-				}
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
@@ -169,7 +160,7 @@ void	HttpServer::_serveClients( void )
 					}
 					catch(std::exception &e)
 					{
-						//std::cout << "callGet exception : " << e.what() << std::endl;
+						std::cout << "callGet exception : " << e.what() << std::endl;
 						error_404((*ClientInfoIt));
 						// continue;
 					}
@@ -182,11 +173,10 @@ void	HttpServer::_serveClients( void )
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
                     (*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
-					(*ClientInfoIt)->retPathWithoutFile((*ClientInfoIt)->tempPathForLocation);
+					(*ClientInfoIt)->returnPathWithoutFile((*ClientInfoIt)->tempPathForLocation);
                     (*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);
 					if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 					{
-						// //std::cout << "REQUEST HEADER : " << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
 						(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
 						(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
 														, (*ClientInfoIt)->parsedRequest);
@@ -194,21 +184,19 @@ void	HttpServer::_serveClients( void )
 					else
 					{
 						(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
-					 try
-					 {
-						 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt); // add a return to the function for the case of no upload folder.
-						 if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength) 
-						 {
-							(*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
-						 }
-					 }
-					 catch (std::exception &e)
-					 {
-						 (*ClientInfoIt)->isErrorOccured = true;
-						 std::cout << e.what() << std::endl;
-					 }
+					 	try
+					 	{
+							 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
+							 if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+								(*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
+					 	}
+					 	catch (std::exception &e)
+					 	{
+							 (*ClientInfoIt)->isErrorOccured = true;
+							 std::cout << e.what() << std::endl;
+					 	}
 					}
-				 }
+				}
 				(*ClientInfoIt)->isFirstRead = false;
 			}
 			else
@@ -225,13 +213,12 @@ void	HttpServer::_serveClients( void )
                     catch (std::exception &e)
                     {
 						error_500(*ClientInfoIt);
-						//std::cout << e.what() << std::endl;
+						std::cout << e.what() << std::endl;
                         (*ClientInfoIt)->isErrorOccured = true;
                     }
                 }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 				{
-					// //std::cout << "Chunked being processed for the SECOND time" << std::endl;
 					(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
 					if ((*ClientInfoIt)->chunkedRequest->uploadDone == true)
 					{
@@ -274,7 +261,6 @@ void	HttpServer::_serveClients( void )
 							std::string newFile = "FilesForServing/" + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
 							if((*ClientInfoIt)->cgi_out.is_open()) (*ClientInfoIt)->cgi_out.close();
 							(*ClientInfoIt)->cgi_out.open(newFile, std::ios::binary);
-							//std::cout << "newFile is " << newFile << std::endl;
 							(*ClientInfoIt)->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
 							(*ClientInfoIt)->cgi_out << body;
 							(*ClientInfoIt)->isFirstCgiRead = false;
@@ -443,7 +429,5 @@ void	HttpServer::setUpMultiplexing ( void )
 
 void	HttpServer::setUpHttpServer( void )
 {
-	// //std::cout << this->_serverConfiguration.serverHost << std::endl;
-	// //std::cout << this->_serverConfiguration.serverPort << std::endl;
 	this->_setUpListeningSocket();
 }

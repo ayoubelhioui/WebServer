@@ -19,6 +19,7 @@ class ClientInfo {
 		ChunkedPostRequest	*chunkedRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
+        void            parseQueryString( void );
 		void            CGIexecutedFile( ClientInfo *, ServerConfiguration & );
 		void	        parseCgiHeader(std::string &);
         void	        parsingCgiLine(std::string line);
@@ -26,7 +27,7 @@ class ClientInfo {
 		void            checkPathValidation(ClientInfo *client, ServerConfiguration &serverConfig, std::string &);
         void            searchForIndexFiles();
 		void			searchForCgi(ClientInfo *, std::list<LocationBlockParse>::iterator &, std::string &);
-		void			retPathWithoutFile(std::string &);
+		void			returnPathWithoutFile(std::string &);
 		bool    		isThereFileLast(std::string &, bool &, int &);
         ParsingRequest parsedRequest;
         bool isFirstRead;

@@ -1,14 +1,20 @@
 #include "../Interfaces/Client.hpp"
 	
 ClientInfo::ClientInfo( void ) : isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
-, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0)
-{
+, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0) { }
+
+ClientInfo::~ClientInfo( void ){ }
+
+
+void        ClientInfo::parseQueryString( void ) {
+    std::string	word = this->parsedRequest.requestDataMap["path"];
+    size_t	foundQuery = word.find('?');
+    if(foundQuery != std::string::npos)
+    {
+        this->parsedRequest.requestDataMap["path"] = word.substr(0, foundQuery);
+        this->parsedRequest.queryString = word.substr(foundQuery + 1);
+    }
 }
-
-ClientInfo::~ClientInfo( void )
-{
-}		
-
 
 ClientInfo	&ClientInfo::operator= ( const ClientInfo &obj )
 {
@@ -337,7 +343,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
     }
 }
 
-void			ClientInfo::retPathWithoutFile(std::string &TempPath)
+void			ClientInfo::returnPathWithoutFile(std::string &TempPath)
 {
     if(TempPath.back() == '/')
         TempPath.pop_back();
