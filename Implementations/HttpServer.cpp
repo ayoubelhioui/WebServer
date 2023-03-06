@@ -151,12 +151,15 @@ void	HttpServer::_serveClients( void )
 					(*ClientInfoIt)->parsedRequest.parse();
 					(*ClientInfoIt)->parseQueryString();
 					if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
+					{
 						error_414(*ClientInfoIt, this->_serverConfiguration.errorInfo["414"]);
+						(*ClientInfoIt)->isErrorOccured = true;
+						ClientInfoIt++;
+						continue;
+					}
 				}
 				catch (std::exception &e)
 				{
-					error_500((*ClientInfoIt), this->_serverConfiguration.errorInfo["500"]);
-					(*ClientInfoIt)->isErrorOccured = true;
 					ClientInfoIt++;
 					continue;
 				}
@@ -175,7 +178,7 @@ void	HttpServer::_serveClients( void )
 					}
 					catch(std::exception &e)
 					{
-						std::cout << "callGet exception : " << e.what() << std::endl;
+						// std::cout << "callGet exception : " << e.what() << std::endl;
 						(*ClientInfoIt)->isErrorOccured = true;
 						ClientInfoIt++;
 						continue;
@@ -463,13 +466,13 @@ void	HttpServer::_serveClients( void )
 						}
 						catch (std::exception &e)
 						{
+							std::cerr << e.what() << std::endl;
 							dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 							continue;
 						}
 					}
 				} 
-				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
-				&& (*ClientInfoIt)->isErrorOccured == true)
+				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					try
 					{
@@ -493,6 +496,7 @@ void	HttpServer::_serveClients( void )
 					}
 					catch (std::exception &e)
 					{
+						std::cerr << e.what() << std::endl;
 						dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
 					}

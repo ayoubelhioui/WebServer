@@ -65,6 +65,7 @@ void	ParsingRequest::parse(){
 
 void    ParsingRequest::receiveFirstTime(int socket){
     this->receivedBytes = recv(socket, this->requestHeader, MAX_REQUEST_SIZE, 0);
+    std::cout << "received are " << this->receivedBytes << std::endl;
     if(this->receivedBytes == -1)
         throw std::runtime_error("recv did not receive anything and has blocked");
     this->requestHeader[this->receivedBytes] = 0;
