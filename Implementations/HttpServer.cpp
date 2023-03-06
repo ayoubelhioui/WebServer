@@ -144,7 +144,7 @@ void	HttpServer::_serveClients( void )
 				(*ClientInfoIt)->parsedRequest.parse();
 				(*ClientInfoIt)->parseQueryString();
 				if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
-					error_414(*ClientInfoIt);
+					error_414(*ClientInfoIt, this->_serverConfiguration.errorInfo["414"]);
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
 					GETMethod getRequest;
@@ -160,8 +160,8 @@ void	HttpServer::_serveClients( void )
 					}
 					catch(std::exception &e)
 					{
-						std::cout << "callGet exception : " << e.what() << std::endl;
-						error_404((*ClientInfoIt));
+						// std::cout << "callGet exception : " << e.what() << std::endl;
+						error_404((*ClientInfoIt), this->_serverConfiguration.errorInfo["404"]);
 						// continue;
 					}
 				}
@@ -212,7 +212,7 @@ void	HttpServer::_serveClients( void )
 					}
                     catch (std::exception &e)
                     {
-						error_500(*ClientInfoIt);
+						error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 						std::cout << e.what() << std::endl;
                         (*ClientInfoIt)->isErrorOccured = true;
                     }
@@ -318,11 +318,11 @@ void	HttpServer::_serveClients( void )
 								if((*ClientInfoIt)->isNotUpload)
 								{
 									chmod((*ClientInfoIt)->actionPath.c_str(),  S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-									(*ClientInfoIt)->servedFileName = (*ClientInfoIt)->actionPath;
+									// (*ClientInfoIt)->servedFileName = (*ClientInfoIt)->actionPath;
 									int acc = access((*ClientInfoIt)->actionPath.c_str(), X_OK | F_OK);
                                     if(acc == -1)
 									{
-                                        error_404(*ClientInfoIt);
+                                        error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
                                         throw std::runtime_error("executed path was not found");
                                     }
 									std::ifstream actionPathFile((*ClientInfoIt)->servedFileName);
@@ -342,7 +342,7 @@ void	HttpServer::_serveClients( void )
                                     int acc = access((*ClientInfoIt)->servedFileName.c_str(), X_OK | F_OK);
                                     if(acc == -1)
 									{
-                                        error_404(*ClientInfoIt);
+                                        error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
                                         throw std::runtime_error("executed path was not found");
                                     }
                                     (*ClientInfoIt)->cgiContentType = "text/php";

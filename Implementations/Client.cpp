@@ -176,7 +176,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
             if (insideLocationPath != currentPath) {
                 continue;
             }
-        
 //            if(client->parsedRequest.requestDataMap["method"] == "POST")
 //            {
 //                client->_currentLocation = beg;
@@ -388,10 +387,7 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     setenv("CONTENT_TYPE", content_type, 1);
     int fdup = 0;
     if(client->isNotUpload)
-    {
         fdup = open(client->servedFileName.c_str(), O_RDONLY);
-        std::cout << "fdup is " << fdup << std::endl;
-    }
     int fd[2];
     pipe(fd);
     pid = fork();
@@ -411,6 +407,7 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
             args[1] = (char *) client->actionPath.c_str();
         else
             args[1] = (char *) client->servedFileName.c_str();
+        std::cerr << "args[1] is : " << args[1] << std::endl;
         args[2] = NULL;
         if (execve(script_name, args, NULL) == -1)
             exit(1);

@@ -31,6 +31,7 @@ std::string GETMethod::format_date(time_t t) {
 
 void GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig) {
     client->checkPathValidation(client, serverConfig, client->parsedRequest.requestDataMap["path"]);
+    std::cout << "GET PATH IS " << client->servedFileName << std::endl;
     if (client->servedFileName == "" && !client->inReadCgiOut) {
         throw std::runtime_error("file path not allowed");
     }

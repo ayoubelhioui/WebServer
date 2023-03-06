@@ -3,13 +3,14 @@
 
 # include "../Interfaces/Client.hpp"
 class ClientInfo;
-bool    isTransferEncodingNotChunked(std::map<std::string, std::string> &requestData);
-bool    isNotValidPostRequest(std::map<std::string, std::string> &requestData);
-bool    isBodySizeBigger(ServerConfiguration &serverConfig, unsigned int bodySize);
-void		error_414(ClientInfo *);
-void		error_501(ClientInfo *);
-void		error_400(ClientInfo *);
-void		error_500(ClientInfo *);
-void		error_413(ClientInfo *);
-void		error_404(ClientInfo *);
+bool    	isTransferEncodingNotChunked(std::map<std::string, std::string> &requestData);
+bool    	isNotValidPostRequest(std::map<std::string, std::string> &requestData);
+bool    	isBodySizeBigger(ServerConfiguration &serverConfig, unsigned int bodySize);
+void		error_414(ClientInfo *, std::string &);
+void		error_501(ClientInfo *, std::string &);
+void		error_400(ClientInfo *, std::string &);
+void		error_500(ClientInfo *, std::string &);
+void		error_413(ClientInfo *, std::string &);
+void		error_404(ClientInfo *, std::string &);
+void    	error_405(ClientInfo *, std::string &);
 #endif

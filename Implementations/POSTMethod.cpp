@@ -83,12 +83,12 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
 void    PostMethod::handleFirstRead(ClientInfo *client) {
      if(client->_currentLocation == this->_serverConfiguration.Locations.end())
      {
-         error_404(client);
+         error_404(client, this->_serverConfiguration.errorInfo["404"]);
          throw std::runtime_error("Location not found");
      }
      if (!this->_isLocationSupportsPost(client))
      {
-         error_500(client); // IT MUST BE ERROR 405 NOT ERROR 500
+         error_405(client, this->_serverConfiguration.errorInfo["405"]); // IT MUST BE ERROR 405 NOT ERROR 500
          throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
      }
     if (isBodySizeBigger(this->_serverConfiguration, client->parsedRequest.contentLength))
@@ -98,20 +98,22 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
     }
     if(this->_isLocationSupportsUpload(client))
     {
-        std::cout << "I'M IN THE FIRST" << std::endl;
         startPostRequest(client, 1);
+        std::cout << "served is  " << client->servedFileName << std::endl;
     }
      else
      {
         startPostRequest(client, 0);
          if(client->cgiIterator == client->_currentLocation->CGI.end())
          {
-             error_500(client);
+             error_500(client, this->_serverConfiguration.errorInfo["500"]);
              throw std::runtime_error("Location doesn't support either CGI nor upload");
          }
          bool isFileLast = 0;
          client->actionPath += client->cgiFileEnd;
          int len = client->actionPath.length() - 1;
+         std::cout << "actionPath is " << client->actionPath << std::endl;
+         std::cout << "served is " << client->servedFileName << std::endl;
          client->isThereFileLast(client->actionPath, isFileLast, len);
          if(isFileLast)
          {
@@ -158,12 +160,12 @@ void PostMethod::_preparingPostRequest(ClientInfo *client) {
 void PostMethod::_isValidPostRequest(ClientInfo *client) {
     if(isNotValidPostRequest(client->parsedRequest.requestDataMap))
     {
-        error_400(client);
+        error_400(client, this->_serverConfiguration.errorInfo["400"]);
         throw std::runtime_error(BAD_REQUEST_EXCEPTION);
     }
     if(isTransferEncodingNotChunked(client->parsedRequest.requestDataMap))
     {
-        error_501(client);
+        error_501(client, this->_serverConfiguration.errorInfo["501"]);
         throw std::runtime_error(TRANSFER_ENCODING_EXCEPTION);
     }
 //    std::map<std::string, std::string>::iterator content = client->parsedRequest.requestDataMap.find("Content-Length:");
@@ -214,7 +216,6 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
         if (client->_currentLocation->UploadDirectoryPath.empty())
             client->_currentLocation->UploadDirectoryPath = DEFAULT_UPLOAD_FOLDER;
     if (!(stat(client->_currentLocation->UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
-        std::cout << "upload dir is " << client->_currentLocation->UploadDirectoryPath  << std::endl;
         i = mkdir(client->_currentLocation->UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
     }
     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
@@ -235,7 +236,7 @@ void PostMethod::writeToUploadedFile(ClientInfo *client)
     this->destinationFile.write(buffer, this->toWrite);
     if (this->sourceFile.fail() || this->destinationFile.fail())
     {
-        error_500(client);
+        error_500(client, this->_serverConfiguration.errorInfo["500"]);
         throw (std::runtime_error("Error Occurred in writeToUploadedFile"));
     }
     this->totalTempFileSize -= this->toWrite;
