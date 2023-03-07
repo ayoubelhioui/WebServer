@@ -35,7 +35,6 @@ void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig
         error_404(client, serverConfig.errorInfo["404"]);
         throw std::runtime_error("file path not allowed");
     }
-    // std::cout << "in read is " << client->inReadCgiOut << std::endl;
     if (client->inReadCgiOut == 0)
     {
         client->served.open(client->servedFileName, std::ios::binary);
@@ -61,9 +60,7 @@ void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig
                              + get_mime_format(client->servedFileName.c_str())
                              + "\r\n\r\n";
         if (send(client->socket, buffer.c_str(), buffer.length(), 0) == -1)
-        {
             throw std::runtime_error("send has failed or blocked");
-        }
     }
 }
 std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path,

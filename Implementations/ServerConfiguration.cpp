@@ -8,6 +8,7 @@ ServerConfiguration::ServerConfiguration() : serverHost("0.0.0.0"), serverPort("
     this->errorInfo["501"] = "./public/htmlErrorPages/error501.html";
     this->errorInfo["413"] = "./public/htmlErrorPages/error413.html";
     this->errorInfo["404"] = "./public/htmlErrorPages/error404.html";
+    this->errorInfo["414"] = "./public/htmlErrorPages/error414.html";
 }
 
 

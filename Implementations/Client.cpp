@@ -153,6 +153,7 @@ bool isCgi(std::pair<std::string, std::string> cgi)
 
 void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration &serverConfig, std::string &currentPath)
 {
+    // throw std::runtime_error("ERROR IN PATH");
     std::string pathOffset = "";
     if (currentPath.back() == '/') {
         currentPath.pop_back();

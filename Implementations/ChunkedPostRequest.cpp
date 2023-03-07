@@ -55,17 +55,11 @@ void	ChunkedPostRequest::_retrieveChunkSize( char *buffer )
 	char	*str;
 
 	str = strstr(buffer, "\r\n");
-	printf("str: %p\n", str);
 	if (!str) 
 		exit(0); // * To be removed
 	crlfPosition = str - buffer;
 	hexString = std::string(buffer, buffer + crlfPosition);
-	try {
-		this->_currentChunkSize = std::stoi(hexString, 0, 16);
-	}
-	catch ( const std::exception& excep) {
-		std::cerr << excep.what() << std::endl;
-	}
+	this->_currentChunkSize = std::stoi(hexString, 0, 16);
 	this->_hexLength = hexString.size();
 	this->_fileSize += this->_currentChunkSize;
 	this->_chunkContent = &buffer[this->_hexLength + CRLF];
@@ -81,7 +75,10 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 	buffer = new char[bufferSize]();
 	this->_receivedBytes = recv(clientSocket, buffer, bufferSize, 0);
 	if (this->_receivedBytes == -1)
+	{
+		delete [] buffer;
 		throw std::runtime_error("recv has failed or blocked");
+	}
 	i = 0;
 	while (i < this->_receivedBytes)
 	{
@@ -130,8 +127,8 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	bodyStart = request.retIndex(request.requestHeader) + DOUBLE_CRLF;
 	this->_retrieveChunkSize(&request.requestHeader[bodyStart]);
 	offSet = bodyStart + this->_hexLength + CRLF;
-	if (this->_currentChunkSize == 0)
-		{std::cerr << "EMPTY FILE" << std::endl; exit(0);}
+	// if (this->_currentChunkSize == 0)
+	// 	{std::cerr << "EMPTY FILE" << std::endl; exit(0);}
 	i = 0;
 	while (i < MAX_REQUEST_SIZE - offSet)
 	{

@@ -46,7 +46,7 @@ void    error_414(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0))
+    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
         throw std::runtime_error("send function has failed or blocked");
 }
 
@@ -68,7 +68,7 @@ void    error_501(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0))
+    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
         throw std::runtime_error("send function has failed or blocked");
 }
 
@@ -91,7 +91,7 @@ void    error_500(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n";
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0))
+    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
         throw std::runtime_error("send function has failed or blocked");
 }
 
@@ -113,8 +113,11 @@ void    error_400(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0))
+    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
+    {
         throw std::runtime_error("send function has failed or blocked");
+    }
+    std::cout << "WAS SENT SUCCe" << std::endl;
 }
 
 void    error_405(ClientInfo *client, std::string &error_page)
@@ -135,7 +138,7 @@ void    error_405(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0))
+    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
         throw std::runtime_error("send function has failed or blocked");
 }
 
@@ -169,7 +172,7 @@ void    error_413(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0))
+    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
         throw std::runtime_error("send function has failed or blocked");
 }
 
@@ -191,6 +194,6 @@ void    error_404(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0))
+    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
         throw std::runtime_error("send function has failed or blocked");
 }

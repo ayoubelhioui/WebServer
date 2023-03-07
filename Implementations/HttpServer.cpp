@@ -161,6 +161,7 @@ void	HttpServer::_serveClients( void )
 				}
 				catch (std::exception &e)
 				{
+					std::cout << "error in receiving first time was " << e.what() << std::endl;
 					ClientInfoIt++;
 					continue;
 				}
@@ -179,7 +180,7 @@ void	HttpServer::_serveClients( void )
 					}
 					catch(std::exception &e)
 					{
-						// std::cout << "callGet exception : " << e.what() << std::endl;
+						std::cout << "error was " << e.what() << std::endl;
 						(*ClientInfoIt)->isErrorOccured = true;
 						ClientInfoIt++;
 						continue;
@@ -196,7 +197,7 @@ void	HttpServer::_serveClients( void )
 					{
 						(*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 						(*ClientInfoIt)->returnPathWithoutFile((*ClientInfoIt)->tempPathForLocation);
-						(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);	
+						(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);
 					}
 					catch (const std::exception& e)
 					{
@@ -209,14 +210,12 @@ void	HttpServer::_serveClients( void )
 					{
 						try
 						{
-						(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
-						(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
-														, (*ClientInfoIt)->parsedRequest);
+							(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
+							(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
+															, (*ClientInfoIt)->parsedRequest);
 						}
 						catch(const std::exception& e)
 						{
-							std::cerr << e.what() << '\n';
-							(*ClientInfoIt)->isErrorOccured = true;
 							ClientInfoIt++;
 							continue;
 						}
@@ -318,6 +317,7 @@ void	HttpServer::_serveClients( void )
 								{
 									error_400((*ClientInfoIt), this->_serverConfiguration.errorInfo["400"]);
 									(*ClientInfoIt)->isErrorOccured = true;
+									(*ClientInfoIt)->inReadCgiOut = false;
 									ClientInfoIt++;
 									continue;
 								}
@@ -448,28 +448,18 @@ void	HttpServer::_serveClients( void )
 					{
 						try
 						{
-							char *s = new char[1024]();
+							char *s = new char[1025]();
 							(*ClientInfoIt)->served.read(s, 1024);
 							int r = (*ClientInfoIt)->served.gcount();
-	                        //std::cout << "i will write : " << r << std::endl;
-							if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
+							if (send((*ClientInfoIt)->socket, s, r, 0) == -1) 
 							{
 								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-								delete[] s;
 								continue;
 							}
 							delete[] s;
-							if (r < 1024)
+							if (r < 1024) 
 							{
-							    //std::cout << "helloWorld" << std::endl;
-								std::list<ClientInfo *>::iterator temp_it = ClientInfoIt;
-								// if ((*ClientInfoIt)->currentServerFile != "")
-								// 	std::remove((*ClientInfoIt)->currentServerFile.c_str());
-								// delete *ClientInfoIt;
-								close((*ClientInfoIt)->socket);
-								(*ClientInfoIt)->served.close();
-								ClientInfoIt++;
-								this->_clientsList.erase(temp_it);
+								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 								continue;
 							}
 						}
