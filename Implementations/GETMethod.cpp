@@ -35,6 +35,7 @@ void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig
         error_404(client, serverConfig.errorInfo["404"]);
         throw std::runtime_error("file path not allowed");
     }
+    // std::cout << "in read is " << client->inReadCgiOut << std::endl;
     if (client->inReadCgiOut == 0)
     {
         client->served.open(client->servedFileName, std::ios::binary);

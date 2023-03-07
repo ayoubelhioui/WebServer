@@ -56,7 +56,7 @@ void	HttpServer::_setUpListeningSocket( void )
 				&_serverHints, &bindAddress);
 	
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
-	fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
+	// fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
 	if (_listeningSocket < 0)
 		exit (EXIT_FAILURE); // to be replaced by sth else
 	// //std::cout << "Socket Created Successfully" << std::endl;
@@ -331,7 +331,6 @@ void	HttpServer::_serveClients( void )
 								(*ClientInfoIt)->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
 								(*ClientInfoIt)->cgi_out << body;
 								(*ClientInfoIt)->isFirstCgiRead = false;
-
 							}
 							else
 							{
@@ -360,7 +359,6 @@ void	HttpServer::_serveClients( void )
 									if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
 									(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
 									if(send((*ClientInfoIt)->socket, headerPart.c_str(), headerPart.length(), 0) == -1) {
-
 										throw std::runtime_error("send has failed or blocked");
 									}
                                 }
@@ -486,6 +484,7 @@ void	HttpServer::_serveClients( void )
 				{
 					try
 					{
+
 						if ((*ClientInfoIt)->inReadCgiOut == false) 
 						{
 							char *s = new char[1025]();
