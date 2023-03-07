@@ -44,6 +44,7 @@ class ClientInfo {
         std::string   postFilePath;
         std::string   cgiEnd;
 		std::string	  cgiFileEnd;
+       	const char 	  *cgiType;
         std::map<std::string, std::string> cgiMap;
 		std::list<std::pair<std::string, std::string> >::iterator cgiIterator;
         std::string             cgiContentLength;

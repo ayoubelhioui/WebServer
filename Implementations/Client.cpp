@@ -136,11 +136,8 @@ void    ClientInfo::searchForCgi(ClientInfo *client, std::list<LocationBlockPars
         {
             client->inReadCgiOut = 1;
             client->servedFileName = currentPath;
+            client->cgiType = cgi_format;
             return;
-        }
-        else if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "py"))
-        {
-            // python cgi
         }
     }
     client->servedFileName = currentPath;
@@ -408,7 +405,6 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
             args[1] = (char *) client->actionPath.c_str();
         else
             args[1] = (char *) client->servedFileName.c_str();
-        std::cerr << "args[1] is " << args[1] << std::endl;
         args[2] = NULL;
         if (execve(script_name, args, NULL) == -1)
             exit(1);

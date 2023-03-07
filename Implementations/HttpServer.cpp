@@ -310,18 +310,29 @@ void	HttpServer::_serveClients( void )
 								ssize_t n;
 								n = read((*ClientInfoIt)->CgiReadEnd, buffer, 1000);
 								buffer[n] = 0;
+								std::cout << "buffer is : " << std::endl;
+								std::cout << buffer << std::endl;
 								std::string str_buffer(buffer);
-								int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
-								std::string header_part = str_buffer.substr(0, bef_header);
-								(*ClientInfoIt)->parseCgiHeader(header_part);
-								std::string contentType = (*ClientInfoIt)->cgiMap["Content-type:"];
-								std::string mimeType = contentType.substr(0, contentType.find(";"));
-								std::string body = str_buffer.substr(bef_header + 4);
-								std::string newFile = "FilesForServing/" + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
+								bool isPhp = strcmp((*ClientInfoIt)->cgiType, "php");
+								std::string body, mimeType;
+								if(isPhp == 0)
+								{
+									int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
+									std::string header_part = str_buffer.substr(0, bef_header);
+									(*ClientInfoIt)->parseCgiHeader(header_part);
+									std::string contentType = (*ClientInfoIt)->cgiMap["Content-type:"];
+									mimeType = contentType.substr(0, contentType.find(";"));
+									body = str_buffer.substr(bef_header + 4);
+								}
+								std::string newFile;
+								if(isPhp == 0)
+									newFile = "FilesForServing/" + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
+								else
+									newFile = "FilesForServing/" + (*ClientInfoIt)->generateRandString() + ".txt";
 								if((*ClientInfoIt)->cgi_out.is_open()) (*ClientInfoIt)->cgi_out.close();
 								(*ClientInfoIt)->cgi_out.open(newFile, std::ios::binary);
 								(*ClientInfoIt)->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
-								(*ClientInfoIt)->cgi_out << body;
+								(*ClientInfoIt)->cgi_out << (isPhp == 0 ? body : buffer);
 								(*ClientInfoIt)->isFirstCgiRead = false;
 
 							}
@@ -346,13 +357,14 @@ void	HttpServer::_serveClients( void )
 										+ get_mime_format((*ClientInfoIt)->servedFileName.c_str())
 										+ "\r\n\r\n";
 									std::cout << "" << std::endl;
-									if(send((*ClientInfoIt)->socket, headerPart.c_str(), headerPart.length(), 0) == -1)
-										throw std::runtime_error("send has failed or blocked");
 									close((*ClientInfoIt)->CgiReadEnd);
 									(*ClientInfoIt)->inReadCgiOut = false;
 									(*ClientInfoIt)->PostFinishedCgi = true;
 									if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
 									(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
+									if(send((*ClientInfoIt)->socket, headerPart.c_str(), headerPart.length(), 0) == -1) {
+										throw std::runtime_error("send has failed or blocked");
+									}
 								}
 							}
 						}
