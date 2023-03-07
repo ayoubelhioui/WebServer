@@ -64,7 +64,6 @@ void	ClientInfo::parsingCgiLine(std::string line){
     for(size_t i = 0; i < save.length(); i++)
         save[i] = tolower(save[i]);
     cgiMap[save] = last;
-    std::cout << "save is " << cgiMap[save] << std::endl;
 }
 
 void	ClientInfo::parseCgiHeader(std::string &header){

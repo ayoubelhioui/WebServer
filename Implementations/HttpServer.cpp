@@ -56,7 +56,7 @@ void	HttpServer::_setUpListeningSocket( void )
 				&_serverHints, &bindAddress);
 	
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
-	// fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
+	fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
 	if (_listeningSocket < 0)
 		exit (EXIT_FAILURE); // to be replaced by sth else
 	// //std::cout << "Socket Created Successfully" << std::endl;
@@ -109,9 +109,10 @@ void	HttpServer::_acceptNewConnection( void )
 {
 	
 	if (FD_ISSET(this->_listeningSocket, &(this->_readFds)))
-    {
+    { 
 		ClientInfo	*newClient = new ClientInfo;
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
+		fcntl(newClient->socket, F_SETFL, O_NONBLOCK);
 		if(newClient->socket == -1)
 			throw std::runtime_error("accept has blocked and did not accept any new connection");
         FD_SET(newClient->socket, &(this->_readFds));
