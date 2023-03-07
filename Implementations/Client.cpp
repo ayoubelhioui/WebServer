@@ -61,7 +61,10 @@ void	ClientInfo::parsingCgiLine(std::string line){
         last += word;
     }
     last.erase(0, 1);
+    for(size_t i = 0; i < save.length(); i++)
+        save[i] = tolower(save[i]);
     cgiMap[save] = last;
+    std::cout << "save is " << cgiMap[save] << std::endl;
 }
 
 void	ClientInfo::parseCgiHeader(std::string &header){
@@ -132,7 +135,8 @@ void    ClientInfo::searchForCgi(ClientInfo *client, std::list<LocationBlockPars
     client->cgiIterator = client->_currentLocation.CGI.begin();
     for (; client->cgiIterator != client->_currentLocation.CGI.end(); client->cgiIterator++)
     {
-        if (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "php"))
+        if ((!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "php"))
+        || (!strcmp(client->cgiIterator->first.c_str(), cgi_format) && !strcmp(cgi_format, "pl")))
         {
             client->inReadCgiOut = 1;
             client->servedFileName = currentPath;
