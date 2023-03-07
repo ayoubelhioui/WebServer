@@ -129,8 +129,10 @@ void    error_405(ClientInfo *client, std::string &error_page)
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
     std::string error_header = "";
-
-    error_header += "HTTP/1.1 A 405 Method Not Allowed\r\n"
+    
+    std::cout << "path is " << path << std::endl;
+    std::cout << "the size of the header is : " << file_size << std::endl;
+    error_header += "HTTP/1.1 405 Method Not Allowed\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size) 

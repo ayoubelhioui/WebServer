@@ -180,7 +180,6 @@ void	HttpServer::_serveClients( void )
 					}
 					catch(std::exception &e)
 					{
-						std::cout << "error was " << e.what() << std::endl;
 						(*ClientInfoIt)->isErrorOccured = true;
 						ClientInfoIt++;
 						continue;
@@ -219,12 +218,12 @@ void	HttpServer::_serveClients( void )
 							ClientInfoIt++;
 							continue;
 						}
-						
 					}
 					else
 					{
 					 	try
 					 	{
+//							 throw std::runtime_error("ERROR POST");
 							(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
 							 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
 							 if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
@@ -235,7 +234,6 @@ void	HttpServer::_serveClients( void )
 					 	catch (std::exception &e)
 					 	{
 							std::cout << e.what() << std::endl;
-							(*ClientInfoIt)->isErrorOccured = true;
 							ClientInfoIt++;
 							continue;
 					 	}
@@ -256,11 +254,9 @@ void	HttpServer::_serveClients( void )
 					}
                     catch (std::exception &e)
                     {
-						error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 						std::cout << e.what() << std::endl;
-						(*ClientInfoIt)->isErrorOccured = true;
-							ClientInfoIt++;
-							continue;
+						ClientInfoIt++;
+						continue;
                     }
                 }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
@@ -276,8 +272,7 @@ void	HttpServer::_serveClients( void )
 					}
 					catch(const std::exception& e)
 					{
-						std::cerr << e.what() << '\n';
-						(*ClientInfoIt)->isErrorOccured = true;
+						std::cerr << e.what() << std::endl;
 						ClientInfoIt++;
 						continue;
 					}
@@ -309,7 +304,7 @@ void	HttpServer::_serveClients( void )
 								char buffer[1001];
 								ssize_t n;
 								n = read((*ClientInfoIt)->CgiReadEnd, buffer, 1000);
-								buffer[n] = 0;
+								buffer[n] = 0; // protect this at all cost
 								std::string str_buffer(buffer);
 								std::string body, mimeType;
 								int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
@@ -382,7 +377,7 @@ void	HttpServer::_serveClients( void )
 				{
 					if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
 						and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false
-						and (*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == false) 
+						and (*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == false)
 					{
 						try 
 						{
@@ -450,8 +445,8 @@ void	HttpServer::_serveClients( void )
 						{
 							char *s = new char[1025]();
 							(*ClientInfoIt)->served.read(s, 1024);
-							int r = (*ClientInfoIt)->served.gcount();
-							if (send((*ClientInfoIt)->socket, s, r, 0) == -1) 
+                            int r = (*ClientInfoIt)->served.gcount();
+                            if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
 							{
 								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 								continue;

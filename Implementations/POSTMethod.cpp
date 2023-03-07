@@ -85,28 +85,30 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
 void    PostMethod::handleFirstRead(ClientInfo *client) {
      if(client->_currentLocation.Location.length() <= 0)
      {
+         client->isErrorOccured = true;
          error_404(client, this->_serverConfiguration.errorInfo["404"]);
          throw std::runtime_error("Location not found");
      }
      if (!this->_isLocationSupportsPost(client))
      {
+         client->isErrorOccured = true;
          error_405(client, this->_serverConfiguration.errorInfo["405"]); // IT MUST BE ERROR 405 NOT ERROR 500
          throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
      }
     if (isBodySizeBigger(this->_serverConfiguration, client->parsedRequest.contentLength))
      {
-//         error_404(client); 413
+        error_413(client, this->_serverConfiguration.errorInfo["413"]);
+        client->isErrorOccured = true;
         throw (std::runtime_error("Body Size Too Large !!"));
     }
     if(this->_isLocationSupportsUpload(client))
-    {
         startPostRequest(client, 1);
-    }
      else
      {
         startPostRequest(client, 0);
          if(client->cgiIterator == client->_currentLocation.CGI.end())
          {
+             client->isErrorOccured = true;
              error_500(client, this->_serverConfiguration.errorInfo["500"]);
              throw std::runtime_error("Location doesn't support either CGI nor upload");
          }
@@ -159,11 +161,13 @@ void PostMethod::_preparingPostRequest(ClientInfo *client) {
 void PostMethod::_isValidPostRequest(ClientInfo *client) {
     if(isNotValidPostRequest(client->parsedRequest.requestDataMap))
     {
+        client->isErrorOccured = true;
         error_400(client, this->_serverConfiguration.errorInfo["400"]);
         throw std::runtime_error(BAD_REQUEST_EXCEPTION);
     }
     if(isTransferEncodingNotChunked(client->parsedRequest.requestDataMap))
     {
+        client->isErrorOccured = true;
         error_501(client, this->_serverConfiguration.errorInfo["501"]);
         throw std::runtime_error(TRANSFER_ENCODING_EXCEPTION);
     }
@@ -184,7 +188,11 @@ void PostMethod::_isValidPostRequest(ClientInfo *client) {
 void PostMethod::_writeInTempFile(ClientInfo *client) {
     client->requestBody.write(client->parsedRequest.requestHeader, client->parsedRequest.receivedBytes);
     if (client->requestBody.fail())
+    {
+        client->isErrorOccured = true;
+        error_500(client, this->_serverConfiguration.errorInfo["500"]);
         throw (std::runtime_error("Error Occurred In writeIntTempFile\n"));
+    }
 }
 
 void PostMethod::_receiveFromClient(ClientInfo *client){
@@ -224,7 +232,11 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
         this->destinationFile.close();
     this->destinationFile.open(client->postFilePath, std::ios::binary);
     if (i == -1 || this->destinationFile.fail())
+    {
+        client->isErrorOccured = true;
+        error_500(client, this->_serverConfiguration.errorInfo["500"]);
         throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));
+    }
 }
 
 void PostMethod::writeToUploadedFile(ClientInfo *client)
@@ -236,6 +248,7 @@ void PostMethod::writeToUploadedFile(ClientInfo *client)
     this->destinationFile.write(buffer, this->toWrite);
     if (this->sourceFile.fail() || this->destinationFile.fail())
     {
+        client->isErrorOccured = true;
         error_500(client, this->_serverConfiguration.errorInfo["500"]);
         throw (std::runtime_error("Error Occurred in writeToUploadedFile"));
     }
