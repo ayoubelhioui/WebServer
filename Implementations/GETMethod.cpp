@@ -31,11 +31,20 @@ std::string GETMethod::format_date(time_t t) {
 
 void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig) {
     client->checkPathValidation(client, serverConfig, client->parsedRequest.requestDataMap["path"]);
-    if (client->servedFileName == "" && !client->inReadCgiOut) {
+    if (client->isRedirect)
+    {
+        client->headerToBeSent += "HTTP/1.1 301 Moved Permanently\r\n"
+            + std::string("Location: ")
+            + client->_currentLocation.Redirection
+            + "\r\n";
+        client->isSendingHeader = true;
+        return ;
+    }
+    else if (client->servedFileName == "" && !client->inReadCgiOut) {
         error_404(client, serverConfig.errorInfo["404"]);
         throw std::runtime_error("file path not allowed");
     }
-    if (client->inReadCgiOut == 0)
+    else if (client->inReadCgiOut == 0)
     {
         client->served.open(client->servedFileName, std::ios::binary);
         if(!client->served.is_open())

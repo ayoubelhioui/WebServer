@@ -1,7 +1,7 @@
 #include "../Interfaces/Client.hpp"
 	
 ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
-, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0)
+, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0)
 {
     this->servedFilesFolder = "FilesForServing/";
     struct stat st;
@@ -12,6 +12,16 @@ ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , add
 
 ClientInfo::~ClientInfo( void ){ }
 
+
+// bool    ClientInfo::_isLocationSupportsCurrentMethod(ClientInfo *client, std::string &method) {
+//     std::list<std::string>::iterator it = client->_currentLocation.allowedMethods.begin();
+//     while (it != client->_currentLocation.allowedMethods.end()){
+//         if (*it == method)
+//             return (true);
+//         it++;
+//     }
+//     return (false);
+// }
 
 void        ClientInfo::parseQueryString( void ) {
     std::string	word = this->parsedRequest.requestDataMap["path"];
@@ -147,9 +157,10 @@ void    ClientInfo::searchForCgi(ClientInfo *client, std::list<LocationBlockPars
             client->inReadCgiOut = 1;
             client->servedFileName = currentPath;
             client->cgiType = cgi_format;
-            return;
+            return ;
         }
     }
+    
     client->servedFileName = currentPath;
 }
 
@@ -184,15 +195,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
             if (insideLocationPath != currentPath) {
                 continue;
             }
-//            if(client->parsedRequest.requestDataMap["method"] == "POST")
-//            {
-//                client->_currentLocation = beg;
-//                client->cgiIterator = std::find_if((*beg).CGI.begin(), (*beg).CGI.end(), isCgi);
-//                return ;
-////                for (; client->cgiIterator != (*beg).CGI.end(); client->cgiIterator++)
-////                    if (client->cgiIterator->first == "php")
-////                        return;
-//            }
             client->cgiIterator = (*beg).CGI.end();
             bool is_file_last = 0;
             int len = currentPath.length() - 1;
@@ -205,6 +207,11 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 std::ifstream fileCheck(currentPath);
                 if (fileCheck)
                 {
+                    if (client->_currentLocation.Redirection.length())
+                    {
+                        client->isRedirect = true;
+                        return ;
+                    }
                     this->searchForCgi(client, beg, currentPath);
                 }
                 fileCheck.close();
@@ -218,6 +225,12 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 currentPath = (*beg).Root + pathOffset;
                 if(client->parsedRequest.requestDataMap["method"] == "POST")
                 {
+                    if ((*beg).Redirection.length())
+                    {
+                        client->_currentLocation = *beg;
+                        client->isRedirect = true;
+                        return ;
+                    }
                     client->servedFileName = currentPath;
                     if(client->servedFileName.back() != '/') {
                         client->servedFileName += '/';
@@ -232,6 +245,11 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     std::ifstream fileCheck(currentPath);
                     if (fileCheck)
                     {
+                        if (client->_currentLocation.Redirection.length())
+                        {
+                            client->isRedirect = true;
+                            return ;
+                        }
                         this->searchForCgi(client, beg, currentPath);
                     }
                     fileCheck.close();
@@ -250,6 +268,11 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                             std::ifstream check_file(final_path, std::ios::binary);
                             if (check_file)
                             {
+                            if (client->_currentLocation.Redirection.length())
+                            {
+                                client->isRedirect = true;
+                                return ;
+                            }
                                 this->searchForCgi(client, beg, currentPath);
                                 return ;
                             }

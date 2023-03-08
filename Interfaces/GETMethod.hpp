@@ -15,6 +15,7 @@ class GETMethod{
 		std::string		directoryListing(std::string , std::string, ClientInfo *);
 		std::string		CGIexecutedFile( std::string , ClientInfo *, ServerConfiguration & );
 		std::string		bodyFromCgiHeader(char *);
+		bool			isRedirect;
 };
 
 #endif

@@ -75,7 +75,7 @@ void	HttpServer::_selectClients ( void )
 {
 	struct timeval tv;
 	tv.tv_sec = 0;
-	tv.tv_usec = 400;
+	tv.tv_usec = 300;
 	_maxSocket = _listeningSocket;
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
 	ClientInfoIt = this->_clientsList.begin();
@@ -198,6 +198,14 @@ void	HttpServer::_serveClients( void )
 						(*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 						(*ClientInfoIt)->returnPathWithoutFile((*ClientInfoIt)->tempPathForLocation);
 						(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);
+						if ((*ClientInfoIt)->isRedirect)
+						{
+							(*ClientInfoIt)->headerToBeSent += "HTTP/1.1 301 Moved Permanently\r\n"
+								+ std::string("Location: ")
+								+ (*ClientInfoIt)->_currentLocation.Redirection
+								+ "\r\n";
+							(*ClientInfoIt)->isSendingHeader = true;
+						}
                     }
 					catch (const std::exception& e)
 					{
@@ -462,6 +470,11 @@ void	HttpServer::_serveClients( void )
                                 {
                                     throw std::runtime_error("send function has failed or blocked");
                                 }
+								if((*ClientInfoIt)->isRedirect == true)
+								{
+									this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+									continue;
+								}
                                 (*ClientInfoIt)->isSendingHeader = false;
                             }
                             else
@@ -499,9 +512,12 @@ void	HttpServer::_serveClients( void )
                         {
                             if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1
 							|| (*ClientInfoIt)->isCreated == -1)
-                            {
                                 throw std::runtime_error("send function has failed or blocked");
-                            }
+							if((*ClientInfoIt)->isRedirect == true)
+							{
+								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                                continue;
+							}
                             (*ClientInfoIt)->isSendingHeader = false;
                         }
                         else
