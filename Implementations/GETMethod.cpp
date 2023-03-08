@@ -51,7 +51,8 @@ void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig
             error_500(client, serverConfig.errorInfo["500"]);
             throw std::runtime_error("size of file is invalid");
         }
-        std::string buffer = "HTTP/1.1 200 OK\r\n"
+
+        client->headerToBeSent = "HTTP/1.1 200 OK\r\n"
                              + std::string("Connection: close\r\n")
                              + std::string("Content-Length: ")
                              + std::to_string(client->served_size)
@@ -59,8 +60,7 @@ void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig
                              + "Content-Type: "
                              + get_mime_format(client->servedFileName.c_str())
                              + "\r\n\r\n";
-        if (send(client->socket, buffer.c_str(), buffer.length(), 0) == -1)
-            throw std::runtime_error("send has failed or blocked");
+        client->isSendingHeader = true;
     }
 }
 std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path,
@@ -96,7 +96,7 @@ std::string GETMethod::directoryListing(std::string rootDirectory, std::string l
                  "</body>\n"
                  "</html>\n";
     closedir(dir);
-    std::string newFile = "FilesForServing/" + client->generateRandString() + ".html";
+    std::string newFile = client->servedFilesFolder + client->generateRandString() + ".html";
     std::ofstream directoryListingFile(newFile);
     directoryListingFile << file_list;
     directoryListingFile.close();

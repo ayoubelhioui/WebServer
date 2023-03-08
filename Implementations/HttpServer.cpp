@@ -160,7 +160,10 @@ void	HttpServer::_serveClients( void )
 				catch (std::exception &e)
 				{
 //					std::cout << "error in receiving first time was " << e.what() << std::endl;
-					ClientInfoIt++;
+					if((*ClientInfoIt)->callsFailedMany == 3)
+						dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+					else
+						ClientInfoIt++;
 					continue;
 				}
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
@@ -221,7 +224,6 @@ void	HttpServer::_serveClients( void )
 					{
 					 	try
 					 	{
-//							 throw std::runtime_error("ERROR POST");
 							(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
 							 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
                              if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
@@ -253,7 +255,10 @@ void	HttpServer::_serveClients( void )
                     catch (std::exception &e)
                     {
 						std::cout << e.what() << std::endl;
-						ClientInfoIt++;
+                        if((*ClientInfoIt)->callsFailedMany == 3)
+                            dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                        else
+						    ClientInfoIt++;
 						continue;
                     }
                 }
@@ -319,7 +324,7 @@ void	HttpServer::_serveClients( void )
 								std::string contentType = (*ClientInfoIt)->cgiMap["content-type:"];
 								mimeType = contentType.substr(0, contentType.find(";"));
 								body = str_buffer.substr(bef_header + 4);
-								std::string newFile = "FilesForServing/" + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
+								std::string newFile = (*ClientInfoIt)->servedFilesFolder + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
 								if((*ClientInfoIt)->cgi_out.is_open()) (*ClientInfoIt)->cgi_out.close();
 								(*ClientInfoIt)->cgi_out.open(newFile, std::ios::binary);
                                 if(!(*ClientInfoIt)->cgi_out.is_open()) std::cout << "NOT OPEN" << std::endl;
@@ -340,7 +345,8 @@ void	HttpServer::_serveClients( void )
 									(*ClientInfoIt)->cgi_out.seekp(0, std::ios::end);
 									(*ClientInfoIt)->served_size = (*ClientInfoIt)->cgi_out.tellp();
 									(*ClientInfoIt)->cgi_out.seekp(0, std::ios::beg);
-									std::string headerPart = "HTTP/1.1 200 OK\r\n"
+
+                                    (*ClientInfoIt)->headerToBeSent = "HTTP/1.1 200 OK\r\n"
 										+ std::string("Connection: close\r\n")
 										+ std::string("Content-Length: ")
 										+ std::to_string((*ClientInfoIt)->served_size)
@@ -348,14 +354,13 @@ void	HttpServer::_serveClients( void )
 										+ std::string("Content-Type: ")
 										+ get_mime_format((*ClientInfoIt)->servedFileName.c_str())
 										+ "\r\n\r\n";
-									close((*ClientInfoIt)->CgiReadEnd);
-									(*ClientInfoIt)->inReadCgiOut = false;
-									(*ClientInfoIt)->PostFinishedCgi = true;
-									if((*ClientInfoIt)->served.is_open()) (*ClientInfoIt)->served.close();
-									(*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
-									if(send((*ClientInfoIt)->socket, headerPart.c_str(), headerPart.length(), 0) == -1) {
-										throw std::runtime_error("send has failed or blocked");
-									}
+                                    (*ClientInfoIt)->isSendingHeader = true;
+                                    close((*ClientInfoIt)->CgiReadEnd);
+                                    (*ClientInfoIt)->inReadCgiOut = false;
+                                    (*ClientInfoIt)->PostFinishedCgi = true;
+                                    if((*ClientInfoIt)->served.is_open())
+                                        (*ClientInfoIt)->served.close();
+                                    (*ClientInfoIt)->served.open((*ClientInfoIt)->servedFileName, std::ios::binary);
                                 }
 							}
 						}
@@ -439,25 +444,41 @@ void	HttpServer::_serveClients( void )
 					{
 						try
 						{
-							char *s = new char[1025]();
-							(*ClientInfoIt)->served.read(s, 1024);
-                            int r = (*ClientInfoIt)->served.gcount();
-                            if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
-							{
-								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-								continue;
-							}
-							delete[] s;
-							if (r < 1024) 
-							{
-								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-								continue;
-							}
+                            if ((*ClientInfoIt)->isSendingHeader == true)
+                            {
+                                if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1
+								|| (*ClientInfoIt)->isCreated == -1)
+                                {
+                                    (*ClientInfoIt)->callsFailedMany++;
+                                    throw std::runtime_error("send function has failed or blocked");
+                                }
+                                (*ClientInfoIt)->isSendingHeader = false;
+                            }
+                            else
+                            {
+                                char *s = new char[1025]();
+                                (*ClientInfoIt)->served.read(s, 1024);
+                                int r = (*ClientInfoIt)->served.gcount();
+                                if (send((*ClientInfoIt)->socket, s, r, 0) == -1
+                                || (*ClientInfoIt)->isCreated == -1)
+                                {
+                                    (*ClientInfoIt)->callsFailedMany++;
+                                    throw std::runtime_error("send function has failed or blocked");
+                                    continue;
+                                }
+                                delete[] s;
+                                if (r < 1024)
+                                {
+                                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                                    continue;
+                                }
+                            }
 						}
 						catch (std::exception &e)
 						{
 							std::cerr << e.what() << std::endl;
-							dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                            if((*ClientInfoIt)->callsFailedMany == 3)
+							    dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 							continue;
 						}
 					}
@@ -468,8 +489,12 @@ void	HttpServer::_serveClients( void )
 					{
                         if ((*ClientInfoIt)->isSendingHeader == true)
                         {
-                            if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1)
+                            if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1
+							|| (*ClientInfoIt)->isCreated == -1)
+                            {
+                                (*ClientInfoIt)->callsFailedMany++;
                                 throw std::runtime_error("send function has failed or blocked");
+                            }
                             (*ClientInfoIt)->isSendingHeader = false;
                         }
                         else
@@ -481,7 +506,8 @@ void	HttpServer::_serveClients( void )
                                 int r = (*ClientInfoIt)->served.gcount();
                                 if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
                                 {
-                                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                                    (*ClientInfoIt)->callsFailedMany++;
+                                    throw std::runtime_error("send function has failed or blocked");
                                     continue;
                                 }
                                 delete[] s;
@@ -496,7 +522,8 @@ void	HttpServer::_serveClients( void )
 					catch (std::exception &e)
 					{
 						std::cerr << e.what() << std::endl;
-						dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                        if((*ClientInfoIt)->callsFailedMany == 3)
+						    dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
 					}
 				}

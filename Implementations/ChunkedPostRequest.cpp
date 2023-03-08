@@ -65,7 +65,7 @@ void	ChunkedPostRequest::_retrieveChunkSize( char *buffer )
 	this->_chunkContent = &buffer[this->_hexLength + CRLF];
 }
 
-void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
+void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket, ClientInfo *client )
 {
 	unsigned int	bufferSize;
 	unsigned int	i;
@@ -77,6 +77,7 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 	if (this->_receivedBytes == -1)
 	{
 		delete [] buffer;
+        client->callsFailedMany++;
 		throw std::runtime_error("recv has failed or blocked");
 	}
 	i = 0;

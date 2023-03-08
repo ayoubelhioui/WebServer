@@ -1,7 +1,14 @@
 #include "../Interfaces/Client.hpp"
 	
 ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
-, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0) { }
+, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), callsFailedMany(0)
+{
+    this->servedFilesFolder = "FilesForServing/";
+    struct stat st;
+    if (!(stat(this->servedFilesFolder.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
+        this->isCreated = mkdir(this->servedFilesFolder.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
+    }
+}
 
 ClientInfo::~ClientInfo( void ){ }
 
