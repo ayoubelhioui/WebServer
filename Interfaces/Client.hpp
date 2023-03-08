@@ -7,6 +7,7 @@
 # include <unistd.h>
 # include "../Interfaces/RequestParser.hpp"
 # include "../Interfaces/POSTMethod.hpp"
+# include "../Interfaces/ChunkedPostRequest.hpp"
 
 class PostMethod;
 
@@ -14,12 +15,23 @@ class ClientInfo {
     public:
 		ClientInfo ( void );
 		~ClientInfo ( void );
-		PostMethod *postRequest;
+		PostMethod			*postRequest;
+		ChunkedPostRequest	*chunkedRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
-		std::string	CGIexecutedFile( std::string php_file, ClientInfo *client, ServerConfiguration &server );
-		std::string    generateRandString ( void );
+        void            parseQueryString( void );
+		void            CGIexecutedFile( ClientInfo *, ServerConfiguration & );
+		void	        parseCgiHeader(std::string &);
+        void	        parsingCgiLine(std::string line);
+		std::string     generateRandString ( void );
+		void            checkPathValidation(ClientInfo *client, ServerConfiguration &serverConfig, std::string &);
+        void            searchForIndexFiles();
+		void			searchForCgi(ClientInfo *, std::list<LocationBlockParse>::iterator &, std::string &);
+		void			returnPathWithoutFile(std::string &);
+		bool    		isThereFileLast(std::string &, bool &, int &);
         ParsingRequest parsedRequest;
+        std::string headerToBeSent;
+        bool isSendingHeader;
         bool isFirstRead;
         std::ofstream requestBody;
         socklen_t addressLength;
@@ -29,19 +41,34 @@ class ClientInfo {
         std::ifstream served;
 		std::ofstream cgi_out;
 		std::string	   servedFileName;	
-		std::string	  currentServerFile;
-		bool			inReadCgiOut;
-		int				CgiReadEnd;
-		int				served_size;
-		bool    		isErrorOccured;
-		int				isServing;
-		bool			stillWaiting;
-		bool			isFirstCgiRead;
-		int				cgiPid;
-        bool            PostFinishedCgi;
+		std::string	   cgiInput;
+        std::string   postFilePath;
+	std::string   cgiEnd;
+	std::string	  cgiFileEnd;
+	std::string	  servedFilesFolder;
+	std::string	  tempPathForLocation;
+	const char 	  *cgiType;
+	std::map<std::string, std::string> cgiMap;
+	std::list<std::pair<std::string, std::string> >::iterator cgiIterator;
+	std::string             cgiContentLength;
+	LocationBlockParse					   					  _currentLocation;
+	std::string     										  cgiContentType;
+	std::string     										  actionPath;
+	bool													  inReadCgiOut;
+	int														  CgiReadEnd;
+	int														  served_size;
+	bool    												  isErrorOccured;
+	int														  isServing;
+	bool													  stillWaiting;
+	bool													  isFirstCgiRead;
+	int														  cgiPid;
+	bool            										  PostFinishedCgi;
+	bool 		    										  isNotUpload;
+	int          											  isCreated;
+	short int                                                 callsFailedMany;
+	// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
 	// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
-		// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
-		// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);
+	// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);
 		// static void dropClient(int &, std::list<ClientInfo>::iterator &, std::list<ClientInfo> &);
 		// void       dropClient(int &clientSocket, std::list<ClientInfo *>::iterator &clientDataIterator, std::list<client_info *> &clientData);
 		// void    printingParsingData(std::list<Parsing> &parsingData);

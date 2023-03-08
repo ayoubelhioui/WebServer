@@ -1,4 +1,4 @@
-# include <cstring>
+#include "webserver.hpp"
 
 const char *get_mime_format(const char *type){
         const char *last_dot = strrchr(type, '.');
@@ -19,12 +19,13 @@ const char *get_mime_format(const char *type){
         if (strcmp(last_dot, ".txt") == 0) return "text/plain";
         if (strcmp(last_dot, ".mp4") == 0) return "video/mp4";
         if (strcmp(last_dot, ".cpp") == 0) return "text/x-c";
-        if (strcmp(last_dot, ".php") == 0) return "text/x-php";
+        if (strcmp(last_dot, ".php") == 0) return "text/php";
 
         return "application/octet-stream";
 }
 
 const char *get_real_format(const char *mime_type){
+//        if (strcmp(mime_type, "application/x-www-form-urlencoded") == 0) return ".php";
         if (strcmp(mime_type, "text/css") == 0) return ".css";
         if (strcmp(mime_type, "text/csv") == 0) return ".csv";
         if (strcmp(mime_type, "image/gif") == 0) return ".gif";
@@ -38,8 +39,10 @@ const char *get_real_format(const char *mime_type){
         if (strcmp(mime_type, "image/png") == 0) return ".png";
         if (strcmp(mime_type, "application/pdf") == 0) return ".pdf";
         if (strcmp(mime_type, "image/svg+xml") == 0) return ".svg+xml";
-        if (strcmp(mime_type, "text/plain") == 0) return ".plain";
+        if (strcmp(mime_type, "text/plain") == 0) return ".txt";
         if (strcmp(mime_type, "video/mp4") == 0) return ".mp4";
+        if (strcmp(mime_type, "text/php") == 0) return ".php";
+        if (strcmp(mime_type, "application/x-www-form-urlencoded") == 0) return ".php";
         return "";
 }
 

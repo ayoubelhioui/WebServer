@@ -11,9 +11,10 @@
 # include "ConfigFileParser.hpp"
 # include "ServerConfiguration.hpp"
 # include "GETMethod.hpp"
+# include <algorithm>
 # include "../errorsHandling/errorsHandling.hpp"
 # define SOCKET int
-# define MAXQUEUESIZE 10
+# define MAXQUEUESIZE 100000
 
 class HttpServer {
 	public:

@@ -1,6 +1,15 @@
 #include "../Interfaces/ServerConfiguration.hpp"
 
-ServerConfiguration::ServerConfiguration() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
+ServerConfiguration::ServerConfiguration() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false)
+{
+    this->errorInfo["400"] = "./public/htmlErrorPages/error400.html";
+    this->errorInfo["500"] = "./public/htmlErrorPages/error500.html";
+    this->errorInfo["405"] = "./public/htmlErrorPages/error405.html";
+    this->errorInfo["501"] = "./public/htmlErrorPages/error501.html";
+    this->errorInfo["413"] = "./public/htmlErrorPages/error413.html";
+    this->errorInfo["404"] = "./public/htmlErrorPages/error404.html";
+    this->errorInfo["414"] = "./public/htmlErrorPages/error414.html";
+}
 
 
 void ServerConfiguration::clientBodySizeKeywordFound(std::vector<std::string> &vec){
@@ -66,8 +75,9 @@ void ServerConfiguration::errorPageKeywordFound(std::vector<std::string> &vec){
         errorPrinting(ERROR_PAGE_ERROR_MSG);
     std::ifstream errorPageFile(vec[2]);
     if (!errorPageFile.is_open())
-        errorPrinting(ERROR_PAGE_FILE_NOT_FOUND);
-    this->errorInfo.push_back(std::make_pair(atoi(vec[1].c_str()), vec[2].c_str()));
+        return ;
+    else
+        this->errorInfo[vec[1]] = vec[2];
 }
 
 // ServerConfiguration	&ServerConfiguration::operator= ( const ServerConfiguration &obj )
@@ -97,7 +107,7 @@ void	ServerConfiguration::printServerConfiguration ( void )
             std::cout << *it1 << " ";
         std::cout << std::endl;
         std::cout << "SERVER ERROR PAGES : ";
-        for (std::list<std::pair<int, std::string > >::iterator it2 = this->errorInfo.begin(); it2 != this->errorInfo.end(); it2++)
+        for (std::map<std::string, std::string>::iterator it2 = this->errorInfo.begin(); it2 != this->errorInfo.end(); it2++)
             std::cout << (*it2).first << " " << (*it2).second << std::endl;
         for (std::list<LocationBlockParse>::iterator it4 = this->Locations.begin(); it4 != this->Locations.end(); it4++)
         {

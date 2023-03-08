@@ -63,15 +63,20 @@ void	ParsingRequest::parse(){
     parsingRequest(line);
 }
 
-void    ParsingRequest::receiveFirstTime(int socket){
+void    ParsingRequest::receiveFirstTime(int socket, ClientInfo *client){
     this->receivedBytes = recv(socket, this->requestHeader, MAX_REQUEST_SIZE, 0);
+    if(this->receivedBytes == -1)
+    {
+        client->callsFailedMany++;
+        throw std::runtime_error("recv did not receive anything or has blocked");
+    }
     this->requestHeader[this->receivedBytes] = 0;
     this->received += this->receivedBytes;
     this->bodyIndex = retIndex(this->requestHeader);
     this->received -= (this->bodyIndex + 4);
     std::string header(requestHeader);
     header = header.substr(0, this->bodyIndex);
-    size_t  foundBoundaryWord = header.find("boundary=");
+    size_t  foundBoundaryWord = header.find("multipart/form-data");
     if(foundBoundaryWord != std::string::npos)
         isBoundaryExist = true;
 }
@@ -92,13 +97,11 @@ void ParsingRequest::gettingNewBodyIndex(std::string &boundarySavior)
     this->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
 
-void ParsingRequest::gettingFileName(std::string &newString)
-{
+void ParsingRequest::gettingFileName(std::string &newString) {
     int newContentIndex = newString.find("filename=");
     int DoubleQuotePosition = newString.find("\"", newContentIndex + 11);
     uploadFileName = newString.substr(newContentIndex + 10, DoubleQuotePosition - newContentIndex - 10);
 }
-
 
 void ParsingRequest::_parsingMiniHeader( void )
 {

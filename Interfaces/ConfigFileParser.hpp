@@ -51,10 +51,10 @@ class ConfigFileParser {
         void	printingParsingData( void );
 		std::list<ServerConfiguration>	listOfServersConfiguration;
 	private:
-		std::list<std::string> 					_configFileLines;				
-		std::string								_configFilePath;
-		void     _startParsingFile( void );
-        void     _readingDataFromFile( void );
+			std::list<std::string> 					_configFileLines;
+			std::string								_configFilePath;
+			void     _startParsingFile( void );
+			void     _readingDataFromFile( void );
 };
 
 

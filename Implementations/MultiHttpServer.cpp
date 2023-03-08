@@ -47,8 +47,14 @@ void MultiHttpServer::startServers(void)
 		vecIdx = 0;
 		while (vecIdx < _vectorOfServers.size())
 		{
-			this->_vectorOfServers[vecIdx].setUpMultiplexing();
-			
+			try
+			{
+				this->_vectorOfServers[vecIdx].setUpMultiplexing();
+			}
+			catch (std::exception &e)
+			{
+				
+			}
 			vecIdx++;
 		}
 	}

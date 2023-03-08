@@ -1,3 +1,8 @@
+#!/usr/bin/php-cgi
 <?php
-    echo "hello world"
+// Disable header output
+header_remove();
+
+// Your PHP code goes here
+echo "Hello, world!";
 ?>

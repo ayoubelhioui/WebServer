@@ -84,7 +84,7 @@ void ConfigFileParser::printingParsingData( void )
             std::cout << *it1 << " ";
         std::cout << std::endl;
         std::cout << "SERVER ERROR PAGES : ";
-        for (std::list<std::pair<int, std::string > >::iterator it2 = it->errorInfo.begin(); it2 != it->errorInfo.end(); it2++)
+        for (std::map<std::string, std::string>::iterator it2 = it->errorInfo.begin(); it2 != it->errorInfo.end(); it2++)
             std::cout << (*it2).first << " " << (*it2).second << std::endl;
         for (std::list<LocationBlockParse>::iterator it4 = it->Locations.begin(); it4 != it->Locations.end(); it4++)
         {

@@ -5,6 +5,7 @@
 #include <list>
 #include <vector>
 #include <sstream>
+#include <map>
 
 
 class LocationBlockParse{
