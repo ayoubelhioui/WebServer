@@ -23,11 +23,12 @@ class ParsingRequest{
 		std::string uploadFileName;
 		std::string		queryString;
 		std::map<std::string, std::string> requestDataMap;
+		bool	isBoundaryExist;
 		void	parse();
 		void	parsingRequestFirstLine(std::string);
 		void	parsingRequest(std::string);
 		void	receiveFirstTime ( SOCKET );
-		void	parsingMiniHeader( void );
+		void	_parsingMiniHeader( void );
 		void 	gettingFileName(std::string &);
 		void	gettingNewBodyIndex(std::string &);
 		int		retIndex(char *);
@@ -36,7 +37,7 @@ class ParsingRequest{
 
 /*
 
-void receiveFromClient(client_info *client, int &received)
+void _receiveFromClient(client_info *client, int &received)
 {
     client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->contentLength) ? MAX_REQUEST_SIZE : client->contentLength - client->received;
     received = recv(client->socket, client->requestHeader, client->bytesToReceive, 0);
@@ -59,7 +60,7 @@ void gettingFileName(client_info *client, std::string &newString)
     client->uploadFileName = newString.substr(newContentIndex + 10, DoubleQuotePosition - newContentIndex - 10);
 }
 
-void parsingMiniHeader(client_info *client)
+void _parsingMiniHeader(client_info *client)
 {
     std::map<std::string, std::string>::iterator content = client->request_data.find("Content-Type:");
     std::string boundarySavior = content->second;

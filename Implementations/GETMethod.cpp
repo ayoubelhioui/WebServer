@@ -29,8 +29,8 @@ std::string GETMethod::format_date(time_t t) {
     return std::string(buf);
 }
 
-std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfiguration &serverConfig){
-	std::string path = parsedData.requestDataMap["path"];
+void    GETMethod::handleGETMethod(ClientInfo *client, ServerConfiguration &serverConfig){
+	std::string path = client->parsedRequest.requestDataMap["path"];
 	for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++){
 		LocationBlockParse loc = *beg;
 		std::string res = loc.Location;
@@ -58,7 +58,8 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
             if(root[root.length() - 1] != '/') root += '/';
             if(root[0] != '.') root = '.' + root;
             if(full_path[0] != '.') full_path = '.' + full_path;
-            return directoryListing(root, full_path);
+            client->servedFileName = directoryListing(root, full_path, client);
+            return ;
         }
         else{
 		    std::string file = path.substr(index_last + 1);
@@ -77,15 +78,17 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
 					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                     for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                            return CGIexecutedFile(final_path, parsedData.queryString, serverConfig);
+                            client->CGIexecutedFile(final_path, client, serverConfig);
+                            return ;
                         }
                         else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
                             // python cgi 
                         }
                     }
-					return final_path;
+                    client->servedFileName = final_path;
+					return ;
 				}
-		    		else ;
+		    	else ;
 		    	}
 		    }
 		    else{
@@ -97,63 +100,48 @@ std::string	GETMethod::handleGETMethod(ParsingRequest &parsedData, ServerConfigu
 					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
                     for( ; CGIit != loc.CGI.end(); CGIit++ ){
                         if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-                            return CGIexecutedFile(final_path, parsedData.queryString, serverConfig);
+                            client->CGIexecutedFile(final_path, client, serverConfig);
+                            return ;
                         }
                         else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
                             // python cgi 
                         }
                     }
-					return final_path;
+                    client->servedFileName = final_path;
+					return ;
 				}
 		    	else ;
 		    }
         }
 	}
-	return "";
 }
 
-std::string GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig)
+void    GETMethod::callGET( ClientInfo *client, ServerConfiguration &serverConfig)
 {
-	std::string path = handleGETMethod(client->parsedRequest, serverConfig);
-	if(path == ""){
-		error_404(client);
-		return "";
+	handleGETMethod(client, serverConfig);
+	if(client->servedFileName == ""){
+		throw std::runtime_error("file path not allowed");
 	}
-	client->served.open(path, std::ios::binary);
-	client->served.seekg(0, std::ios::end);
-	client->served_size = client->served.tellg();
-	client->served.seekg(0, std::ios::beg);
-	char *buffer = new char[1024];
-	sprintf(buffer, "HTTP/1.1 200 OK\r\n");
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
-	sprintf(buffer, "Connection: close\r\n");
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
-	sprintf(buffer, "Content-Length: %d\r\n", client->served_size);
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
-	sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
-	sprintf(buffer, "\r\n"); // * 
-	if (send(client->socket, buffer, strlen(buffer), 0) == -1) errorPrinting("GET SEND ");
-    delete [] buffer;
-	return path;
-}
+    if(client->inReadCgiOut == 0){
 
-std::string    generateRandString ( int n )
-{
-    std::string         randString;
-
-    const std::string    chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz"
-        "0123456789";
-    
-    for (int i = 0; i < n; ++i) {
-        randString += chars[rand() % chars.size()];
+	    client->served.open(client->servedFileName, std::ios::binary);
+	    client->served.seekg(0, std::ios::end);
+	    client->served_size = client->served.tellg();
+	    client->served.seekg(0, std::ios::beg);
+        std::string  buffer = "HTTP/1.1 200 OK\r\n"
+								 + std::string("Connection: close\r\n")
+								 + std::string("Content-Length: ")
+								 + std::to_string(client->served_size)
+								 + "\r\n"
+								 + "Content-Type: "
+								 + get_mime_format(client->servedFileName.c_str())
+								 + "\r\n\r\n";
+                                send(client->socket, buffer.c_str(), buffer.length(), 0);
     }
-    return randString;
 }
 
-std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path){
+std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path,
+ClientInfo *client){
 	DIR* dir = opendir(rootDirectory.c_str());
     if (dir == NULL) {
         
@@ -185,75 +173,11 @@ std::string GETMethod::directoryListing(std::string rootDirectory, std::string l
 				"</body>\n"
 				"</html>\n";
 	closedir(dir);
-    std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
+    std::string newFile = "FilesForServingGET/" + client->generateRandString() + ".html";
     std::ofstream directoryListingFile(newFile);
     directoryListingFile << file_list;
     directoryListingFile.close();
     return newFile;
 }
 
-int     cgiretIndex(char *requestHeader){
-    for(int i = 0; requestHeader[i]; i++){
-      if(!strncmp(&requestHeader[i], "\r\n\r\n", 4))
-          return i;
-    }
-    return -1;
-}
 
-std::string		GETMethod::CGIexecutedFile( std::string php_file, std::string queryString, ServerConfiguration &server ){
-    int     pid = 0;
-    const char * request_method = "GET";
-    const char * script_name = "CGIS/php-cgi";
-	const char * query_string = queryString.c_str();
-    const char * server_name = server.serverHost.c_str();
-    const char * server_port = server.serverPort.c_str();
-    setenv("REQUEST_METHOD", request_method, 1);
-    setenv("QUERY_STRING", query_string, 1)   ;
-    setenv("SCRIPT_NAME", script_name, 1)    ;
-    setenv("SERVER_NAME", server_name, 1)    ;
-    setenv("SERVER_PORT", server_port, 1)    ;
-    setenv("REDIRECT_STATUS", "200", 1)     ;
-    int fd[2];
-    pipe(fd);
-    std::string newFile = "FilesForServingGET/" + generateRandString(10) + ".html";
-    std::ofstream out_file(newFile);
-    pid = fork();
-    if (pid == 0){
-        out_file.close();
-        char  *args[3];
-        dup2(fd[1], 1);
-        close(fd[0]);
-        close(fd[1]);
-        args[0] = (char *) script_name;
-        args[1] = (char *) php_file.c_str();
-        args[2] = NULL;
-        if (execve(script_name, args, NULL)){
-            return "";
-        }
-    }
-    else if (pid > 0){
-        waitpid(pid, NULL, 0);
-        close(fd[1]);
-        char buffer[1001];
-        ssize_t n;
-        n = read(fd[0], buffer, 1000);
-        buffer[n] = 0;
-        std::string header(buffer);
-        int bef_header = cgiretIndex(buffer);
-        int body_index = bef_header + 4;
-        header = header.substr(0, bef_header);
-        std::string body = header.substr(body_index);
-        std::cout << body << std::endl;
-        out_file << body;
-        while(n > 0){
-            n = read(fd[0], buffer, 1000);
-            std::cout << buffer << std::endl;
-            buffer[n] = 0;
-            out_file << buffer;
-        }
-        out_file.close();
-        close(fd[0]);
-        if(!out_file) std::cout << "out close is failing" << std::endl;
-    }
-    return newFile;
-}
