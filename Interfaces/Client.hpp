@@ -30,6 +30,8 @@ class ClientInfo {
 		void			returnPathWithoutFile(std::string &);
 		bool    		isThereFileLast(std::string &, bool &, int &);
         ParsingRequest parsedRequest;
+        std::string headerToBeSent;
+        bool isSendingHeader;
         bool isFirstRead;
         std::ofstream requestBody;
         socklen_t addressLength;

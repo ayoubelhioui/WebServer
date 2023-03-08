@@ -133,8 +133,6 @@ void HttpServer::dropClient( SOCKET &clientSocket, std::list<ClientInfo *>::iter
     this->_clientsList.erase(tempIterator);
 }
 
-
-
 void	HttpServer::_serveClients( void )
 {
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
@@ -161,7 +159,7 @@ void	HttpServer::_serveClients( void )
 				}
 				catch (std::exception &e)
 				{
-					std::cout << "error in receiving first time was " << e.what() << std::endl;
+//					std::cout << "error in receiving first time was " << e.what() << std::endl;
 					ClientInfoIt++;
 					continue;
 				}
@@ -197,7 +195,7 @@ void	HttpServer::_serveClients( void )
 						(*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 						(*ClientInfoIt)->returnPathWithoutFile((*ClientInfoIt)->tempPathForLocation);
 						(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);
-					}
+                    }
 					catch (const std::exception& e)
 					{
 						error_500((*ClientInfoIt), this->_serverConfiguration.errorInfo["500"]);
@@ -226,7 +224,7 @@ void	HttpServer::_serveClients( void )
 //							 throw std::runtime_error("ERROR POST");
 							(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
 							 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
-							 if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+                             if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
 							 {
 								(*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 							 }
@@ -324,6 +322,7 @@ void	HttpServer::_serveClients( void )
 								std::string newFile = "FilesForServing/" + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
 								if((*ClientInfoIt)->cgi_out.is_open()) (*ClientInfoIt)->cgi_out.close();
 								(*ClientInfoIt)->cgi_out.open(newFile, std::ios::binary);
+                                if(!(*ClientInfoIt)->cgi_out.is_open()) std::cout << "NOT OPEN" << std::endl;
 								(*ClientInfoIt)->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
 								(*ClientInfoIt)->cgi_out << body;
 								(*ClientInfoIt)->isFirstCgiRead = false;
@@ -390,15 +389,14 @@ void	HttpServer::_serveClients( void )
 								if((*ClientInfoIt)->isNotUpload)
 								{
 									chmod((*ClientInfoIt)->actionPath.c_str(),  S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-									// (*ClientInfoIt)->servedFileName = (*ClientInfoIt)->actionPath;
 									int acc = access((*ClientInfoIt)->actionPath.c_str(), X_OK | F_OK);
                                     if(acc == -1)
 									{
                                         error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
                                         throw std::runtime_error("executed path was not found");
                                     }
-									std::ifstream actionPathFile((*ClientInfoIt)->servedFileName);
-									actionPathFile.seekg(0, std::ios::end);
+									std::ifstream actionPathFile((*ClientInfoIt)->actionPath);
+                                    actionPathFile.seekg(0, std::ios::end);
     								int file_size = actionPathFile.tellg();
     								actionPathFile.seekg(0, std::ios::beg);
 									actionPathFile.close();
@@ -410,7 +408,6 @@ void	HttpServer::_serveClients( void )
 								&& (*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation.CGI.end())
 								{
 									chmod((*ClientInfoIt)->postFilePath.c_str(),  S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-                                    // (*ClientInfoIt)->servedFileName = (*ClientInfoIt)->postFilePath;
                                     int acc = access((*ClientInfoIt)->servedFileName.c_str(), X_OK | F_OK);
                                     if(acc == -1)
 									{
@@ -427,7 +424,6 @@ void	HttpServer::_serveClients( void )
 									(*ClientInfoIt)->isServing = true;
 								}
 							}
-							// exeuteCGI;
 						}
 						catch (std::exception &e)
 						{
@@ -470,24 +466,32 @@ void	HttpServer::_serveClients( void )
 				{
 					try
 					{
-
-						if ((*ClientInfoIt)->inReadCgiOut == false) 
-						{
-							char *s = new char[1025]();
-							(*ClientInfoIt)->served.read(s, 1024);
-							int r = (*ClientInfoIt)->served.gcount();
-							if (send((*ClientInfoIt)->socket, s, r, 0) == -1) 
-							{
-								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-								continue;
-							}
-							delete[] s;
-							if (r < 1024) 
-							{
-								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-								continue;
-							}
-						}
+                        if ((*ClientInfoIt)->isSendingHeader == true)
+                        {
+                            if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1)
+                                throw std::runtime_error("send function has failed or blocked");
+                            (*ClientInfoIt)->isSendingHeader = false;
+                        }
+                        else
+                        {
+                            if ((*ClientInfoIt)->inReadCgiOut == false)
+                            {
+                                char *s = new char[1025]();
+                                (*ClientInfoIt)->served.read(s, 1024);
+                                int r = (*ClientInfoIt)->served.gcount();
+                                if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
+                                {
+                                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                                    continue;
+                                }
+                                delete[] s;
+                                if (r < 1024)
+                                {
+                                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                                    continue;
+                                }
+                            }
+                        }
 					}
 					catch (std::exception &e)
 					{

@@ -70,14 +70,11 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
             client->parsedRequest._parsingMiniHeader();
             client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
-            std::cout << "upload is " << client->servedFileName << std::endl; 
-
         }
         else {
             client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
             client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
-            std::cout << "upload is " << client->servedFileName << std::endl; 
         }
         client->postRequest->_preparingPostRequest(client);
         client->postRequest->_isValidPostRequest(client);
@@ -121,7 +118,6 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
              std::ifstream fileFound (client->actionPath.c_str(), std::ios::binary);
              if(fileFound)
              {
-                std::cout << "ISSSSS BIG SUCCESS 1" << std::endl;
                 client->isNotUpload = true;
                 client->actionPath = client->actionPath.c_str();
                 return ;
@@ -139,7 +135,6 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
                  std::ifstream inFile(fileLast);
                 if(inFile)
                 {
-                    std::cout << "ISSSSS BIG SUCCESS 2" << std::endl;
                     client->isNotUpload = true;
                     client->actionPath = fileLast;
                     inFile.close();

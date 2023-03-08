@@ -103,9 +103,8 @@ void    error_400(ClientInfo *client, std::string &error_page)
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
 
-    error_header += "HTTP/1.1 400 Bad Request\r\n"
+    client->headerToBeSent += "HTTP/1.1 400 Bad Request\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size) 
@@ -117,7 +116,7 @@ void    error_400(ClientInfo *client, std::string &error_page)
     {
         throw std::runtime_error("send function has failed or blocked");
     }
-    std::cout << "WAS SENT SUCCe" << std::endl;
+    client->isSendingHeader = true;
 }
 
 void    error_405(ClientInfo *client, std::string &error_page)
@@ -128,11 +127,8 @@ void    error_405(ClientInfo *client, std::string &error_page)
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
-    
-    std::cout << "path is " << path << std::endl;
-    std::cout << "the size of the header is : " << file_size << std::endl;
-    error_header += "HTTP/1.1 405 Method Not Allowed\r\n"
+
+    client->headerToBeSent += "HTTP/1.1 405 Method Not Allowed\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size) 
@@ -140,8 +136,7 @@ void    error_405(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
-        throw std::runtime_error("send function has failed or blocked");
+    client->isSendingHeader = true;
 }
 
 void errorPrinting(const char *errorMessage){
@@ -164,9 +159,8 @@ void    error_413(ClientInfo *client, std::string &error_page)
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
 
-    error_header += "HTTP/1.1 413 Request Entity Too Large\r\n"
+    client->headerToBeSent += "HTTP/1.1 413 Request Entity Too Large\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size) 
@@ -174,8 +168,7 @@ void    error_413(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
-        throw std::runtime_error("send function has failed or blocked");
+    client->isSendingHeader = true;
 }
 
 void    error_404(ClientInfo *client, std::string &error_page)
@@ -186,9 +179,10 @@ void    error_404(ClientInfo *client, std::string &error_page)
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
-
-    error_header += "HTTP/1.1 404 Not Found\r\n"
+//    std::string error_header = "";
+//
+//    error_header += "HTTP/1.1 404 Not Found\r\n"
+    client->headerToBeSent += "HTTP/1.1 404 Not Found\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size)  
@@ -196,6 +190,7 @@ void    error_404(ClientInfo *client, std::string &error_page)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    if (send(client->socket, error_header.c_str(), error_header.length(), 0) == -1)
-        throw std::runtime_error("send function has failed or blocked");
+    client->isSendingHeader = true;
+//    if (send(client->socket, client->headerToBeSent.c_str(), client->headerToBeSent.length(), 0) == -1)
+//        throw std::runtime_error("send function has failed or blocked");
 }
