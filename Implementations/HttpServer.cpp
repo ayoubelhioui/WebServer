@@ -74,8 +74,8 @@ void	HttpServer::_setUpListeningSocket( void )
 void	HttpServer::_selectClients ( void )
 {
 	struct timeval tv;
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
+	tv.tv_sec = 0;
+	tv.tv_usec = 400;
 	_maxSocket = _listeningSocket;
 	std::list<ClientInfo *>::iterator	ClientInfoIt;
 	ClientInfoIt = this->_clientsList.begin();
@@ -89,7 +89,7 @@ void	HttpServer::_selectClients ( void )
         FD_SET((*ClientInfoIt)->socket, &_writeFds);
 		_maxSocket = std::max(_maxSocket, (*ClientInfoIt)->socket);
 	}
-	if (select(_maxSocket + 1, &_readFds, &_writeFds, NULL, &tv) == -1)
+	if (select(_maxSocket + 1, &_readFds, &_writeFds, NULL, &tv) == 0)
 		throw std::runtime_error("select has failed or may have no clients at the moment");
 }
 
@@ -114,9 +114,9 @@ void	HttpServer::_acceptNewConnection( void )
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
 		fcntl(newClient->socket, F_SETFL, O_NONBLOCK);
 		if(newClient->socket == -1)
-			throw std::runtime_error("accept has blocked and did not accept any new connection");
-        FD_SET(newClient->socket, &(this->_readFds));
-        FD_SET(newClient->socket, &(this->_writeFds));
+        {
+            throw std::runtime_error("accept has blocked and did not accept any new connection");
+        }
         _maxSocket = std::max(_maxSocket, newClient->socket);
         if (newClient->socket < 0)
 			std::cerr << "accept function failed\n";
@@ -159,10 +159,10 @@ void	HttpServer::_serveClients( void )
 				}
 				catch (std::exception &e)
 				{
-//					std::cout << "error in receiving first time was " << e.what() << std::endl;
-					if((*ClientInfoIt)->callsFailedMany == 3)
-						dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-					else
+					std::cout << "error in receiving first time was " << e.what() << std::endl;
+//					if((*ClientInfoIt)->callsFailedMany == 3)
+//						dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+//					else
 						ClientInfoIt++;
 					continue;
 				}
@@ -216,6 +216,8 @@ void	HttpServer::_serveClients( void )
 						}
 						catch(const std::exception& e)
 						{
+							error_500((*ClientInfoIt), this->_serverConfiguration.errorInfo["500"]);
+							(*ClientInfoIt)->isErrorOccured = true;
 							ClientInfoIt++;
 							continue;
 						}
@@ -255,9 +257,9 @@ void	HttpServer::_serveClients( void )
                     catch (std::exception &e)
                     {
 						std::cout << e.what() << std::endl;
-                        if((*ClientInfoIt)->callsFailedMany == 3)
-                            dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-                        else
+//                        if((*ClientInfoIt)->callsFailedMany == 3)
+//                            dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+//                        else
 						    ClientInfoIt++;
 						continue;
                     }
@@ -265,17 +267,18 @@ void	HttpServer::_serveClients( void )
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 				{
 					try
-					{	
+					{
 						(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
 						if ((*ClientInfoIt)->chunkedRequest->uploadDone == true)
 						{
-//							this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-//							continue;
+							this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+							continue;
 						}
 					}
 					catch(const std::exception& e)
 					{
 						std::cerr << e.what() << std::endl;
+                        error_500((*ClientInfoIt), this->_serverConfiguration.errorInfo["500"]);
 						ClientInfoIt++;
 						continue;
 					}
@@ -307,6 +310,14 @@ void	HttpServer::_serveClients( void )
 								char buffer[1001];
 								ssize_t n;
 								n = read((*ClientInfoIt)->CgiReadEnd, buffer, 1000);
+                                if(n == -1)
+                                {
+									error_400((*ClientInfoIt), this->_serverConfiguration.errorInfo["400"]);
+									(*ClientInfoIt)->isErrorOccured = true;
+									(*ClientInfoIt)->inReadCgiOut = false;
+									ClientInfoIt++;
+									continue;
+                                }
 								buffer[n] = 0; // protect this at all cost
 								std::string str_buffer(buffer);
 								std::string body, mimeType;
@@ -449,7 +460,6 @@ void	HttpServer::_serveClients( void )
                                 if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1
 								|| (*ClientInfoIt)->isCreated == -1)
                                 {
-                                    (*ClientInfoIt)->callsFailedMany++;
                                     throw std::runtime_error("send function has failed or blocked");
                                 }
                                 (*ClientInfoIt)->isSendingHeader = false;
@@ -462,7 +472,6 @@ void	HttpServer::_serveClients( void )
                                 if (send((*ClientInfoIt)->socket, s, r, 0) == -1
                                 || (*ClientInfoIt)->isCreated == -1)
                                 {
-                                    (*ClientInfoIt)->callsFailedMany++;
                                     throw std::runtime_error("send function has failed or blocked");
                                     continue;
                                 }
@@ -477,8 +486,7 @@ void	HttpServer::_serveClients( void )
 						catch (std::exception &e)
 						{
 							std::cerr << e.what() << std::endl;
-                            if((*ClientInfoIt)->callsFailedMany == 3)
-							    dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+							dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 							continue;
 						}
 					}
@@ -492,7 +500,6 @@ void	HttpServer::_serveClients( void )
                             if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1
 							|| (*ClientInfoIt)->isCreated == -1)
                             {
-                                (*ClientInfoIt)->callsFailedMany++;
                                 throw std::runtime_error("send function has failed or blocked");
                             }
                             (*ClientInfoIt)->isSendingHeader = false;
@@ -506,7 +513,6 @@ void	HttpServer::_serveClients( void )
                                 int r = (*ClientInfoIt)->served.gcount();
                                 if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
                                 {
-                                    (*ClientInfoIt)->callsFailedMany++;
                                     throw std::runtime_error("send function has failed or blocked");
                                     continue;
                                 }
@@ -522,8 +528,7 @@ void	HttpServer::_serveClients( void )
 					catch (std::exception &e)
 					{
 						std::cerr << e.what() << std::endl;
-                        if((*ClientInfoIt)->callsFailedMany == 3)
-						    dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+						dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
 					}
 				}
@@ -544,3 +549,5 @@ void	HttpServer::setUpHttpServer( void )
 {
 	this->_setUpListeningSocket();
 }
+
+// comments in file.conf

@@ -31,14 +31,14 @@ class HttpServer {
 		std::string			queryString;
 		std::string			newPath;
 		std::string			cgi_exec_type;
-	private:
 		SOCKET						_listeningSocket;
 		struct addrinfo 			_serverHints;
 		std::list<ClientInfo *>		_clientsList;
 		fd_set						_readFds;
 		fd_set						_writeFds; // * May ruin code
 		int 						_maxSocket;
-		void	_setUpListeningSocket ( void );
+private:
+	void	_setUpListeningSocket ( void );
 		void	_addClient ( SOCKET );
 		void	_selectClients ( void );
 		void	_acceptNewConnection ( void );

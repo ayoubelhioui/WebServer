@@ -63,11 +63,10 @@ void	ParsingRequest::parse(){
     parsingRequest(line);
 }
 
-void    ParsingRequest::receiveFirstTime(int socket, ClientInfo *client){
+void    ParsingRequest::receiveFirstTime(int socket){
     this->receivedBytes = recv(socket, this->requestHeader, MAX_REQUEST_SIZE, 0);
     if(this->receivedBytes == -1)
     {
-        client->callsFailedMany++;
         throw std::runtime_error("recv did not receive anything or has blocked");
     }
     this->requestHeader[this->receivedBytes] = 0;

@@ -88,7 +88,8 @@ void ConfigFileParser::printingParsingData( void )
             std::cout << (*it2).first << " " << (*it2).second << std::endl;
         for (std::list<LocationBlockParse>::iterator it4 = it->Locations.begin(); it4 != it->Locations.end(); it4++)
         {
-            std::cout << "direc path " << it4->UploadDirectoryPath << std::endl;
+            std::cout << "++++++++++LOCAAAAAATION IS BEGINNING+++++++++" << std::endl;
+            std::cout << "upload directory " << it4->UploadDirectoryPath << std::endl;
             std::cout << "root is " << it4->Root << std::endl;
             std::cout << "redirect is " << it4->Redirection << std::endl;
             std::cout << "location path " << it4->Location << std::endl;
@@ -111,7 +112,9 @@ void ConfigFileParser::printingParsingData( void )
                 std::cout << "first part " << it3->first << " ";
                 std::cout << "second part " << it3->second << std::endl;
             }
+            std::cout << "++++++++++LOCAAAAAATION IS ENDINNINNG+++++++++" << std::endl;
         }
+        std::cout << "++++++++++++++++++  END CONFIG FILE DATA FOR EVERY SERVER ++++++++++++++++++++++++" << std::endl;
     }
 }
 

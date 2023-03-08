@@ -55,8 +55,8 @@ void	ChunkedPostRequest::_retrieveChunkSize( char *buffer )
 	char	*str;
 
 	str = strstr(buffer, "\r\n");
-	if (!str) 
-		exit(0); // * To be removed
+	if (!str)
+		throw std::runtime_error("Error in chunked");
 	crlfPosition = str - buffer;
 	hexString = std::string(buffer, buffer + crlfPosition);
 	this->_currentChunkSize = std::stoi(hexString, 0, 16);
@@ -65,7 +65,7 @@ void	ChunkedPostRequest::_retrieveChunkSize( char *buffer )
 	this->_chunkContent = &buffer[this->_hexLength + CRLF];
 }
 
-void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket, ClientInfo *client )
+void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 {
 	unsigned int	bufferSize;
 	unsigned int	i;
@@ -77,7 +77,6 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket, ClientInfo *
 	if (this->_receivedBytes == -1)
 	{
 		delete [] buffer;
-        client->callsFailedMany++;
 		throw std::runtime_error("recv has failed or blocked");
 	}
 	i = 0;
@@ -100,7 +99,9 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 	char buffer[BUFFER_SIZE];
 	this->_receivedBytes = recv(clientSocket, buffer, BUFFER_SIZE, 0);
 	if (this->_receivedBytes == -1)
+	{
 		throw std::runtime_error("recv has failed or blocked");
+	}
 	this->_retrieveChunkSize(buffer + CRLF);
 	if (this->_currentChunkSize == 0)
 	{
@@ -139,7 +140,7 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	this->_writtenBytes = i;
 }	
 
-void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket )
+void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket)
 {
 	if (this->_writtenBytes == this->_currentChunkSize)
 	{

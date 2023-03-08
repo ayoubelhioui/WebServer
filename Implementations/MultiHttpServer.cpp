@@ -53,7 +53,7 @@ void MultiHttpServer::startServers(void)
 			}
 			catch (std::exception &e)
 			{
-				
+
 			}
 			vecIdx++;
 		}

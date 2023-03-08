@@ -27,7 +27,7 @@ class ParsingRequest{
 		void	parse();
 		void	parsingRequestFirstLine(std::string);
 		void	parsingRequest(std::string);
-		void	receiveFirstTime ( SOCKET, ClientInfo * );
+		void	receiveFirstTime ( SOCKET );
 		void	_parsingMiniHeader( void );
 		void 	gettingFileName(std::string &);
 		void	gettingNewBodyIndex(std::string &);

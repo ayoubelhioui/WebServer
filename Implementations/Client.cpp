@@ -1,7 +1,7 @@
 #include "../Interfaces/Client.hpp"
 	
 ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
-, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), callsFailedMany(0)
+, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0)
 {
     this->servedFilesFolder = "FilesForServing/";
     struct stat st;
@@ -424,6 +424,7 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
         close(fdup);
     close(fd[1]);
     client->CgiReadEnd = fd[0];
+    fcntl(client->CgiReadEnd, F_SETFL, O_NONBLOCK);
     client->inReadCgiOut = 1;
     client->stillWaiting = 1;
     client->cgiPid = pid;
