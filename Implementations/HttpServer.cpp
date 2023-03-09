@@ -341,7 +341,10 @@ void	HttpServer::_serveClients( void )
 								std::string header_part = str_buffer.substr(0, bef_header);
 								(*ClientInfoIt)->parseCgiHeader(header_part);
 								std::string contentType = (*ClientInfoIt)->cgiMap["content-type:"];
-								(*ClientInfoIt)->cgiContentLength = (*ClientInfoIt)->cgiMap["content-length:"];
+								(*ClientInfoIt)->cgiContentLength = std::stoi((*ClientInfoIt)->cgiMap["content-length:"]);
+								if((*ClientInfoIt)->cgiContentLength == 0)
+									(*ClientInfoIt)->cgiContentLength = lseek((*ClientInfoIt)->CgiReadEnd, 0, SEEK_END);
+								std::cout << "content length is " << (*ClientInfoIt)->cgiContentLength << std::endl;
 								mimeType = contentType.substr(0, contentType.find(";"));
 								body = str_buffer.substr(bef_header + 4);
 								std::string newFile = (*ClientInfoIt)->servedFilesFolder + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());

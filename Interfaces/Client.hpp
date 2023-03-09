@@ -53,7 +53,6 @@ class ClientInfo {
 	const char 	  *cgiType;
 	std::map<std::string, std::string> cgiMap;
 	std::list<std::pair<std::string, std::string> >::iterator cgiIterator;
-	std::string             cgiContentLength;
 	LocationBlockParse					   					  _currentLocation;
 	std::string     										  cgiContentType;
 	std::string     										  actionPath;
@@ -70,6 +69,7 @@ class ClientInfo {
 	bool													  isRedirect;
 	std::string   											  cgiStatus;
 	int          											  isCreated;
+	size_t										             cgiContentLength;
 	// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
 	// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 	// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);

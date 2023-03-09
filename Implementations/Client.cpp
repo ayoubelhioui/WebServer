@@ -1,7 +1,7 @@
 #include "../Interfaces/Client.hpp"
 	
 ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
-, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0), cgiStatus("200")
+, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0), cgiStatus("200"), cgiContentLength(0)
 {
     this->servedFilesFolder = "FilesForServing/";
     this->isCreated = 0;
