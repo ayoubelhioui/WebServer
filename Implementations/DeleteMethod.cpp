@@ -6,7 +6,9 @@
 
 DeleteMethod::DeleteMethod ( std::string &path )
 	: _pathToResource(path)
-{}
+{
+	std::cout << this->_pathToResource << std::endl;
+}
 
 DeleteMethod::DeleteMethod ( void )
 {
@@ -44,14 +46,39 @@ void	DeleteMethod::deleteTargetedResource ( void )
 void	DeleteMethod::sendResponse( void )
 {}
 
-void	DeleteMethod::_locateResource ( void )
+void	DeleteMethod::_removeRecursively ( std::string path )
 {
+	
+}
+
+void	DeleteMethod::_deleteResource ( void )
+{
+	/*-- path/to/the/targeted/resources --*/
+	/*
+		FILE --> delete simply
+
+				    ___ EMPTY FOLDER --> rmdir(pathToFolder);
+				   /
+                  /
+		FOLDER ---
+				  \
+				   \___ NON-EMPTY FOLDER --> remove recursively(pathToFolder);
+	*/
+
 	this->_defineResourceType();
-	//*  proceed for location stuff 
 	if (this->_resourceType ==  FILE)
 		remove(this->_pathToResource.c_str());
 	else if (this->_resourceType == FOLDER)
-		this->removeRecursively();
+	{
+		if (opendir() == 0)
+			
+		this->_removeRecursively( this->_pathToResource );
+	}
+}
+
+void	DeleteMethod::_locateResource ( void )
+{
+	//*  proceed for location stuff 
 }
 
 void	DeleteMethod::_defineResourceType ( void )
@@ -67,3 +94,7 @@ void	DeleteMethod::_defineResourceType ( void )
 	else
 		this->_resourceType = UNKNOWN;
 }
+
+/*
+	DELETE /file.html HTTP/1.1
+*/

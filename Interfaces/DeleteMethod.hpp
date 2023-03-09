@@ -21,7 +21,7 @@ class DeleteMethod {
 		void		_locateResource ( void );
 		void		_deleteResource ( void );
 		void		_defineResourceType ( void );
-		void		_removeRecursively ( void );
+		void		_removeRecursively ( std::string );
 };
 
 #endif

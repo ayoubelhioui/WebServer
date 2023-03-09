@@ -8,6 +8,7 @@
 # include "../Interfaces/RequestParser.hpp"
 # include "../Interfaces/POSTMethod.hpp"
 # include "../Interfaces/ChunkedPostRequest.hpp"
+# include "../Interfaces/DeleteMethod.hpp"
 
 class PostMethod;
 
@@ -17,6 +18,7 @@ class ClientInfo {
 		~ClientInfo ( void );
 		PostMethod			*postRequest;
 		ChunkedPostRequest	*chunkedRequest;
+		DeleteMethod		*DeleteRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
         void            parseQueryString( void );
@@ -43,29 +45,29 @@ class ClientInfo {
 		std::string	   servedFileName;	
 		std::string	   cgiInput;
         std::string   postFilePath;
-	std::string   cgiEnd;
-	std::string	  cgiFileEnd;
-	std::string	  servedFilesFolder;
-	std::string	  tempPathForLocation;
-	const char 	  *cgiType;
-	std::map<std::string, std::string> cgiMap;
-	std::list<std::pair<std::string, std::string> >::iterator cgiIterator;
-	std::string             cgiContentLength;
-	LocationBlockParse					   					  _currentLocation;
-	std::string     										  cgiContentType;
-	std::string     										  actionPath;
-	bool													  inReadCgiOut;
-	int														  CgiReadEnd;
-	int														  served_size;
-	bool    												  isErrorOccured;
-	int														  isServing;
-	bool													  stillWaiting;
-	bool													  isFirstCgiRead;
-	int														  cgiPid;
-	bool            										  PostFinishedCgi;
-	bool 		    										  isNotUpload;
-	int          											  isCreated;
-	short int                                                 callsFailedMany;
+		std::string   cgiEnd;
+		std::string	  cgiFileEnd;
+		std::string	  servedFilesFolder;
+		std::string	  tempPathForLocation;
+		const char 	  *cgiType;
+		std::map<std::string, std::string> cgiMap;
+		std::list<std::pair<std::string, std::string> >::iterator cgiIterator;
+		std::string             cgiContentLength;
+		LocationBlockParse					   					  _currentLocation;
+		std::string     										  cgiContentType;
+		std::string     										  actionPath;
+		bool													  inReadCgiOut;
+		int														  CgiReadEnd;
+		int														  served_size;
+		bool    												  isErrorOccured;
+		int														  isServing;
+		bool													  stillWaiting;
+		bool													  isFirstCgiRead;
+		int														  cgiPid;
+		bool            										  PostFinishedCgi;
+		bool 		    										  isNotUpload;
+		int          											  isCreated;
+		short int                                                 callsFailedMany;
 	// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
 	// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 	// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);
