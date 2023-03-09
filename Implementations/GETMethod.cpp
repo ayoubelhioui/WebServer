@@ -33,6 +33,7 @@ void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig
     client->checkPathValidation(client, serverConfig, client->parsedRequest.requestDataMap["path"]);
     if(client->_currentLocation.Location.length() && !client->_isLocationSupportsCurrentMethod(client, "GET"))
     {
+        client->isDefaultError = false;
         error_405(client, serverConfig.errorInfo["405"]);
         throw std::runtime_error("Method not allowed");
     }
@@ -47,6 +48,7 @@ void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig
     }
     else if (client->servedFileName == "" && !client->inReadCgiOut) 
     {
+        client->isDefaultError = false;
         error_404(client, serverConfig.errorInfo["404"]);
         throw std::runtime_error("file path not allowed");
     }
@@ -55,6 +57,7 @@ void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig
         client->served.open(client->servedFileName, std::ios::binary);
         if(!client->served.is_open())
         {
+            client->isDefaultError = false;
             error_500(client, serverConfig.errorInfo["500"]);
             throw std::runtime_error("file was not opened properly");
         }

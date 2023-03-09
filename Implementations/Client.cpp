@@ -2,7 +2,7 @@
 	
 ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
 , stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0)
-, cgiBodyLength(0), readFromCgi(0), cgiStatus("200 OK")
+, cgiBodyLength(0), readFromCgi(0), cgiStatus("200 OK"), isDefaultError(1)
 {
     this->servedFilesFolder = "FilesForServing/";
     this->isCreated = 0;
@@ -53,6 +53,73 @@ ClientInfo::ClientInfo ( const ClientInfo &obj )
 	// *this = obj;
 }
 
+void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfig)
+{
+    if(this->cgiIterator == this->_currentLocation.CGI.end())
+    {
+        this->isDefaultError = false;
+        this->isErrorOccured = true;
+        error_500(this, serverConfig.errorInfo["500"]);
+        throw std::runtime_error("Location doesn't support either CGI nor upload");
+    }
+    bool isFileLast = 0;
+    this->actionPath += this->cgiFileEnd;
+    int len = this->actionPath.length() - 1;
+    this->isThereFileLast(this->actionPath, isFileLast, len);
+    if(isFileLast)
+    {
+        std::ifstream fileFound (this->actionPath.c_str(), std::ios::binary);
+        if(fileFound)
+        {
+        this->isNotUpload = true;
+        this->actionPath = this->actionPath.c_str();
+        return ;
+        }
+        fileFound.close();
+    }
+    else
+    {
+        if(this->actionPath.back() != '/')
+            this->actionPath += '/';
+        for(std::list<std::string>::iterator indexIt = this->_currentLocation.indexFiles.begin();
+        indexIt != this->_currentLocation.indexFiles.end(); indexIt++)
+        {
+            std::string fileLast = this->actionPath + (*indexIt);
+            std::ifstream inFile(fileLast);
+        if(inFile)
+        {
+            this->isNotUpload = true;
+            this->actionPath = fileLast;
+            inFile.close();
+            return ;
+        }
+        }
+    }
+}
+void            ClientInfo::postErrorsHandling(ServerConfiguration &serverConfig)
+{
+    if(this->_currentLocation.Location.length() <= 0)
+     {
+        this->isDefaultError = false;
+         this->isErrorOccured = true;
+         error_404(this, serverConfig.errorInfo["404"]);
+         throw std::runtime_error("Location not found");
+     }
+     if (!this->_isLocationSupportsCurrentMethod(this, "POST"))
+     {
+        this->isDefaultError = false;
+         this->isErrorOccured = true;
+         error_405(this, serverConfig.errorInfo["405"]); // IT MUST BE ERROR 405 NOT ERROR 500
+         throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
+     }
+    if (isBodySizeBigger(serverConfig, this->parsedRequest.contentLength))
+    {
+        this->isDefaultError = false;
+        error_413(this, serverConfig.errorInfo["413"]);
+        this->isErrorOccured = true;
+        throw (std::runtime_error("Body Size Too Large !!"));
+    }
+}
 std::string    ClientInfo::generateRandString ( void )
 {
     std::string    randString;

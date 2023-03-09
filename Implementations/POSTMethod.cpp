@@ -57,12 +57,18 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
 {
         if(client->parsedRequest.isBoundaryExist == true) {
             client->parsedRequest._parsingMiniHeader();
+            std::cout << "action is " << client->actionPath << std::endl;
+            std::cout << "served is " << client->servedFileName << std::endl;
+            std::cout << "upload " << client->parsedRequest.uploadFileName << std::endl;
             if(isNotUpload == 1)
                 client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
         }
         else {
             client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
+            std::cout << "action is " << client->actionPath << std::endl;
+            std::cout << "served is " << client->servedFileName << std::endl;
+            std::cout << "upload " << client->parsedRequest.uploadFileName << std::endl;
             if(isNotUpload == 1)
                 client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
@@ -71,68 +77,30 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
         client->postRequest->_isValidPostRequest(client);
 }
 void    PostMethod::handleFirstRead(ClientInfo *client) {
-     if(client->_currentLocation.Location.length() <= 0)
-     {
-         client->isErrorOccured = true;
-         error_404(client, this->_serverConfiguration.errorInfo["404"]);
-         throw std::runtime_error("Location not found");
-     }
-     if (!client->_isLocationSupportsCurrentMethod(client, "POST"))
-     {
-         client->isErrorOccured = true;
-         error_405(client, this->_serverConfiguration.errorInfo["405"]); // IT MUST BE ERROR 405 NOT ERROR 500
-         throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
-     }
-    if (isBodySizeBigger(this->_serverConfiguration, client->parsedRequest.contentLength))
-     {
-        error_413(client, this->_serverConfiguration.errorInfo["413"]);
-        client->isErrorOccured = true;
-        throw (std::runtime_error("Body Size Too Large !!"));
-    }
+    //  if(client->_currentLocation.Location.length() <= 0)
+    //  {client->isDefaultError = false;
+    //      client->isErrorOccured = true;
+    //      error_404(client, this->_serverConfiguration.errorInfo["404"]);
+    //      throw std::runtime_error("Location not found");
+    //  }
+    //  if (!client->_isLocationSupportsCurrentMethod(client, "POST"))
+    //  {
+    //      client->isErrorOccured = true;
+    //      error_405(client, this->_serverConfiguration.errorInfo["405"]); // IT MUST BE ERROR 405 NOT ERROR 500
+    //      throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
+    //  }
+    // if (isBodySizeBigger(this->_serverConfiguration, client->parsedRequest.contentLength))
+    //  {
+    //     error_413(client, this->_serverConfiguration.errorInfo["413"]);
+    //     client->isErrorOccured = true;
+    //     throw (std::runtime_error("Body Size Too Large !!"));
+    // }
     if(this->_isLocationSupportsUpload(client))
         startPostRequest(client, 0);
-     else
-     {
+    else
+    {
         startPostRequest(client, 1);
-         if(client->cgiIterator == client->_currentLocation.CGI.end())
-         {
-             client->isErrorOccured = true;
-             error_500(client, this->_serverConfiguration.errorInfo["500"]);
-             throw std::runtime_error("Location doesn't support either CGI nor upload");
-         }
-         bool isFileLast = 0;
-         client->actionPath += client->cgiFileEnd;
-         int len = client->actionPath.length() - 1;
-         client->isThereFileLast(client->actionPath, isFileLast, len);
-         if(isFileLast)
-         {
-             std::ifstream fileFound (client->actionPath.c_str(), std::ios::binary);
-             if(fileFound)
-             {
-                client->isNotUpload = true;
-                client->actionPath = client->actionPath.c_str();
-                return ;
-             }
-             fileFound.close();
-         }
-         else
-         {
-             if(client->actionPath.back() != '/')
-                 client->actionPath += '/';
-             for(std::list<std::string>::iterator indexIt = client->_currentLocation.indexFiles.begin();
-             indexIt != client->_currentLocation.indexFiles.end(); indexIt++)
-             {
-                 std::string fileLast = client->actionPath + (*indexIt);
-                 std::ifstream inFile(fileLast);
-                if(inFile)
-                {
-                    client->isNotUpload = true;
-                    client->actionPath = fileLast;
-                    inFile.close();
-                    return ;
-                }
-             }
-         }
+        client->postLocationAbsence(this->_serverConfiguration);
      }
 }
 
@@ -147,12 +115,14 @@ void PostMethod::_preparingPostRequest(ClientInfo *client) {
 void PostMethod::_isValidPostRequest(ClientInfo *client) {
     if(isNotValidPostRequest(client->parsedRequest.requestDataMap))
     {
+        client->isDefaultError = false;
         client->isErrorOccured = true;
         error_400(client, this->_serverConfiguration.errorInfo["400"]);
         throw std::runtime_error(BAD_REQUEST_EXCEPTION);
     }
     if(isTransferEncodingNotChunked(client->parsedRequest.requestDataMap))
     {
+        client->isDefaultError = false;
         client->isErrorOccured = true;
         error_501(client, this->_serverConfiguration.errorInfo["501"]);
         throw std::runtime_error(TRANSFER_ENCODING_EXCEPTION);
@@ -162,7 +132,7 @@ void PostMethod::_isValidPostRequest(ClientInfo *client) {
 //    {
 ////        std::cout << "the content length is : " << (*_clientInfoIt  )->parsedRequest.contentLength << std::endl;
 //        int bodySize = (client->parsedRequest.bodyIndex) - std::stoi(client->parsedRequest.requestDataMap["Content-Length:"]);
-//        if(isBodySizeBigger(this->_serverConfiguration, bodySize))
+//        if(iclient->isDefaultError = false;sBodySizeBigger(this->_serverConfiguration, bodySize))
 //        {
 //            error_413(this->_clientInfoIt);
 //            throw std::runtime_error(BODY_SIZE_EXCEPTION);
@@ -227,6 +197,7 @@ void PostMethod::writeToUploadedFile(ClientInfo *client)
     this->destinationFile.write(buffer, this->toWrite);
     if (this->sourceFile.fail() || this->destinationFile.fail())
     {
+        client->isDefaultError = false;
         client->isErrorOccured = true;
         error_500(client, this->_serverConfiguration.errorInfo["500"]);
         throw (std::runtime_error("Error Occurred in writeToUploadedFile"));

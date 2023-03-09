@@ -178,6 +178,8 @@ void	HttpServer::_serveClients( void )
 					}
 					catch(std::exception &e)
 					{
+						if((*ClientInfoIt)->isDefaultError == true)
+							error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 						(*ClientInfoIt)->isErrorOccured = true;
 						ClientInfoIt++;
 						continue;
@@ -195,6 +197,7 @@ void	HttpServer::_serveClients( void )
 						(*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 						(*ClientInfoIt)->returnPathWithoutFile((*ClientInfoIt)->tempPathForLocation);
 						(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);
+						(*ClientInfoIt)->postErrorsHandling(this->_serverConfiguration);
 						if ((*ClientInfoIt)->isRedirect)
 						{
 							(*ClientInfoIt)->headerToBeSent += "HTTP/1.1 301 Moved Permanently\r\n"
@@ -206,7 +209,8 @@ void	HttpServer::_serveClients( void )
                     }
 					catch (const std::exception& e)
 					{
-						error_500((*ClientInfoIt), this->_serverConfiguration.errorInfo["500"]);
+						if((*ClientInfoIt)->isDefaultError == true)
+							error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 						(*ClientInfoIt)->isErrorOccured = true;
 						ClientInfoIt++;
 						continue;
@@ -216,8 +220,15 @@ void	HttpServer::_serveClients( void )
 						try
 						{
 							(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
-							(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
+							if((*ClientInfoIt)->_currentLocation.UploadDirectoryPath.length())
+								(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
 															, (*ClientInfoIt)->parsedRequest);
+							else
+							{
+								(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
+															, (*ClientInfoIt)->parsedRequest);
+								(*ClientInfoIt)->postLocationAbsence(this->_serverConfiguration);
+							}
 						}
 						catch(const std::exception& e)
 						{
@@ -240,7 +251,11 @@ void	HttpServer::_serveClients( void )
 					 	}
 					 	catch (std::exception &e)
 					 	{
-							std::cout << e.what() << std::endl;
+							if((*ClientInfoIt)->isDefaultError == true)
+							{
+								(*ClientInfoIt)->isErrorOccured = true;
+								error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
+							}
 							ClientInfoIt++;
 							continue;
 					 	}
@@ -463,12 +478,13 @@ void	HttpServer::_serveClients( void )
 									int acc = access((*ClientInfoIt)->actionPath.c_str(), X_OK | F_OK);
 									if(foundPhp == std::string::npos && foundPerl == std::string::npos)
 									{
-										std::cout << "uploaded is " << (*ClientInfoIt)->parsedRequest.uploadFileName  << std::endl;
+										(*ClientInfoIt)->isDefaultError = false;
 										error_400((*ClientInfoIt), this->_serverConfiguration.errorInfo["400"]);
 										throw std::runtime_error("executed path was not script");
 									}
                                     if(acc == -1)
 									{
+										(*ClientInfoIt)->isDefaultError = false;
                                         error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
                                         throw std::runtime_error("executed path was not found");
                                     }
@@ -489,6 +505,7 @@ void	HttpServer::_serveClients( void )
 									int acc = access((*ClientInfoIt)->postFilePath.c_str(), X_OK | F_OK);
                                     if(acc == -1)
 									{
+										(*ClientInfoIt)->isDefaultError = false;
                                         error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
                                         throw std::runtime_error("executed path was not found");
                                     }
@@ -507,6 +524,8 @@ void	HttpServer::_serveClients( void )
 						catch (std::exception &e)
 						{
 							std::cout << e.what() << std::endl;
+							if((*ClientInfoIt)->isDefaultError == true)
+								error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 							(*ClientInfoIt)->isErrorOccured = true;
 							ClientInfoIt++;
 							continue;
