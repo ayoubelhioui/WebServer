@@ -89,7 +89,6 @@ void	HttpServer::_selectClients ( void )
         FD_SET((*ClientInfoIt)->socket, &_writeFds);
 		_maxSocket = std::max(_maxSocket, (*ClientInfoIt)->socket);
 	}
-	std::cout << "max socket is " << _maxSocket  << std::endl;
 	if (select(_maxSocket + 1, &_readFds, &_writeFds, NULL, &tv) == 0)
 		throw std::runtime_error("select has failed or may have no clients at the moment");
 }
@@ -160,11 +159,8 @@ void	HttpServer::_serveClients( void )
 				}
 				catch (std::exception &e)
 				{
-					std::cout << "error in receiving first time was " << e.what() << std::endl;
-//					if((*ClientInfoIt)->callsFailedMany == 3)
-//						dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-//					else
-						ClientInfoIt++;
+					error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
+					dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					continue;
 				}
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
@@ -266,10 +262,9 @@ void	HttpServer::_serveClients( void )
                     catch (std::exception &e)
                     {
 						std::cout << e.what() << std::endl;
-//                        if((*ClientInfoIt)->callsFailedMany == 3)
-//                            dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-//                        else
-						    ClientInfoIt++;
+						(*ClientInfoIt)->isErrorOccured = true;
+						error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
+						ClientInfoIt++;
 						continue;
                     }
                 }
@@ -344,8 +339,23 @@ void	HttpServer::_serveClients( void )
 								std::string contentType = (*ClientInfoIt)->cgiMap["content-type:"];
 								std::string contentLength =  (*ClientInfoIt)->cgiMap["content-length:"];
 								std::string status = (*ClientInfoIt)->cgiMap["status:"];
+								std::string	Location = (*ClientInfoIt)->cgiMap["location:"];
 								if(status != "")
 									(*ClientInfoIt)->cgiStatus = status;
+								if(Location != "")
+								{
+									(*ClientInfoIt)->headerToBeSent +=  "HTTP/1.1 "
+									+ (*ClientInfoIt)->cgiStatus
+									+ "\r\n"
+									+ std::string("Location: ")
+									+ Location
+									+ "\r\n\r\n";
+									(*ClientInfoIt)->isSendingHeader = true;
+									(*ClientInfoIt)->inReadCgiOut = false;
+									(*ClientInfoIt)->isRedirect = true;
+									ClientInfoIt++;
+									continue;
+								}
 								if(contentLength == "")
 								{
 									int bytes_available = 0;
@@ -435,11 +445,28 @@ void	HttpServer::_serveClients( void )
 							{
 								(*ClientInfoIt)->postRequest->sourceFile.close();
     							(*ClientInfoIt)->postRequest->destinationFile.close();
-								size_t foundPhp = (*ClientInfoIt)->parsedRequest.uploadFileName.find(".php");
+								size_t foundPhp = 0;
+								size_t foundPerl = 0;
+								if((*ClientInfoIt)->isNotUpload)
+								{
+									foundPhp = (*ClientInfoIt)->actionPath.find(".php");
+									foundPerl = (*ClientInfoIt)->actionPath.find(".pl");
+								}
+								else
+								{
+									foundPhp = (*ClientInfoIt)->parsedRequest.uploadFileName.find(".php");
+									foundPerl = (*ClientInfoIt)->parsedRequest.uploadFileName.find(".pl");
+								}
 								if((*ClientInfoIt)->isNotUpload)
 								{
 									chmod((*ClientInfoIt)->actionPath.c_str(),  S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
 									int acc = access((*ClientInfoIt)->actionPath.c_str(), X_OK | F_OK);
+									if(foundPhp == std::string::npos && foundPerl == std::string::npos)
+									{
+										std::cout << "uploaded is " << (*ClientInfoIt)->parsedRequest.uploadFileName  << std::endl;
+										error_400((*ClientInfoIt), this->_serverConfiguration.errorInfo["400"]);
+										throw std::runtime_error("executed path was not script");
+									}
                                     if(acc == -1)
 									{
                                         error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
@@ -450,21 +477,23 @@ void	HttpServer::_serveClients( void )
     								int file_size = actionPathFile.tellg();
     								actionPathFile.seekg(0, std::ios::beg);
 									actionPathFile.close();
-									(*ClientInfoIt)->cgiContentType = "text/php";
+									(*ClientInfoIt)->cgiContentType = foundPhp != std::string::npos ? "text/php" : "text/x-perl-script";
+									(*ClientInfoIt)->cgiContentType = "";
 									(*ClientInfoIt)->cgiContentLength = std::to_string(file_size);
 									(*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt), this->_serverConfiguration);
 								}
-								else if (foundPhp != std::string::npos
+								else if ((foundPhp != std::string::npos || foundPerl != std::string::npos )
 								&& (*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation.CGI.end())
 								{
 									chmod((*ClientInfoIt)->postFilePath.c_str(),  S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH);
-                                    int acc = access((*ClientInfoIt)->servedFileName.c_str(), X_OK | F_OK);
+									int acc = access((*ClientInfoIt)->postFilePath.c_str(), X_OK | F_OK);
                                     if(acc == -1)
 									{
                                         error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
                                         throw std::runtime_error("executed path was not found");
                                     }
-                                    (*ClientInfoIt)->cgiContentType = "text/php";
+									(*ClientInfoIt)->servedFileName = (*ClientInfoIt)->postFilePath;
+                                    (*ClientInfoIt)->cgiContentType = foundPhp != std::string::npos ? "text/php" : "text/x-perl-script";
 									(*ClientInfoIt)->cgiContentLength = std::to_string((*ClientInfoIt)->postRequest->cgiContentLength);
 									(*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt), this->_serverConfiguration);
 								}
@@ -477,7 +506,7 @@ void	HttpServer::_serveClients( void )
 						}
 						catch (std::exception &e)
 						{
-							error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
+							std::cout << e.what() << std::endl;
 							(*ClientInfoIt)->isErrorOccured = true;
 							ClientInfoIt++;
 							continue;
@@ -594,3 +623,4 @@ void	HttpServer::setUpHttpServer( void )
 }
 
 // comments in file.conf
+

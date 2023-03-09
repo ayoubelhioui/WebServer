@@ -53,16 +53,18 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
     return (client->_currentLocation.UploadDirectoryPath.length());
 }
 
- void   PostMethod::startPostRequest(ClientInfo *client)
+ void   PostMethod::startPostRequest(ClientInfo *client, bool isNotUpload)
 {
         if(client->parsedRequest.isBoundaryExist == true) {
             client->parsedRequest._parsingMiniHeader();
-            client->actionPath = client->servedFileName;
+            if(isNotUpload == 1)
+                client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
         }
         else {
             client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
-            client->actionPath = client->servedFileName;
+            if(isNotUpload == 1)
+                client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
         }
         client->postRequest->_preparingPostRequest(client);
@@ -88,10 +90,10 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
         throw (std::runtime_error("Body Size Too Large !!"));
     }
     if(this->_isLocationSupportsUpload(client))
-        startPostRequest(client);
+        startPostRequest(client, 0);
      else
      {
-        startPostRequest(client);
+        startPostRequest(client, 1);
          if(client->cgiIterator == client->_currentLocation.CGI.end())
          {
              client->isErrorOccured = true;
@@ -172,11 +174,7 @@ void PostMethod::_isValidPostRequest(ClientInfo *client) {
 void PostMethod::_writeInTempFile(ClientInfo *client) {
     client->requestBody.write(client->parsedRequest.requestHeader, client->parsedRequest.receivedBytes);
     if (client->requestBody.fail())
-    {
-        client->isErrorOccured = true;
-        error_500(client, this->_serverConfiguration.errorInfo["500"]);
         throw (std::runtime_error("Error Occurred In writeIntTempFile\n"));
-    }
 }
 
 void PostMethod::_receiveFromClient(ClientInfo *client){
@@ -217,11 +215,7 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
         this->destinationFile.close();
     this->destinationFile.open(client->postFilePath, std::ios::binary);
     if (client->isCreated == -1 || this->destinationFile.fail())
-    {
-        client->isErrorOccured = true;
-        error_500(client, this->_serverConfiguration.errorInfo["500"]);
         throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));
-    }
 }
 
 void PostMethod::writeToUploadedFile(ClientInfo *client)

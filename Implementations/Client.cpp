@@ -432,6 +432,7 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     setenv("PATH_INFO", path_info, 1);
     setenv("CONTENT_LENGTH", content_length, 1);
     setenv("CONTENT_TYPE", content_type, 1);
+    
     int fdup = 0;
     if(client->isNotUpload)
         fdup = open(client->servedFileName.c_str(), O_RDONLY);

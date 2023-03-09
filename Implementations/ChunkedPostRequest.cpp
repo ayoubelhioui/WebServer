@@ -43,8 +43,10 @@ void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 	fileName = "/tmp/" + generateRandString() + std::string(get_real_format(mimeType));
 	// fileName = "~/Desktop/" + generateRandString() + std::string(get_real_format(mimeType));
 	this->_uploadedFile.open(fileName, std::ios::binary);
-	if (this->_uploadedFile.is_open())
-		std::cout << fileName << " is created!!" << std::endl;
+	if (!this->_uploadedFile.is_open())
+	{
+		throw std::runtime_error("cannot open chunked folder");
+	}
 
 }
 
@@ -99,9 +101,7 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 	char buffer[BUFFER_SIZE];
 	this->_receivedBytes = recv(clientSocket, buffer, BUFFER_SIZE, 0);
 	if (this->_receivedBytes == -1)
-	{
 		throw std::runtime_error("recv has failed or blocked");
-	}
 	this->_retrieveChunkSize(buffer + CRLF);
 	if (this->_currentChunkSize == 0)
 	{
