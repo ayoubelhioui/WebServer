@@ -49,23 +49,12 @@ PostMethod::PostMethod(ServerConfiguration &serverConfiguration)
 //    client->_currentLocation = beg;
 //}
 
-bool    PostMethod::_isLocationSupportsPost(ClientInfo *client) {
-    std::list<std::string>::iterator it = client->_currentLocation.allowedMethods.begin();
-    while (it != client->_currentLocation.allowedMethods.end()){
-        if (*it == "POST")
-            return (true);
-        it++;
-    }
-    return (false);
-}
-
 bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
     return (client->_currentLocation.UploadDirectoryPath.length());
 }
 
- void   PostMethod::startPostRequest(ClientInfo *client, bool k)
+ void   PostMethod::startPostRequest(ClientInfo *client)
 {
-    (void) k;
         if(client->parsedRequest.isBoundaryExist == true) {
             client->parsedRequest._parsingMiniHeader();
             client->actionPath = client->servedFileName;
@@ -86,7 +75,7 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
          error_404(client, this->_serverConfiguration.errorInfo["404"]);
          throw std::runtime_error("Location not found");
      }
-     if (!this->_isLocationSupportsPost(client))
+     if (!client->_isLocationSupportsCurrentMethod(client, "POST"))
      {
          client->isErrorOccured = true;
          error_405(client, this->_serverConfiguration.errorInfo["405"]); // IT MUST BE ERROR 405 NOT ERROR 500
@@ -99,10 +88,10 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
         throw (std::runtime_error("Body Size Too Large !!"));
     }
     if(this->_isLocationSupportsUpload(client))
-        startPostRequest(client, 1);
+        startPostRequest(client);
      else
      {
-        startPostRequest(client, 0);
+        startPostRequest(client);
          if(client->cgiIterator == client->_currentLocation.CGI.end())
          {
              client->isErrorOccured = true;

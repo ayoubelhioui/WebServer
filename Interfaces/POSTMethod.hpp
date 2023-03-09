@@ -27,9 +27,8 @@ class PostMethod{
         void _writeInTempFile( ClientInfo* );
         void _receiveFromClient( ClientInfo* );
         void _searchForCurrentLocation(ClientInfo *);
-        bool _isLocationSupportsPost( ClientInfo * );
         bool _isLocationSupportsUpload( ClientInfo * );
-        void startPostRequest(ClientInfo *, bool);
+        void startPostRequest( ClientInfo * );
         ServerConfiguration _serverConfiguration;
     public :
         std::ifstream sourceFile;

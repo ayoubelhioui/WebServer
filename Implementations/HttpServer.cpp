@@ -114,9 +114,9 @@ void	HttpServer::_acceptNewConnection( void )
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
 		fcntl(newClient->socket, F_SETFL, O_NONBLOCK);
 		if(newClient->socket == -1)
-        {
+		{ 
             throw std::runtime_error("accept has blocked and did not accept any new connection");
-        }
+		}
         _maxSocket = std::max(_maxSocket, newClient->socket);
         if (newClient->socket < 0)
 			std::cerr << "accept function failed\n";
@@ -168,10 +168,10 @@ void	HttpServer::_serveClients( void )
 				}
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
 				{
-					GETMethod getRequest;
+					(*ClientInfoIt)->getRequest = new GETMethod();
 					try
 					{
-						getRequest.callGET(*ClientInfoIt, this->_serverConfiguration);
+						(*ClientInfoIt)->getRequest->callGET(*ClientInfoIt, this->_serverConfiguration);
 						if((*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation.CGI.end())
                         {
                             (*ClientInfoIt)->cgiContentType = "";
@@ -341,12 +341,13 @@ void	HttpServer::_serveClients( void )
 								std::string header_part = str_buffer.substr(0, bef_header);
 								(*ClientInfoIt)->parseCgiHeader(header_part);
 								std::string contentType = (*ClientInfoIt)->cgiMap["content-type:"];
+								(*ClientInfoIt)->cgiContentLength = (*ClientInfoIt)->cgiMap["content-length:"];
 								mimeType = contentType.substr(0, contentType.find(";"));
 								body = str_buffer.substr(bef_header + 4);
 								std::string newFile = (*ClientInfoIt)->servedFilesFolder + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
-								if((*ClientInfoIt)->cgi_out.is_open()) (*ClientInfoIt)->cgi_out.close();
+								if((*ClientInfoIt)->cgi_out.is_open()) 
+									(*ClientInfoIt)->cgi_out.close();
 								(*ClientInfoIt)->cgi_out.open(newFile, std::ios::binary);
-                                if(!(*ClientInfoIt)->cgi_out.is_open()) std::cout << "NOT OPEN" << std::endl;
 								(*ClientInfoIt)->servedFileName = newFile; // case of no upload /testcmd.php or the case of uploaded file example.php
 								(*ClientInfoIt)->cgi_out << body;
 								(*ClientInfoIt)->isFirstCgiRead = false;
@@ -468,7 +469,7 @@ void	HttpServer::_serveClients( void )
                                 if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1
 								|| (*ClientInfoIt)->isCreated == -1)
                                 {
-                                    throw std::runtime_error("send function has failed or blocked");
+                                    throw std::runtime_error("1send function has failed or blocked");
                                 }
 								if((*ClientInfoIt)->isRedirect == true)
 								{
@@ -485,7 +486,7 @@ void	HttpServer::_serveClients( void )
                                 if (send((*ClientInfoIt)->socket, s, r, 0) == -1
                                 || (*ClientInfoIt)->isCreated == -1)
                                 {
-                                    throw std::runtime_error("send function has failed or blocked");
+                                    throw std::runtime_error("2send function has failed or blocked");
                                     continue;
                                 }
                                 delete[] s;
@@ -510,11 +511,12 @@ void	HttpServer::_serveClients( void )
 					{
                         if ((*ClientInfoIt)->isSendingHeader == true)
                         {
-                            if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1
-							|| (*ClientInfoIt)->isCreated == -1)
-                                throw std::runtime_error("send function has failed or blocked");
+                            if ((send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1)
+							|| ((*ClientInfoIt)->isCreated == -1))
+                                throw std::runtime_error("3send function has failed or blocked");
 							if((*ClientInfoIt)->isRedirect == true)
 							{
+								std::cout << "inside get redirect" << std::endl;
 								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
                                 continue;
 							}
@@ -527,9 +529,9 @@ void	HttpServer::_serveClients( void )
                                 char *s = new char[1025]();
                                 (*ClientInfoIt)->served.read(s, 1024);
                                 int r = (*ClientInfoIt)->served.gcount();
-                                if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
+								if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
                                 {
-                                    throw std::runtime_error("send function has failed or blocked");
+                                    throw std::runtime_error("4send function has failed or blocked");
                                     continue;
                                 }
                                 delete[] s;

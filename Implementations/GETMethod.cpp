@@ -31,16 +31,22 @@ std::string GETMethod::format_date(time_t t) {
 
 void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig) {
     client->checkPathValidation(client, serverConfig, client->parsedRequest.requestDataMap["path"]);
+    if(client->_currentLocation.Location.length() && !client->_isLocationSupportsCurrentMethod(client, "GET"))
+    {
+        error_405(client, serverConfig.errorInfo["405"]);
+        throw std::runtime_error("Method not allowed");
+    }
     if (client->isRedirect)
     {
         client->headerToBeSent += "HTTP/1.1 301 Moved Permanently\r\n"
             + std::string("Location: ")
-            + client->_currentLocation.Redirection
+        + client->_currentLocation.Redirection
             + "\r\n";
         client->isSendingHeader = true;
         return ;
     }
-    else if (client->servedFileName == "" && !client->inReadCgiOut) {
+    else if (client->servedFileName == "" && !client->inReadCgiOut) 
+    {
         error_404(client, serverConfig.errorInfo["404"]);
         throw std::runtime_error("file path not allowed");
     }
@@ -72,10 +78,15 @@ void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig
         client->isSendingHeader = true;
     }
 }
+
 std::string GETMethod::directoryListing(std::string rootDirectory, std::string linking_path,
-                                        ClientInfo *client) {
+                                        ClientInfo *client, ServerConfiguration &serverConfig)
+{
     DIR *dir = opendir(rootDirectory.c_str());
-    if (dir == NULL) {
+    if (dir == NULL) 
+    {
+        error_500(client, serverConfig.errorInfo["500"]);
+        throw std::runtime_error("root directory was not opened properly");
     }
     std::string file_list = "<!DOCTYPE html>\n"
                             "<html>\n"
@@ -88,17 +99,19 @@ std::string GETMethod::directoryListing(std::string rootDirectory, std::string l
     struct stat filestat;
     while ((entry = readdir(dir)) != NULL) {
         char path[1024];
-        snprintf(path, sizeof(path), "%s%s", rootDirectory.c_str(), entry->d_name);
-        if (stat(path, &filestat) == -1) {
+        snprintf(path, sizeof(path), "%s/%s", rootDirectory.c_str(), entry->d_name);
+        if (stat(path, &filestat) == -1 || !strcmp(entry->d_name, "..") || !strcmp(entry->d_name, "."))
+        {
             continue;
         }
         std::string filename = std::string(entry->d_name);
         std::string filesize = std::to_string(filestat.st_size);
         std::string filemodtime = format_date(filestat.st_mtime);
         std::string filetype = get_file_type(filestat.st_mode);
-        file_list +=
-                "<tr><td><a href=\"" + linking_path + filename + "\">" + filename + "</a></td><td>" + filesize +
-                "</td><td>" + filemodtime + "</td><td>" + filetype + "</td></tr>\n";
+        if(linking_path.back() != '/')
+            linking_path.push_back('/');
+        file_list += "<tr><td><a href=\"" + linking_path + filename + "\">" + filename + "</a></td><td>" + filesize +
+                    "</td><td>" + filemodtime + "</td><td>" + filetype + "</td></tr>\n";
     }
 
     file_list += "</table>\n"

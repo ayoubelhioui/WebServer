@@ -8,14 +8,16 @@
 # include "../Interfaces/RequestParser.hpp"
 # include "../Interfaces/POSTMethod.hpp"
 # include "../Interfaces/ChunkedPostRequest.hpp"
-
+# include "../Interfaces/GETMethod.hpp"
 class PostMethod;
+class GETMethod;
 
 class ClientInfo {
     public:
 		ClientInfo ( void );
 		~ClientInfo ( void );
 		PostMethod			*postRequest;
+		GETMethod 			*getRequest;
 		ChunkedPostRequest	*chunkedRequest;
 		ClientInfo ( const ClientInfo & );
 		ClientInfo	&operator= ( const ClientInfo & );
@@ -29,6 +31,7 @@ class ClientInfo {
 		void			searchForCgi(ClientInfo *, std::list<LocationBlockParse>::iterator &, std::string &);
 		void			returnPathWithoutFile(std::string &);
 		bool    		isThereFileLast(std::string &, bool &, int &);
+		bool 			_isLocationSupportsCurrentMethod( ClientInfo *, std::string );
         ParsingRequest parsedRequest;
         std::string headerToBeSent;
         bool isSendingHeader;
@@ -64,8 +67,9 @@ class ClientInfo {
 	int														  cgiPid;
 	bool            										  PostFinishedCgi;
 	bool 		    										  isNotUpload;
-	int          											  isCreated;
 	bool													  isRedirect;
+	std::string   											  cgiStatus;
+	int          											  isCreated;
 	// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
 	// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 	// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);

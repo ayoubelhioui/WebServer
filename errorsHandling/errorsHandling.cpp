@@ -113,12 +113,12 @@ void    error_400(ClientInfo *client, std::string &error_page)
 void    error_405(ClientInfo *client, std::string &error_page)
 {
     std::string path = error_page;
-    if(client->served.is_open()) client->served.close();
+    if(client->served.is_open()) 
+        client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-
     client->headerToBeSent += "HTTP/1.1 405 Method Not Allowed\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")

@@ -1,11 +1,13 @@
 #include "../Interfaces/Client.hpp"
 	
 ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
-, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0)
+, stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0), cgiStatus("200")
 {
     this->servedFilesFolder = "FilesForServing/";
+    this->isCreated = 0;
     struct stat st;
-    if (!(stat(this->servedFilesFolder.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
+    if (!(stat(this->servedFilesFolder.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) 
+    {
         this->isCreated = mkdir(this->servedFilesFolder.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
     }
 }
@@ -13,15 +15,16 @@ ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , add
 ClientInfo::~ClientInfo( void ){ }
 
 
-// bool    ClientInfo::_isLocationSupportsCurrentMethod(ClientInfo *client, std::string &method) {
-//     std::list<std::string>::iterator it = client->_currentLocation.allowedMethods.begin();
-//     while (it != client->_currentLocation.allowedMethods.end()){
-//         if (*it == method)
-//             return (true);
-//         it++;
-//     }
-//     return (false);
-// }
+bool    ClientInfo::_isLocationSupportsCurrentMethod(ClientInfo *client, std::string method) 
+{
+    std::list<std::string>::iterator it = client->_currentLocation.allowedMethods.begin();
+    while (it != client->_currentLocation.allowedMethods.end()){
+        if (*it == method)
+            return (true);
+        it++;
+    }
+    return (false);
+}
 
 void        ClientInfo::parseQueryString( void ) {
     std::string	word = this->parsedRequest.requestDataMap["path"];
@@ -160,7 +163,6 @@ void    ClientInfo::searchForCgi(ClientInfo *client, std::list<LocationBlockPars
             return ;
         }
     }
-    
     client->servedFileName = currentPath;
 }
 
@@ -171,7 +173,6 @@ bool isCgi(std::pair<std::string, std::string> cgi)
 
 void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration &serverConfig, std::string &currentPath)
 {
-    // throw std::runtime_error("ERROR IN PATH");
     std::string pathOffset = "";
     if (currentPath.back() == '/') {
         currentPath.pop_back();
@@ -207,8 +208,10 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 std::ifstream fileCheck(currentPath);
                 if (fileCheck)
                 {
-                    if (client->_currentLocation.Redirection.length())
+                    if ((*beg).Redirection.length())
                     {
+                        client->_currentLocation = *beg;
+                        client->cgiIterator = client->_currentLocation.CGI.end();
                         client->isRedirect = true;
                         return ;
                     }
@@ -223,11 +226,13 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 if ((*beg).Root.back() == '/' && (*beg).Root.length() > 1)
                     (*beg).Root.pop_back();
                 currentPath = (*beg).Root + pathOffset;
+                
                 if(client->parsedRequest.requestDataMap["method"] == "POST")
                 {
                     if ((*beg).Redirection.length())
                     {
                         client->_currentLocation = *beg;
+                        client->cgiIterator = client->_currentLocation.CGI.end();
                         client->isRedirect = true;
                         return ;
                     }
@@ -245,8 +250,10 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     std::ifstream fileCheck(currentPath);
                     if (fileCheck)
                     {
-                        if (client->_currentLocation.Redirection.length())
+                        if ((*beg).Redirection.length())
                         {
+                            client->_currentLocation = *beg;
+                            client->cgiIterator = client->_currentLocation.CGI.end();
                             client->isRedirect = true;
                             return ;
                         }
@@ -257,10 +264,15 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 }
                 else // handle the case where the path + offset is a directory (must loop through indexes and check if there is a valid path)
                 {
-                    // if((*beg).isDirectoryListingOn && client->parsedRequest.requestDataMap["method"] == "GET")
-                    //     client->servedFileName = directoryListing((*beg).Root, currentPath, client);
-                    // else
-                    // {
+                    if((*beg).isDirectoryListingOn)
+                    {
+                        client->_currentLocation = *beg;
+                        client->cgiIterator = client->_currentLocation.CGI.end();
+                        client->servedFileName = client->getRequest->directoryListing((*beg).Root, (*beg).Location, client, serverConfig);
+                        return ;
+                    }
+                    else
+                    {
                         for (std::list<std::string>::iterator index_it = (*beg).indexFiles.begin();
                              index_it != (*beg).indexFiles.end(); index_it++)
                         {
@@ -268,17 +280,20 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                             std::ifstream check_file(final_path, std::ios::binary);
                             if (check_file)
                             {
-                            if (client->_currentLocation.Redirection.length())
-                            {
-                                client->isRedirect = true;
-                                return ;
-                            }
-                                this->searchForCgi(client, beg, currentPath);
+                                if ((*beg).Redirection.length())
+                                {
+                                    client->_currentLocation = *beg;
+                                    client->cgiIterator = client->_currentLocation.CGI.end();
+                                    client->isRedirect = true;
+                                    return ;
+                                }
+                                this->searchForCgi(client, beg, final_path);
                                 return ;
                             }
                             check_file.close();
                         }
                         return ;
+                    }
                 }
 
             }
