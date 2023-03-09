@@ -89,6 +89,7 @@ void	HttpServer::_selectClients ( void )
         FD_SET((*ClientInfoIt)->socket, &_writeFds);
 		_maxSocket = std::max(_maxSocket, (*ClientInfoIt)->socket);
 	}
+	std::cout << "max socket is " << _maxSocket  << std::endl;
 	if (select(_maxSocket + 1, &_readFds, &_writeFds, NULL, &tv) == 0)
 		throw std::runtime_error("select has failed or may have no clients at the moment");
 }
@@ -326,7 +327,7 @@ void	HttpServer::_serveClients( void )
 									ClientInfoIt++;
 									continue;
                                 }
-								buffer[n] = 0; // protect this at all cost
+								buffer[n] = 0;
 								std::string str_buffer(buffer);
 								std::string body, mimeType;
 								int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
@@ -341,10 +342,18 @@ void	HttpServer::_serveClients( void )
 								std::string header_part = str_buffer.substr(0, bef_header);
 								(*ClientInfoIt)->parseCgiHeader(header_part);
 								std::string contentType = (*ClientInfoIt)->cgiMap["content-type:"];
-								(*ClientInfoIt)->cgiContentLength = std::stoi((*ClientInfoIt)->cgiMap["content-length:"]);
-								if((*ClientInfoIt)->cgiContentLength == 0)
-									(*ClientInfoIt)->cgiContentLength = lseek((*ClientInfoIt)->CgiReadEnd, 0, SEEK_END);
-								std::cout << "content length is " << (*ClientInfoIt)->cgiContentLength << std::endl;
+								std::string contentLength =  (*ClientInfoIt)->cgiMap["content-length:"];
+								std::string status = (*ClientInfoIt)->cgiMap["status:"];
+								if(status != "")
+									(*ClientInfoIt)->cgiStatus = status;
+								if(contentLength == "")
+								{
+									int bytes_available = 0;
+									ioctl((*ClientInfoIt)->CgiReadEnd, FIONREAD, &bytes_available);
+									(*ClientInfoIt)->cgiBodyLength = bytes_available;
+								}
+								else
+									(*ClientInfoIt)->cgiBodyLength = std::stoi(contentLength);
 								mimeType = contentType.substr(0, contentType.find(";"));
 								body = str_buffer.substr(bef_header + 4);
 								std::string newFile = (*ClientInfoIt)->servedFilesFolder + (*ClientInfoIt)->generateRandString() + get_real_format(mimeType.c_str());
@@ -359,7 +368,18 @@ void	HttpServer::_serveClients( void )
 							{
 								char buffer[1001];
 								ssize_t n;
-								n = read((*ClientInfoIt)->CgiReadEnd , buffer, 1000);
+								int		to_read = 0;
+								to_read = ((*ClientInfoIt)->cgiBodyLength > 1024) ? 1024 : (*ClientInfoIt)->cgiBodyLength;
+								n = read((*ClientInfoIt)->CgiReadEnd, buffer, to_read);
+								if(n == -1)
+                                {
+									error_400((*ClientInfoIt), this->_serverConfiguration.errorInfo["400"]);
+									(*ClientInfoIt)->isErrorOccured = true;
+									(*ClientInfoIt)->inReadCgiOut = false;
+									ClientInfoIt++;
+									continue;
+                                }
+								(*ClientInfoIt)->cgiBodyLength -= n;
 								buffer[n] = 0;
 								if(n >= 0)
 									(*ClientInfoIt)->cgi_out << buffer;
@@ -369,7 +389,9 @@ void	HttpServer::_serveClients( void )
 									(*ClientInfoIt)->served_size = (*ClientInfoIt)->cgi_out.tellp();
 									(*ClientInfoIt)->cgi_out.seekp(0, std::ios::beg);
 
-                                    (*ClientInfoIt)->headerToBeSent = "HTTP/1.1 200 OK\r\n"
+                                    (*ClientInfoIt)->headerToBeSent = "HTTP/1.1 "
+										+ (*ClientInfoIt)->cgiStatus
+										+ "\r\n"
 										+ std::string("Connection: close\r\n")
 										+ std::string("Content-Length: ")
 										+ std::to_string((*ClientInfoIt)->served_size)
