@@ -2,6 +2,8 @@
 # define __DELETEMETHOD_H__
 # include <iostream>
 # include <sys/stat.h>
+# include <dirent.h>
+# include <unistd.h>
 # define FOLDER 2
 # define FILE 1
 # define UNKNOWN 0
@@ -21,7 +23,7 @@ class DeleteMethod {
 		void		_locateResource ( void );
 		void		_deleteResource ( void );
 		void		_defineResourceType ( void );
-		void		_removeRecursively ( std::string );
+		void		_removeRecursively ( const char * );
 };
 
 #endif

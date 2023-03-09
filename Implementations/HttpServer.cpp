@@ -186,11 +186,14 @@ void	HttpServer::_serveClients( void )
 						continue;
 					}
 				}
-				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
-				// {
-				// 	ClientInfoIt++;
-				// 	continue ;
-				// }
+				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
+				{
+					(*ClientInfoIt)->DeleteRequest = new DeleteMethod((*ClientInfoIt)->parsedRequest.requestDataMap["path"]);
+					(*ClientInfoIt)->DeleteRequest->deleteTargetedResource();
+					(*ClientInfoIt)->DeleteRequest->sendResponse();
+					ClientInfoIt++;
+					continue ;
+				}
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
 					try

@@ -44,11 +44,25 @@ void	DeleteMethod::deleteTargetedResource ( void )
 }
 
 void	DeleteMethod::sendResponse( void )
-{}
-
-void	DeleteMethod::_removeRecursively ( std::string path )
 {
+	std::cout << this->_pathToResource << " DELETED SUCCESSFULLY" << std::endl;
+}
+
+void	DeleteMethod::_removeRecursively ( const char *path )
+{
+	const char	*newPath;
+
 	
+	if (rmdir(path) == 0)
+		std::cout << std::string(path) << "REMOVED SUCCESSFULLY !!" << std::endl;
+	else
+	{
+		if (path[0] == '/')
+			newPath = strstr(path + 1, "/");
+		else
+			newPath = strstr(path, "/");
+		this->_removeRecursively (newPath);
+	}
 }
 
 void	DeleteMethod::_deleteResource ( void )
@@ -70,9 +84,9 @@ void	DeleteMethod::_deleteResource ( void )
 		remove(this->_pathToResource.c_str());
 	else if (this->_resourceType == FOLDER)
 	{
-		if (opendir() == 0)
-			
-		this->_removeRecursively( this->_pathToResource );
+		if (opendir(this->_pathToResource.c_str()) == 0)
+			throw std::runtime_error("Cannot access " + this->_pathToResource);
+		this->_removeRecursively( this->_pathToResource.c_str() );
 	}
 }
 
