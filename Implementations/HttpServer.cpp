@@ -192,6 +192,7 @@ void	HttpServer::_serveClients( void )
 				// }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
+					std::cout << "is " << (*ClientInfoIt)->parsedRequest.requestDataMap["path"]  << std::endl;
 					try
 					{
 						(*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
@@ -297,8 +298,6 @@ void	HttpServer::_serveClients( void )
 						ClientInfoIt++;
 						continue;
 					}
-					
-					
 				}
 				else if ((*ClientInfoIt)->inReadCgiOut)
 				{

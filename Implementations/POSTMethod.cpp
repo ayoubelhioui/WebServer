@@ -71,12 +71,18 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
 }
 void    PostMethod::handleFirstRead(ClientInfo *client) {
     if(this->_isLocationSupportsUpload(client))
+    {
+        std::cout << "upload true" << std::endl;
         startPostRequest(client, 0);
+    }
     else
     {
+        std::cout << "upload false" << std::endl;
         startPostRequest(client, 1);
+        std::cout << "BEF client is not upload " << client->isNotUpload << std::endl;
         client->postLocationAbsence(this->_serverConfiguration);
-     }
+        std::cout << "AFTER client is not upload " << client->isNotUpload << std::endl;
+    }
 }
 
 void PostMethod::_preparingPostRequest(ClientInfo *client) {
@@ -143,7 +149,7 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     if(this->destinationFile.is_open())
         this->destinationFile.close();
     this->destinationFile.open(client->postFilePath, std::ios::binary);
-    if (client->isCreated == -1 || this->destinationFile.fail())
+    if (client->isCreated == -1 || this->destinationFile.fail() || this->sourceFile.fail())
         throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));
 }
 

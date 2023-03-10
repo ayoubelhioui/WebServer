@@ -9,12 +9,11 @@ ChunkedPostRequest::ChunkedPostRequest ( void )
 	  _receivedBytes(0),
 	  _currentChunkSize(0),
 	  _hexLength(0),
-	  _fileSize(0),
 	  _writtenBytes(0),
 	  _chunkContent(nullptr),
 	  _numberOfRecChunk(0),
 	  _entered(0)
-{}
+{ _fileSize = 0;}
 
 ChunkedPostRequest::~ChunkedPostRequest ( void )
 {

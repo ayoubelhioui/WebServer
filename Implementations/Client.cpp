@@ -63,7 +63,9 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
         throw std::runtime_error("Location doesn't support either CGI nor upload");
     }
     bool isFileLast = 0;
+    std::cout << "1 this action is " << this->actionPath << std::endl;
     this->actionPath += this->cgiFileEnd;
+    std::cout << "2 this action is " << this->actionPath << std::endl;
     int len = this->actionPath.length() - 1;
     this->isThereFileLast(this->actionPath, isFileLast, len);
     if(isFileLast)
@@ -71,6 +73,7 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
         std::ifstream fileFound (this->actionPath.c_str(), std::ios::binary);
         if(fileFound)
         {
+            std::cout << "HERE1" << std::endl;
             this->isNotUpload = true;
             this->actionPath = this->actionPath.c_str();
             return ;
@@ -86,13 +89,14 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
         {
             std::string fileLast = this->actionPath + (*indexIt);
             std::ifstream inFile(fileLast);
-        if(inFile)
-        {
-            this->isNotUpload = true;
-            this->actionPath = fileLast;
-            inFile.close();
-            return ;
-        }
+            if(inFile)
+            {
+                std::cout << "HERE2" << std::endl;
+                this->isNotUpload = true;
+                this->actionPath = fileLast;
+                inFile.close();
+                return ;
+            }
         }
     }
 }
@@ -119,18 +123,18 @@ void            ClientInfo::postErrorsHandling(ServerConfiguration &serverConfig
         this->isErrorOccured = true;
         throw (std::runtime_error("Body Size Too Large !!"));
     }
-    if(isNotValidPostRequest(client->parsedRequest.requestDataMap))
+    if(isNotValidPostRequest(this->parsedRequest.requestDataMap))
     {
-        client->isDefaultError = false;
-        client->isErrorOccured = true;
-        error_400(client, this->_serverConfiguration.errorInfo["400"]);
+        this->isDefaultError = false;
+        this->isErrorOccured = true;
+        error_400(this, serverConfig.errorInfo["400"]);
         throw std::runtime_error(BAD_REQUEST_EXCEPTION);
     }
-    if(isTransferEncodingNotChunked(client->parsedRequest.requestDataMap))
+    if(isTransferEncodingNotChunked(this->parsedRequest.requestDataMap))
     {
-        client->isDefaultError = false;
-        client->isErrorOccured = true;
-        error_501(client, this->_serverConfiguration.errorInfo["501"]);
+        this->isDefaultError = false;
+        this->isErrorOccured = true;
+        error_501(this, serverConfig.errorInfo["501"]);
         throw std::runtime_error(TRANSFER_ENCODING_EXCEPTION);
     }
 }
@@ -481,7 +485,7 @@ void			ClientInfo::returnPathWithoutFile(std::string &TempPath)
         if (TempPath[len] == '/' && point) {
             if(len == 0)
                 len++;
-            this->cgiFileEnd = TempPath.substr(len + 1);
+            this->cgiFileEnd = TempPath.substr(len);
             TempPath = TempPath.substr(0, len);
             return ;
         }
@@ -516,7 +520,10 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     
     int fdup = 0;
     if(client->isNotUpload)
+    {
+        std::cout << "WAS HERE" << std::endl;
         fdup = open(client->servedFileName.c_str(), O_RDONLY);
+    }
     int fd[2];
     pipe(fd);
     pid = fork();
