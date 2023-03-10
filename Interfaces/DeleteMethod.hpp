@@ -1,6 +1,7 @@
 #ifndef __DELETEMETHOD_H__
 # define __DELETEMETHOD_H__
 # include <iostream>
+# include "Client.hpp"
 # include <sys/stat.h>
 # include <dirent.h>
 # include <unistd.h>
@@ -10,13 +11,15 @@
 
 class DeleteMethod {
 	public:
-		DeleteMethod ( std::string & );
+		DeleteMethod ( std::string &, ClientInfo *, ServerConfiguration & );
 		DeleteMethod ( void );
 		~DeleteMethod ( void );
 		DeleteMethod ( const DeleteMethod & );
 		DeleteMethod	&operator= ( const DeleteMethod & );
 		void	deleteTargetedResource ( void );
 		void	sendResponse ( void );
+		ClientInfo				*client;
+		ServerConfiguration	    serverConfig;
 	private:
 		std::string	_pathToResource;
 		short int	_resourceType;

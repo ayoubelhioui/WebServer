@@ -13,4 +13,5 @@ void		error_500(ClientInfo *, std::string &);
 void		error_413(ClientInfo *, std::string &);
 void		error_404(ClientInfo *, std::string &);
 void    	error_405(ClientInfo *, std::string &);
+void    	error_403(ClientInfo *, std::string &);
 #endif

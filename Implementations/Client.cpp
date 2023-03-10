@@ -138,7 +138,6 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
             std::ifstream inFile(fileLast);
             if(inFile)
             {
-                std::cout << "HERE2" << std::endl;
                 this->isNotUpload = true;
                 this->actionPath = fileLast;
                 inFile.close();
@@ -151,7 +150,6 @@ void            ClientInfo::postErrorsHandling(ServerConfiguration &serverConfig
 {
     if(this->_currentLocation.Location.length() <= 0)
     {
-        std::cout << "HERE!!!!!!!1" << std::endl;
         this->isDefaultError = false;
         this->isErrorOccured = true;
         error_404(this, serverConfig.errorInfo["404"]);
@@ -340,6 +338,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 if (currentPath.front() != '.')
                     currentPath = '.' + currentPath;
                 std::ifstream fileCheck(currentPath);
+                std::cout << "Current path is " << currentPath << std::endl;
                 if (fileCheck)
                 {
                     if ((*beg).Redirection.length())
@@ -347,14 +346,16 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         client->_currentLocation = *beg;
                         client->cgiIterator = client->_currentLocation.CGI.end();
                         client->isRedirect = true;
+                        std::cout << "im here" << std::endl;
                         return ;
                     }
                     if(client->parsedRequest.requestDataMap["method"] != "DELETE")
                         this->searchForCgi(client, beg, currentPath);
                     else
+                    {
+                        
                         client->servedFileName = currentPath;
-                    std::cout << "client->servedFileName is " << client->servedFileName << std::endl;
-                    exit(1);
+                    }
                     
                 }
                 fileCheck.close();
@@ -383,11 +384,12 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     client->_currentLocation = *beg;
                     client->cgiIterator = std::find_if(client->_currentLocation.CGI.begin(), client->_currentLocation.CGI.end(), isCgi);
                     return ;
-                }
+            }
                 int rootLength = currentPath.length() - 1;
                 if (isThereFileLast(currentPath, is_file_last, rootLength))
                 {
                     std::ifstream fileCheck(currentPath);
+                    std::cout << "Current path is " << currentPath << std::endl;
                     if (fileCheck)
                     {
                         if ((*beg).Redirection.length())
@@ -401,18 +403,17 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                             this->searchForCgi(client, beg, currentPath);
                         else
                             client->servedFileName = currentPath;
-                        std::cout << "2client->servedFileName is " << client->servedFileName << std::endl;
-                        exit(1);
                     }
                     fileCheck.close();
                     return ;
                 }
                 else // handle the case where the path + offset is a directory (must loop through indexes and check if there is a valid path)
                 {
-                    if(client->parsedRequest.requestDataMap["method"] != "DELETE")
+                    if(client->parsedRequest.requestDataMap["method"] == "DELETE")
                     {
-                        client->servedFileName = currentPath;
-                        std::cout << "dir is " << client->servedFileName  << std::endl;
+                        std::ifstream fileCheck(currentPath);
+                        if(fileCheck)
+                            client->servedFileName = currentPath;
                         return ;
                     }
                     if((*beg).isDirectoryListingOn)
@@ -442,8 +443,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                                     this->searchForCgi(client, beg, currentPath);
                                 else
                                     client->servedFileName = currentPath;
-                                std::cout << "3client->servedFileName is " << client->servedFileName << std::endl;
-                                exit(1);
                                 return ;
                             }
                             check_file.close();

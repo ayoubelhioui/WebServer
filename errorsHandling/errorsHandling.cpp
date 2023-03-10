@@ -130,6 +130,26 @@ void    error_405(ClientInfo *client, std::string &error_page)
     client->isSendingHeader = true;
 }
 
+void    error_403(ClientInfo *client, std::string &error_page)
+{
+    std::string path = error_page;
+    if(client->served.is_open()) 
+        client->served.close();
+    client->served.open(path);
+    client->served.seekg(0, std::ios::end);
+    int file_size = client->served.tellg();
+    client->served.seekg(0, std::ios::beg);
+    client->headerToBeSent += "HTTP/1.1 403 Forbidden\r\n"
+    + std::string("Connection: close\r\n")
+    + std::string("Content-Length: ")
+    + std::to_string(file_size)
+    + "\r\n"
+    +  std::string("Content-Type: ")
+    +  get_mime_format(path.c_str())
+    + "\r\n\r\n" ;
+    client->isSendingHeader = true;
+}
+
 void errorPrinting(const char *errorMessage){
     std::cout << errorMessage << std::endl;
     exit (EXIT_FAILURE);

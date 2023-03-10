@@ -1,9 +1,0 @@
-path is /
-path is /assets/css/main.css
-path is /assets/js/functions-min.js
-path is /assets/img/work-victory.jpg
-path is /assets/img/introduction-visual.png
-path is /assets/img/logo.png
-path is /assets/img/about-visual.png
-path is /assets/img/work-alex-nowak.jpg
-path is /assets/img/work-metiew-smith.jpg

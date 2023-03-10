@@ -15,6 +15,7 @@
 #include  <sys/ioctl.h>
 class PostMethod;
 class GETMethod;
+class DeleteMethod;
 
 class ClientInfo {
     public:

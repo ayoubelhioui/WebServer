@@ -4,10 +4,10 @@
 /* ------------------ CANONICAL FORM ------------------- */
 /* ----------------------------------------------------- */
 
-DeleteMethod::DeleteMethod ( std::string &path )
-	: _pathToResource(path)
+DeleteMethod::DeleteMethod ( std::string &path, ClientInfo *client, ServerConfiguration &server )
+	: client(client), serverConfig(server), _pathToResource(path)
 {
-	std::cout << this->_pathToResource << std::endl;
+	// std::cout << this->_pathToResource << std::endl;
 }
 
 DeleteMethod::DeleteMethod ( void )
@@ -39,13 +39,51 @@ DeleteMethod::DeleteMethod ( const DeleteMethod &obj )
 
 void	DeleteMethod::deleteTargetedResource ( void )
 {
+	std::cout << "path is : " << _pathToResource << std::endl;
+	if(client->_currentLocation.Location.length() && !client->_isLocationSupportsCurrentMethod(client, "DELETE"))
+    {
+        client->isDefaultError = false;
+        error_405(client, serverConfig.errorInfo["405"]);
+        throw std::runtime_error("Method not allowed");
+    }
+    if (client->isRedirect)
+    {
+        client->headerToBeSent += "HTTP/1.1 301 Moved Permanently\r\n"
+            + std::string("Location: ")
+        + client->_currentLocation.Redirection
+            + "\r\n";
+        client->isSendingHeader = true;
+        return ;
+    }
+	else if (client->servedFileName == "")
+    {
+        client->isDefaultError = false;
+        error_404(client, serverConfig.errorInfo["404"]);
+        throw std::runtime_error("file path not allowed");
+    }
 	this->_locateResource();
 	this->_deleteResource();
 }
 
 void	DeleteMethod::sendResponse( void )
 {
-	std::cout << this->_pathToResource << " DELETED SUCCESSFULLY" << std::endl;
+	std::string path = "DeleteSuccess.html";
+    if(client->served.is_open())
+        client->served.close();
+    client->served.open(path);
+    client->served.seekg(0, std::ios::end);
+    int file_size = client->served.tellg();
+    client->served.seekg(0, std::ios::beg);
+
+    client->headerToBeSent += "HTTP/1.1 204 No Content\r\n"
+    + std::string("Connection: close\r\n")
+    + std::string("Content-Length: ")
+    + std::to_string(file_size)
+    + "\r\n"
+    +  std::string("Content-Type: ")
+    +  get_mime_format(path.c_str())
+    + "\r\n\r\n" ;
+    client->isSendingHeader = true;
 }
 
 void	DeleteMethod::_removeRecursively ( const char *path )
@@ -64,12 +102,12 @@ void	DeleteMethod::_removeRecursively ( const char *path )
 	// 	this->_removeRecursively (newPath);
 	// }
 	DIR	*dir_ptr = opendir(path);
-	if (dir_ptr == NULL) 
+	if (dir_ptr == NULL)
 	{
-		throw std::runtime_error("Cannot access " + this->_pathToResource);
-		return;
+		client->isDefaultError = false;
+		error_500(this->client, this->serverConfig.errorInfo["500"]);
+		throw std::runtime_error("Cannot delete the directory or file");
 	}
-
 	struct dirent* dir_entry_ptr;
 	while ((dir_entry_ptr = readdir(dir_ptr)) != NULL) 
 	{
@@ -86,22 +124,33 @@ void	DeleteMethod::_removeRecursively ( const char *path )
 		{
 			if (access(file_path.c_str(), W_OK) != 0) 
 			{
-				std::cout << "Error: permission denied to delete file " << file_path << std::endl;
-				continue;
+				client->isDefaultError = false;
+				error_403(this->client, this->serverConfig.errorInfo["403"]);
+				throw std::runtime_error("Cannot delete the directory or file ");
 			}
-			if (remove(file_path.c_str()) == -1) 
+			if (remove(file_path.c_str()) == -1)
 			{
+				client->isDefaultError = false;
+				error_500(this->client, this->serverConfig.errorInfo["500"]);
+				throw std::runtime_error("Cannot delete the directory or file ");
 				
 			}
 		}
 	}
-
 	closedir(dir_ptr);
-
-	// delete folder
-	if (rmdir(folder_path) != 0) {
-		std::cout << "Error deleting folder " << folder_path << std::endl;
+	if (access(path, W_OK) != 0) 
+	{
+		client->isDefaultError = false;
+		error_403(this->client, this->serverConfig.errorInfo["403"]);
+		throw std::runtime_error("Cannot delete the directory or file");
 	}
+	if (rmdir(path) != 0) 
+	{
+		client->isDefaultError = false;
+		error_500(this->client, this->serverConfig.errorInfo["500"]);
+		throw std::runtime_error("Cannot delete the directory or file");
+	}
+
 }
 
 void	DeleteMethod::_deleteResource ( void )

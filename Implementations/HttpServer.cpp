@@ -188,12 +188,21 @@ void	HttpServer::_serveClients( void )
 				}
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
                 {
-					(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->parsedRequest.requestDataMap["path"]);
-                    (*ClientInfoIt)->DeleteRequest = new DeleteMethod((*ClientInfoIt)->parsedRequest.requestDataMap["path"]);
-                    (*ClientInfoIt)->DeleteRequest->deleteTargetedResource();
-                    (*ClientInfoIt)->DeleteRequest->sendResponse();
-                    ClientInfoIt++;
-                    continue ;
+					try
+					{
+						(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->parsedRequest.requestDataMap["path"]);
+						(*ClientInfoIt)->DeleteRequest = new DeleteMethod((*ClientInfoIt)->servedFileName, *ClientInfoIt, this->_serverConfiguration);
+						(*ClientInfoIt)->DeleteRequest->deleteTargetedResource();
+						(*ClientInfoIt)->DeleteRequest->sendResponse();
+					}
+					catch (std::exception &e)
+					{
+						if((*ClientInfoIt)->isDefaultError == true)
+							error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
+						(*ClientInfoIt)->isErrorOccured = true;
+					}
+					ClientInfoIt++;
+					continue;
                 }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
@@ -219,7 +228,6 @@ void	HttpServer::_serveClients( void )
 						if((*ClientInfoIt)->isDefaultError == true)
                             error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 						(*ClientInfoIt)->isErrorOccured = true;
-						std::cout << "(*ClientInfoIt)->isErrorOccured is " << (*ClientInfoIt)->isErrorOccured << std::endl;
 						ClientInfoIt++;
 						continue;
 					}
@@ -587,7 +595,8 @@ void	HttpServer::_serveClients( void )
 						}
 					}
 				} 
-				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
+				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET"
+				|| (*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
 				{
 					try
 					{
@@ -598,7 +607,6 @@ void	HttpServer::_serveClients( void )
                                 throw std::runtime_error("3send function has failed or blocked");
 							if((*ClientInfoIt)->isRedirect == true)
 							{
-								std::cout << "inside get redirect" << std::endl;
 								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
                                 continue;
 							}
