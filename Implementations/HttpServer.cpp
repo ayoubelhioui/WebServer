@@ -54,20 +54,20 @@ void	HttpServer::_setUpListeningSocket( void )
 	getaddrinfo(_serverConfiguration.serverHost.c_str(),
 				_serverConfiguration.serverPort.c_str(),
 				&_serverHints, &bindAddress);
-	
+
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
 	fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
 	if (_listeningSocket < 0)
-		exit (EXIT_FAILURE); // to be replaced by sth else
+        exit (EXIT_FAILURE); // to be replaced by sth else
 	// //std::cout << "Socket Created Successfully" << std::endl;
 	optval = 1;
     setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 	if (bind(_listeningSocket, bindAddress->ai_addr, bindAddress->ai_addrlen))
-		exit (EXIT_FAILURE); // to be replaced by sth else
+        exit (EXIT_FAILURE); // to be replaced by sth else
 	// //std::cout << "Binded Successfully" << std::endl;
 	freeaddrinfo(bindAddress);
 	if (listen(_listeningSocket, MAXQUEUESIZE) < 0)
-		exit (EXIT_FAILURE); // to be replaced by sth else
+        exit (EXIT_FAILURE); // to be replaced by sth else
 	// //std::cout << "Set Up for LISTENING Successfully" << std::endl;
 }
 
@@ -209,8 +209,9 @@ void	HttpServer::_serveClients( void )
                     }
 					catch (const std::exception& e)
 					{
+                        std::cout << e.what() << std::endl;
 						if((*ClientInfoIt)->isDefaultError == true)
-							error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
+                            error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 						(*ClientInfoIt)->isErrorOccured = true;
 						ClientInfoIt++;
 						continue;
@@ -232,6 +233,7 @@ void	HttpServer::_serveClients( void )
 						}
 						catch(const std::exception& e)
 						{
+                            std::cout << e.what() << std::endl;
 							error_500((*ClientInfoIt), this->_serverConfiguration.errorInfo["500"]);
 							(*ClientInfoIt)->isErrorOccured = true;
 							ClientInfoIt++;
@@ -243,14 +245,13 @@ void	HttpServer::_serveClients( void )
 					 	try
 					 	{
 							(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
-							 (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
-                             if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
-							 {
-								(*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
-							 }
+                            (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
+                            if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
+                                (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					 	}
 					 	catch (std::exception &e)
 					 	{
+                             std::cout << e.what() << std::endl;
 							if((*ClientInfoIt)->isDefaultError == true)
 							{
 								(*ClientInfoIt)->isErrorOccured = true;

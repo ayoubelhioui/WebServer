@@ -71,9 +71,9 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
         std::ifstream fileFound (this->actionPath.c_str(), std::ios::binary);
         if(fileFound)
         {
-        this->isNotUpload = true;
-        this->actionPath = this->actionPath.c_str();
-        return ;
+            this->isNotUpload = true;
+            this->actionPath = this->actionPath.c_str();
+            return ;
         }
         fileFound.close();
     }

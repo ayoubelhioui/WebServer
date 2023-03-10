@@ -77,24 +77,6 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
         client->postRequest->_isValidPostRequest(client);
 }
 void    PostMethod::handleFirstRead(ClientInfo *client) {
-    //  if(client->_currentLocation.Location.length() <= 0)
-    //  {client->isDefaultError = false;
-    //      client->isErrorOccured = true;
-    //      error_404(client, this->_serverConfiguration.errorInfo["404"]);
-    //      throw std::runtime_error("Location not found");
-    //  }
-    //  if (!client->_isLocationSupportsCurrentMethod(client, "POST"))
-    //  {
-    //      client->isErrorOccured = true;
-    //      error_405(client, this->_serverConfiguration.errorInfo["405"]); // IT MUST BE ERROR 405 NOT ERROR 500
-    //      throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
-    //  }
-    // if (isBodySizeBigger(this->_serverConfiguration, client->parsedRequest.contentLength))
-    //  {
-    //     error_413(client, this->_serverConfiguration.errorInfo["413"]);
-    //     client->isErrorOccured = true;
-    //     throw (std::runtime_error("Body Size Too Large !!"));
-    // }
     if(this->_isLocationSupportsUpload(client))
         startPostRequest(client, 0);
     else
