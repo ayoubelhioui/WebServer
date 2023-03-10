@@ -85,7 +85,8 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
     }
 }
 
-void PostMethod::_preparingPostRequest(ClientInfo *client) {
+void PostMethod::_preparingPostRequest(ClientInfo *client) 
+{
     int a = (client->parsedRequest. isBoundaryExist == true) ? 4 : 0;
     int b = (client->parsedRequest.isBoundaryExist == true) ? 0 : 4;
     client->requestBody.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
@@ -136,16 +137,10 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     if (!(stat(client->_currentLocation.UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
         client->isCreated = mkdir(client->_currentLocation.UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
     }
-    if(!client->isChunk)
-    {
-        this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-        client->postFilePath = client->_currentLocation.UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
-    }
-    else
-    {
-        this->sourceFile.open(TMP_FOLDER_PATH + client->chunkedRequest->fileName, std::ios::binary);
-        client->postFilePath = client->_currentLocation.UploadDirectoryPath + "/" + client->chunkedRequest->fileName;
-    }
+    if(client->isChunk)
+        client->parsedRequest.uploadFileName = client->chunkedRequest->fileName;
+    this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
+    client->postFilePath = client->_currentLocation.UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
     if(this->destinationFile.is_open())
         this->destinationFile.close();
     this->destinationFile.open(client->postFilePath, std::ios::binary);

@@ -192,7 +192,6 @@ void	HttpServer::_serveClients( void )
 				// }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
-					std::cout << "is " << (*ClientInfoIt)->parsedRequest.requestDataMap["path"]  << std::endl;
 					try
 					{
 						(*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
@@ -444,7 +443,8 @@ void	HttpServer::_serveClients( void )
 		{
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST") 
 				{
-					if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
+					if (((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
+					|| (*ClientInfoIt)->chunkedRequest->uploadDone)
 						and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false
 						and (*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == false)
 					{
