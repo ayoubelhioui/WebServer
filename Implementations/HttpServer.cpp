@@ -188,6 +188,7 @@ void	HttpServer::_serveClients( void )
 				}
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
                 {
+					(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->parsedRequest.requestDataMap["path"]);
                     (*ClientInfoIt)->DeleteRequest = new DeleteMethod((*ClientInfoIt)->parsedRequest.requestDataMap["path"]);
                     (*ClientInfoIt)->DeleteRequest->deleteTargetedResource();
                     (*ClientInfoIt)->DeleteRequest->sendResponse();
