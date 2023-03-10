@@ -74,7 +74,7 @@ void    PostMethod::handleFirstRead(ClientInfo *client) {
     {
         std::cout << "upload true" << std::endl;
         startPostRequest(client, 0);
-    }
+    } 
     else
     {
         std::cout << "upload false" << std::endl;

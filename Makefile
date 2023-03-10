@@ -18,6 +18,7 @@ SOURCES = main.cpp \
 		Implementations/ChunkedPostRequest.cpp \
 		Implementations/HttpServer.cpp \
 		Implementations/RequestParser.cpp \
+		Implementations/DeleteMethod.cpp \
 		errorsHandling/errorsHandling.cpp \
 		Utils/stringManip.cpp \
 		getFormat.cpp \

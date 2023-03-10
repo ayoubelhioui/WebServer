@@ -75,15 +75,11 @@ void ClientInfo::preparingMovingTempFile(ClientInfo *client)
     }
     if(client->isChunk)
         client->parsedRequest.uploadFileName = client->chunkedRequest->fileName;
-    std::cout << "upload file name is " << client->parsedRequest.uploadFileName << std::endl;
     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
     client->postFilePath = client->_currentLocation.UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
     if(this->destinationFile.is_open())
         this->destinationFile.close();
     this->destinationFile.open(client->postFilePath, std::ios::binary);
-    std::cout << "is created " << client->isCreated  << std::endl;
-    std::cout << "source " << this->sourceFile.fail()  << std::endl;
-    std::cout << "destination " << this->destinationFile.fail()  << std::endl;
     if (client->isCreated == -1 || this->destinationFile.fail() || this->sourceFile.fail())
         throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));
 }
@@ -118,7 +114,6 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
     if(this->cgiFileEnd.front() == '/')
         this->cgiFileEnd.erase(0, 1);
     this->actionPath += this->cgiFileEnd;
-    std::cout << "2actionPath is " << this->actionPath  << std::endl;
     int len = this->actionPath.length() - 1;
     this->isThereFileLast(this->actionPath, isFileLast, len);
     if(isFileLast)
@@ -126,7 +121,6 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
         std::ifstream fileFound (this->actionPath.c_str(), std::ios::binary);
         if(fileFound)
         {
-            std::cout << "HERE1" << std::endl;
             this->isNotUpload = true;
             this->actionPath = this->actionPath.c_str();
             return ;
@@ -574,10 +568,7 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     
     int fdup = 0;
     if(client->isNotUpload)
-    {
-        std::cout << "WAS HERE" << std::endl;
         fdup = open(client->servedFileName.c_str(), O_RDONLY);
-    }
     int fd[2];
     pipe(fd);
     pid = fork();

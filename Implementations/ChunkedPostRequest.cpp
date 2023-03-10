@@ -37,7 +37,6 @@ ChunkedPostRequest::ChunkedPostRequest ( const ChunkedPostRequest &obj )
 
 void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 {
-	std::cout << "mimeType is " << mimeType << std::endl;
 	this->fileName = generateRandString() + std::string(get_real_format(mimeType));
 	// fileName = "~/Desktop/" + generateRandString() + std::string(get_real_format(mimeType));
 	this->_uploadedFile.open("/tmp/." + fileName, std::ios::binary);
@@ -130,7 +129,6 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	{
 		this->_uploadedFile.close();
 		uploadDone = true;
-		std::cout << "DONE WRITTING TO THE FIEL" << std::endl;
 		return ;
 	}
 	offSet = bodyStart + this->_hexLength + CRLF;
@@ -141,6 +139,12 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	{
 		this->_uploadedFile << this->_chunkContent[i];
 		i++;
+	}
+	if (this->_currentChunkSize <= MAX_REQUEST_SIZE - offSet)
+	{
+		this->_uploadedFile.close();
+		uploadDone = true;
+		return ;
 	}
 	this->_writtenBytes = i;
 }	

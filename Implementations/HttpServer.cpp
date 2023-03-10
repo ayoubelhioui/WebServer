@@ -1,7 +1,8 @@
 # include "../webserver.hpp"
 # include "../Interfaces/HttpServer.hpp"
 # include "../Interfaces/ChunkedPostRequest.hpp"
-#   include <algorithm>
+# include "../Interfaces/DeleteMethod.hpp"
+# include <algorithm>
 //# define RECEIVING_FINISHED (received, contentLength) (received == contentLength) ? (true) : (false);
 // # include "../parsing/parsing.hpp"
 // //std::cout
@@ -185,11 +186,14 @@ void	HttpServer::_serveClients( void )
 						continue;
 					}
 				}
-				// else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
-				// {
-				// 	ClientInfoIt++;
-				// 	continue ;
-				// }
+				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "DELETE")
+                {
+                    (*ClientInfoIt)->DeleteRequest = new DeleteMethod((*ClientInfoIt)->parsedRequest.requestDataMap["path"]);
+                    (*ClientInfoIt)->DeleteRequest->deleteTargetedResource();
+                    (*ClientInfoIt)->DeleteRequest->sendResponse();
+                    ClientInfoIt++;
+                    continue ;
+                }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
 					try
