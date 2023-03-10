@@ -23,13 +23,14 @@ class ChunkedPostRequest {
 		void	handleRecv( SOCKET & );
 		void	handleFirstRecv ( const char *, ParsingRequest & );
 		bool	uploadDone;
+		unsigned int	_fileSize;
+		std::string		fileName;
 	private:
 		std::ofstream	_uploadedFile;
 		std::string		_buffer;
 		ssize_t			_receivedBytes;
 		unsigned int	_currentChunkSize;
 		unsigned int	_hexLength;
-		unsigned int	_fileSize;
 		unsigned int	_writtenBytes;
 		char			*_chunkContent;
 		int				_numberOfRecChunk;

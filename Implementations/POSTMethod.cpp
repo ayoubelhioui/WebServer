@@ -57,24 +57,17 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
 {
         if(client->parsedRequest.isBoundaryExist == true) {
             client->parsedRequest._parsingMiniHeader();
-            std::cout << "action is " << client->actionPath << std::endl;
-            std::cout << "served is " << client->servedFileName << std::endl;
-            std::cout << "upload " << client->parsedRequest.uploadFileName << std::endl;
             if(isNotUpload == 1)
                 client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
         }
         else {
             client->parsedRequest.uploadFileName = client->generateRandString() + get_real_format(client->parsedRequest.requestDataMap["Content-Type:"].c_str());
-            std::cout << "action is " << client->actionPath << std::endl;
-            std::cout << "served is " << client->servedFileName << std::endl;
-            std::cout << "upload " << client->parsedRequest.uploadFileName << std::endl;
             if(isNotUpload == 1)
                 client->actionPath = client->servedFileName;
             client->servedFileName += client->parsedRequest.uploadFileName;
         }
         client->postRequest->_preparingPostRequest(client);
-        client->postRequest->_isValidPostRequest(client);
 }
 void    PostMethod::handleFirstRead(ClientInfo *client) {
     if(this->_isLocationSupportsUpload(client))
@@ -94,33 +87,6 @@ void PostMethod::_preparingPostRequest(ClientInfo *client) {
 }
 
 
-void PostMethod::_isValidPostRequest(ClientInfo *client) {
-    if(isNotValidPostRequest(client->parsedRequest.requestDataMap))
-    {
-        client->isDefaultError = false;
-        client->isErrorOccured = true;
-        error_400(client, this->_serverConfiguration.errorInfo["400"]);
-        throw std::runtime_error(BAD_REQUEST_EXCEPTION);
-    }
-    if(isTransferEncodingNotChunked(client->parsedRequest.requestDataMap))
-    {
-        client->isDefaultError = false;
-        client->isErrorOccured = true;
-        error_501(client, this->_serverConfiguration.errorInfo["501"]);
-        throw std::runtime_error(TRANSFER_ENCODING_EXCEPTION);
-    }
-//    std::map<std::string, std::string>::iterator content = client->parsedRequest.requestDataMap.find("Content-Length:");
-//    if(content != client->parsedRequest.requestDataMap.end())
-//    {
-////        std::cout << "the content length is : " << (*_clientInfoIt  )->parsedRequest.contentLength << std::endl;
-//        int bodySize = (client->parsedRequest.bodyIndex) - std::stoi(client->parsedRequest.requestDataMap["Content-Length:"]);
-//        if(iclient->isDefaultError = false;sBodySizeBigger(this->_serverConfiguration, bodySize))
-//        {
-//            error_413(this->_clientInfoIt);
-//            throw std::runtime_error(BODY_SIZE_EXCEPTION);
-//        }
-//    }
-}
 
 
 void PostMethod::_writeInTempFile(ClientInfo *client) {
@@ -149,8 +115,11 @@ void PostMethod::receiveTheBody(ClientInfo *client){
 
 
 void PostMethod::preparingMovingTempFile(ClientInfo *client) {
-    this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex;
-    if (client->parsedRequest.isBoundaryExist == true)
+    if(client->isChunk)
+        this->totalTempFileSize = client->chunkedRequest->_fileSize;
+    else
+        this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex;
+    if (!client->isChunk && client->parsedRequest.isBoundaryExist == true)
         totalTempFileSize -= 8; // for skipping /r/n/r/n twice.
     this->cgiContentLength = totalTempFileSize;
     this->toWrite = 0;
@@ -161,8 +130,16 @@ void PostMethod::preparingMovingTempFile(ClientInfo *client) {
     if (!(stat(client->_currentLocation.UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
         client->isCreated = mkdir(client->_currentLocation.UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
     }
-    this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-    client->postFilePath = client->_currentLocation.UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
+    if(!client->isChunk)
+    {
+        this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
+        client->postFilePath = client->_currentLocation.UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
+    }
+    else
+    {
+        this->sourceFile.open(TMP_FOLDER_PATH + client->chunkedRequest->fileName, std::ios::binary);
+        client->postFilePath = client->_currentLocation.UploadDirectoryPath + "/" + client->chunkedRequest->fileName;
+    }
     if(this->destinationFile.is_open())
         this->destinationFile.close();
     this->destinationFile.open(client->postFilePath, std::ios::binary);

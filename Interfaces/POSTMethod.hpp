@@ -23,7 +23,6 @@ class PostMethod{
     private :
         void _searchingForUploadFolder( ClientInfo* );
         void _preparingPostRequest( ClientInfo* );
-        void _isValidPostRequest( ClientInfo* );
         void _writeInTempFile( ClientInfo* );
         void _receiveFromClient( ClientInfo* );
         void _searchForCurrentLocation(ClientInfo *);

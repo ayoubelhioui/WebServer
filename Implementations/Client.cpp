@@ -2,7 +2,7 @@
 	
 ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
 , stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0)
-, cgiBodyLength(0), readFromCgi(0), cgiStatus("200 OK"), isDefaultError(1)
+, cgiBodyLength(0), readFromCgi(0), cgiStatus("200 OK"), isDefaultError(1), isChunk(0)
 {
     this->servedFilesFolder = "FilesForServing/";
     this->isCreated = 0;
@@ -99,25 +99,39 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
 void            ClientInfo::postErrorsHandling(ServerConfiguration &serverConfig)
 {
     if(this->_currentLocation.Location.length() <= 0)
-     {
+    {
         this->isDefaultError = false;
-         this->isErrorOccured = true;
-         error_404(this, serverConfig.errorInfo["404"]);
-         throw std::runtime_error("Location not found");
-     }
-     if (!this->_isLocationSupportsCurrentMethod(this, "POST"))
-     {
-        this->isDefaultError = false;
-         this->isErrorOccured = true;
-         error_405(this, serverConfig.errorInfo["405"]); // IT MUST BE ERROR 405 NOT ERROR 500
-         throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
-     }
+        this->isErrorOccured = true;
+        error_404(this, serverConfig.errorInfo["404"]);
+        throw std::runtime_error("Location not found");
+    }
+    if (!this->_isLocationSupportsCurrentMethod(this, "POST"))
+    {
+    this->isDefaultError = false;
+        this->isErrorOccured = true;
+        error_405(this, serverConfig.errorInfo["405"]); // IT MUST BE ERROR 405 NOT ERROR 500
+        throw (std::runtime_error("Post Method is not supported !!")); // this line was just added and need to be tested.....
+    }
     if (isBodySizeBigger(serverConfig, this->parsedRequest.contentLength))
     {
         this->isDefaultError = false;
         error_413(this, serverConfig.errorInfo["413"]);
         this->isErrorOccured = true;
         throw (std::runtime_error("Body Size Too Large !!"));
+    }
+    if(isNotValidPostRequest(client->parsedRequest.requestDataMap))
+    {
+        client->isDefaultError = false;
+        client->isErrorOccured = true;
+        error_400(client, this->_serverConfiguration.errorInfo["400"]);
+        throw std::runtime_error(BAD_REQUEST_EXCEPTION);
+    }
+    if(isTransferEncodingNotChunked(client->parsedRequest.requestDataMap))
+    {
+        client->isDefaultError = false;
+        client->isErrorOccured = true;
+        error_501(client, this->_serverConfiguration.errorInfo["501"]);
+        throw std::runtime_error(TRANSFER_ENCODING_EXCEPTION);
     }
 }
 std::string    ClientInfo::generateRandString ( void )

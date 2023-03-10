@@ -38,9 +38,8 @@ ChunkedPostRequest::ChunkedPostRequest ( const ChunkedPostRequest &obj )
 
 void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 {
-	std::string	fileName;
 
-	fileName = "/tmp/" + generateRandString() + std::string(get_real_format(mimeType));
+	this->fileName = "/tmp/." + generateRandString() + std::string(get_real_format(mimeType));
 	// fileName = "~/Desktop/" + generateRandString() + std::string(get_real_format(mimeType));
 	this->_uploadedFile.open(fileName, std::ios::binary);
 	if (!this->_uploadedFile.is_open())
@@ -106,7 +105,7 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 	if (this->_currentChunkSize == 0)
 	{
 		this->_uploadedFile.close();
-		this->uploadDone = true;;
+		this->uploadDone = true;
 		std::cout << "DONE WRITTING TO THE FIEL" << std::endl;
 	}
 	i = 0;
@@ -128,6 +127,13 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	this->_createUploadedFile(contentType);
 	bodyStart = request.retIndex(request.requestHeader) + DOUBLE_CRLF;
 	this->_retrieveChunkSize(&request.requestHeader[bodyStart]);
+	if (this->_currentChunkSize == 0)
+	{
+		this->_uploadedFile.close();
+		this->uploadDone = true;
+		std::cout << "DONE WRITTING TO THE FIEL" << std::endl;
+		return ;
+	}
 	offSet = bodyStart + this->_hexLength + CRLF;
 	// if (this->_currentChunkSize == 0)
 	// 	{std::cerr << "EMPTY FILE" << std::endl; exit(0);}
@@ -140,7 +146,7 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	this->_writtenBytes = i;
 }	
 
-void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket)
+void	ChunkedPostRequest:: handleRecv( SOCKET &clientSocket)
 {
 	if (this->_writtenBytes == this->_currentChunkSize)
 	{

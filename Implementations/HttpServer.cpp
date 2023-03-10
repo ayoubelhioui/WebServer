@@ -218,18 +218,16 @@ void	HttpServer::_serveClients( void )
 					}
 					if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
 					{
+						(*ClientInfoIt)->isChunk = true;
 						try
 						{
 							(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
-							if((*ClientInfoIt)->_currentLocation.UploadDirectoryPath.length())
-								(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
+							(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
 															, (*ClientInfoIt)->parsedRequest);
-							else
-							{
-								(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
-															, (*ClientInfoIt)->parsedRequest);
+							if(!(*ClientInfoIt)->_currentLocation.UploadDirectoryPath.length())
 								(*ClientInfoIt)->postLocationAbsence(this->_serverConfiguration);
-							}
+							if ((*ClientInfoIt)->chunkedRequest->uploadDone == true)
+								(*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 						}
 						catch(const std::exception& e)
 						{
@@ -290,10 +288,7 @@ void	HttpServer::_serveClients( void )
 					{
 						(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
 						if ((*ClientInfoIt)->chunkedRequest->uploadDone == true)
-						{
-							this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-							continue;
-						}
+							(*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
 					}
 					catch(const std::exception& e)
 					{
