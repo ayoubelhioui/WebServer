@@ -30,16 +30,10 @@ class PostMethod{
         void startPostRequest( ClientInfo *, bool );
         ServerConfiguration _serverConfiguration;
     public :
-        std::ifstream sourceFile;
-        std::ofstream destinationFile;
-        int totalTempFileSize;
-        int toWrite;
         int cgiContentLength;
         PostMethod(ServerConfiguration &);
-        void writeToUploadedFile( ClientInfo * );
         void receiveTheBody( ClientInfo* );
         void successfulPostRequest( ClientInfo* );
-        void preparingMovingTempFile( ClientInfo* );
         void handleFirstRead( ClientInfo* );
 };
 

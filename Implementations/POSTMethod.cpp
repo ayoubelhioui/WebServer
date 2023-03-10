@@ -2,7 +2,7 @@
 # include "../errorsHandling/errorsHandling.hpp"
 
 PostMethod::PostMethod(ServerConfiguration &serverConfiguration)
-: _serverConfiguration(serverConfiguration), totalTempFileSize(0), toWrite(0), cgiContentLength(0)
+: _serverConfiguration(serverConfiguration), cgiContentLength(0)
 {}
 
 
@@ -53,7 +53,7 @@ bool    PostMethod::_isLocationSupportsUpload( ClientInfo *client ) {
     return (client->_currentLocation.UploadDirectoryPath.length());
 }
 
- void   PostMethod::startPostRequest(ClientInfo *client, bool isNotUpload)
+void   PostMethod::startPostRequest(ClientInfo *client, bool isNotUpload)
 {
         if(client->parsedRequest.isBoundaryExist == true) {
             client->parsedRequest._parsingMiniHeader();
@@ -117,53 +117,9 @@ void PostMethod::receiveTheBody(ClientInfo *client){
     this->_receiveFromClient(client);
     this->_writeInTempFile(client);
     if (client->parsedRequest.received == client->parsedRequest.contentLength)
-        this->preparingMovingTempFile(client);
+        client->preparingMovingTempFile(client);
 };
 
-
-void PostMethod::preparingMovingTempFile(ClientInfo *client) {
-    if(client->isChunk)
-        this->totalTempFileSize = client->chunkedRequest->_fileSize;
-    else
-        this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex;
-    if (!client->isChunk && client->parsedRequest.isBoundaryExist == true)
-        totalTempFileSize -= 8; // for skipping /r/n/r/n twice.
-    this->cgiContentLength = totalTempFileSize;
-    this->toWrite = 0;
-    client->requestBody.close();
-    struct stat st;
-    if (client->_currentLocation.UploadDirectoryPath.empty())
-        client->_currentLocation.UploadDirectoryPath = DEFAULT_UPLOAD_FOLDER;
-    if (!(stat(client->_currentLocation.UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
-        client->isCreated = mkdir(client->_currentLocation.UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
-    }
-    if(client->isChunk)
-        client->parsedRequest.uploadFileName = client->chunkedRequest->fileName;
-    this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
-    client->postFilePath = client->_currentLocation.UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
-    if(this->destinationFile.is_open())
-        this->destinationFile.close();
-    this->destinationFile.open(client->postFilePath, std::ios::binary);
-    if (client->isCreated == -1 || this->destinationFile.fail() || this->sourceFile.fail())
-        throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));
-}
-
-void PostMethod::writeToUploadedFile(ClientInfo *client)
-{
-    this->toWrite = (this->totalTempFileSize > 1024) ? 1024 : this->totalTempFileSize;
-    char buffer[this->toWrite + 1];
-    this->sourceFile.read(buffer, this->toWrite);
-    buffer[this->toWrite] = 0;
-    this->destinationFile.write(buffer, this->toWrite);
-    if (this->sourceFile.fail() || this->destinationFile.fail())
-    {
-        client->isDefaultError = false;
-        client->isErrorOccured = true;
-        error_500(client, this->_serverConfiguration.errorInfo["500"]);
-        throw (std::runtime_error("Error Occurred in writeToUploadedFile"));
-    }
-    this->totalTempFileSize -= this->toWrite;
-}
 
 void  PostMethod::successfulPostRequest(ClientInfo *client){
     std::string path = "uploadSuccess.html";

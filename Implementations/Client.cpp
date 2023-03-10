@@ -1,8 +1,9 @@
 #include "../Interfaces/Client.hpp"
 	
-ClientInfo::ClientInfo( void ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
+ClientInfo::ClientInfo( ServerConfiguration &server ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
 , stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0)
 , cgiBodyLength(0), readFromCgi(0), cgiStatus("200 OK"), isDefaultError(1), isChunk(0)
+, totalTempFileSize(0), toWrite(0), serverConfig(server), isChunkUploadDone(0)
 {
     this->servedFilesFolder = "FilesForServing/";
     this->isCreated = 0;
@@ -53,6 +54,57 @@ ClientInfo::ClientInfo ( const ClientInfo &obj )
 	// *this = obj;
 }
 
+void ClientInfo::preparingMovingTempFile(ClientInfo *client) 
+{
+    if(client->isChunk)
+    {
+        this->totalTempFileSize = client->chunkedRequest->_fileSize;
+    }
+    else
+        this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex;
+    if (!client->isChunk && client->parsedRequest.isBoundaryExist == true)
+        totalTempFileSize -= 8; // for skipping /r/n/r/n twice.
+    this->cgiContentLength = std::to_string(totalTempFileSize);
+    this->toWrite = 0;
+    client->requestBody.close();
+    struct stat st;
+    if (client->_currentLocation.UploadDirectoryPath.empty())
+        client->_currentLocation.UploadDirectoryPath = DEFAULT_UPLOAD_FOLDER;
+    if (!(stat(client->_currentLocation.UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
+        client->isCreated = mkdir(client->_currentLocation.UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
+    }
+    if(client->isChunk)
+        client->parsedRequest.uploadFileName = client->chunkedRequest->fileName;
+    std::cout << "upload file name is " << client->parsedRequest.uploadFileName << std::endl;
+    this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
+    client->postFilePath = client->_currentLocation.UploadDirectoryPath + "/" + client->parsedRequest.uploadFileName;
+    if(this->destinationFile.is_open())
+        this->destinationFile.close();
+    this->destinationFile.open(client->postFilePath, std::ios::binary);
+    std::cout << "is created " << client->isCreated  << std::endl;
+    std::cout << "source " << this->sourceFile.fail()  << std::endl;
+    std::cout << "destination " << this->destinationFile.fail()  << std::endl;
+    if (client->isCreated == -1 || this->destinationFile.fail() || this->sourceFile.fail())
+        throw (std::runtime_error("Error Occurred in preparingMovingTempFile"));
+}
+
+void    ClientInfo::writeToUploadedFile(ClientInfo *client)
+{
+    this->toWrite = (this->totalTempFileSize > 1024) ? 1024 : this->totalTempFileSize;
+    char buffer[this->toWrite + 1];
+    this->sourceFile.read(buffer, this->toWrite);
+    buffer[this->toWrite] = 0;
+    this->destinationFile.write(buffer, this->toWrite);
+    if (this->sourceFile.fail() || this->destinationFile.fail())
+    {
+        client->isDefaultError = false;
+        client->isErrorOccured = true;
+        error_500(client, this->serverConfig.errorInfo["500"]);
+        throw (std::runtime_error("Error Occurred in writeToUploadedFile"));
+    }
+    this->totalTempFileSize -= this->toWrite;
+}
+
 void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfig)
 {
     if(this->cgiIterator == this->_currentLocation.CGI.end())
@@ -63,9 +115,10 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
         throw std::runtime_error("Location doesn't support either CGI nor upload");
     }
     bool isFileLast = 0;
-    std::cout << "1 this action is " << this->actionPath << std::endl;
+    if(this->cgiFileEnd.front() == '/')
+        this->cgiFileEnd.erase(0, 1);
     this->actionPath += this->cgiFileEnd;
-    std::cout << "2 this action is " << this->actionPath << std::endl;
+    std::cout << "2actionPath is " << this->actionPath  << std::endl;
     int len = this->actionPath.length() - 1;
     this->isThereFileLast(this->actionPath, isFileLast, len);
     if(isFileLast)
@@ -104,6 +157,7 @@ void            ClientInfo::postErrorsHandling(ServerConfiguration &serverConfig
 {
     if(this->_currentLocation.Location.length() <= 0)
     {
+        std::cout << "HERE!!!!!!!1" << std::endl;
         this->isDefaultError = false;
         this->isErrorOccured = true;
         error_404(this, serverConfig.errorInfo["404"]);
@@ -327,7 +381,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         client->servedFileName += '/';
                     }
                     client->_currentLocation = *beg;
-                    client->cgiIterator = std::find_if((*beg).CGI.begin(), (*beg).CGI.end(), isCgi);
+                    client->cgiIterator = std::find_if(client->_currentLocation.CGI.begin(), client->_currentLocation.CGI.end(), isCgi);
                     return ;
                 }
                 int rootLength = currentPath.length() - 1;

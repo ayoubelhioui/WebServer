@@ -110,7 +110,7 @@ void	HttpServer::_acceptNewConnection( void )
 	
 	if (FD_ISSET(this->_listeningSocket, &(this->_readFds)))
     { 
-		ClientInfo	*newClient = new ClientInfo;
+		ClientInfo	*newClient = new ClientInfo(this->_serverConfiguration);
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
 		fcntl(newClient->socket, F_SETFL, O_NONBLOCK);
 		if(newClient->socket == -1)
@@ -209,10 +209,12 @@ void	HttpServer::_serveClients( void )
                     }
 					catch (const std::exception& e)
 					{
+												std::cout << "HERE" << std::endl;
                         std::cout << e.what() << std::endl;
 						if((*ClientInfoIt)->isDefaultError == true)
                             error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 						(*ClientInfoIt)->isErrorOccured = true;
+						std::cout << "(*ClientInfoIt)->isErrorOccured is " << (*ClientInfoIt)->isErrorOccured << std::endl;
 						ClientInfoIt++;
 						continue;
 					}
@@ -222,12 +224,17 @@ void	HttpServer::_serveClients( void )
 						try
 						{
 							(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
+
 							(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
-															, (*ClientInfoIt)->parsedRequest);
-							if(!(*ClientInfoIt)->_currentLocation.UploadDirectoryPath.length())
+															, (*ClientInfoIt)->parsedRequest, (*ClientInfoIt)->isChunkUploadDone);
+							if((*ClientInfoIt)->_currentLocation.UploadDirectoryPath == "")
+							{
+								(*ClientInfoIt)->actionPath = (*ClientInfoIt)->servedFileName;
+								(*ClientInfoIt)->servedFileName += (*ClientInfoIt)->parsedRequest.uploadFileName;
 								(*ClientInfoIt)->postLocationAbsence(this->_serverConfiguration);
-							if ((*ClientInfoIt)->chunkedRequest->uploadDone == true)
-								(*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
+							}
+							if ((*ClientInfoIt)->isChunkUploadDone == true)
+								(*ClientInfoIt)->preparingMovingTempFile(*ClientInfoIt);
 						}
 						catch(const std::exception& e)
 						{
@@ -245,7 +252,7 @@ void	HttpServer::_serveClients( void )
 							(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
                             (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
                             if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
-                                (*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
+                                (*ClientInfoIt)->preparingMovingTempFile(*ClientInfoIt);
 					 	}
 					 	catch (std::exception &e)
 					 	{
@@ -282,13 +289,14 @@ void	HttpServer::_serveClients( void )
 						continue;
                     }
                 }
-				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked")
+				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["Transfer-Encoding:"] == "chunked"
+				&& ((*ClientInfoIt)->inReadCgiOut == false))
 				{
 					try
 					{
-						(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket);
-						if ((*ClientInfoIt)->chunkedRequest->uploadDone == true)
-							(*ClientInfoIt)->postRequest->preparingMovingTempFile(*ClientInfoIt);
+						(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket, (*ClientInfoIt)->isChunkUploadDone);
+						if ((*ClientInfoIt)->isChunkUploadDone == true)
+							(*ClientInfoIt)->preparingMovingTempFile(*ClientInfoIt);
 					}
 					catch(const std::exception& e)
 					{
@@ -444,17 +452,17 @@ void	HttpServer::_serveClients( void )
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST") 
 				{
 					if (((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
-					|| (*ClientInfoIt)->chunkedRequest->uploadDone)
+					|| (*ClientInfoIt)->isChunkUploadDone)
 						and (*ClientInfoIt)->isErrorOccured == false and (*ClientInfoIt)->isServing == false
 						and (*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == false)
 					{
 						try 
 						{
-							(*ClientInfoIt)->postRequest->writeToUploadedFile(*ClientInfoIt);
-							if ((*ClientInfoIt)->postRequest->totalTempFileSize == 0)
+							(*ClientInfoIt)->writeToUploadedFile(*ClientInfoIt);
+							if ((*ClientInfoIt)->totalTempFileSize == 0)
 							{
-								(*ClientInfoIt)->postRequest->sourceFile.close();
-    							(*ClientInfoIt)->postRequest->destinationFile.close();
+								(*ClientInfoIt)->sourceFile.close();
+    							(*ClientInfoIt)->destinationFile.close();
 								size_t foundPhp = 0;
 								size_t foundPerl = 0;
 								if((*ClientInfoIt)->isNotUpload)
@@ -506,11 +514,11 @@ void	HttpServer::_serveClients( void )
                                     }
 									(*ClientInfoIt)->servedFileName = (*ClientInfoIt)->postFilePath;
                                     (*ClientInfoIt)->cgiContentType = foundPhp != std::string::npos ? "text/php" : "text/x-perl-script";
-									(*ClientInfoIt)->cgiContentLength = std::to_string((*ClientInfoIt)->postRequest->cgiContentLength);
 									(*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt), this->_serverConfiguration);
 								}
 								else
 								{
+
 									(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
 									(*ClientInfoIt)->isServing = true;
 								}
@@ -532,6 +540,7 @@ void	HttpServer::_serveClients( void )
 					{
 						try
 						{
+
                             if ((*ClientInfoIt)->isSendingHeader == true)
                             {
                                 if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1

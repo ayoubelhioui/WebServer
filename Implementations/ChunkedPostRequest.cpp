@@ -5,14 +5,14 @@
 /* ----------------------------------------------------- */
 
 ChunkedPostRequest::ChunkedPostRequest ( void )
-	: uploadDone(false),
-	  _receivedBytes(0),
-	  _currentChunkSize(0),
-	  _hexLength(0),
-	  _writtenBytes(0),
-	  _chunkContent(nullptr),
-	  _numberOfRecChunk(0),
-	  _entered(0)
+	: 
+		_receivedBytes(0),
+		_currentChunkSize(0),
+		_hexLength(0),
+		_writtenBytes(0),
+		_chunkContent(nullptr),
+		_numberOfRecChunk(0),
+		_entered(0)
 { _fileSize = 0;}
 
 ChunkedPostRequest::~ChunkedPostRequest ( void )
@@ -37,10 +37,10 @@ ChunkedPostRequest::ChunkedPostRequest ( const ChunkedPostRequest &obj )
 
 void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 {
-
-	this->fileName = "/tmp/." + generateRandString() + std::string(get_real_format(mimeType));
+	std::cout << "mimeType is " << mimeType << std::endl;
+	this->fileName = generateRandString() + std::string(get_real_format(mimeType));
 	// fileName = "~/Desktop/" + generateRandString() + std::string(get_real_format(mimeType));
-	this->_uploadedFile.open(fileName, std::ios::binary);
+	this->_uploadedFile.open("/tmp/." + fileName, std::ios::binary);
 	if (!this->_uploadedFile.is_open())
 	{
 		throw std::runtime_error("cannot open chunked folder");
@@ -90,7 +90,7 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 }
 
 
-void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
+void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket, bool &uploadDone )
 {
 	// char		*buffer;
 	unsigned int i;
@@ -104,7 +104,7 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 	if (this->_currentChunkSize == 0)
 	{
 		this->_uploadedFile.close();
-		this->uploadDone = true;
+		uploadDone = true;
 		std::cout << "DONE WRITTING TO THE FIEL" << std::endl;
 	}
 	i = 0;
@@ -117,7 +117,7 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 }
 /*------------------------------------------------------------------------*/
 
-void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingRequest &request )
+void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingRequest &request, bool &uploadDone )
 {
 	unsigned int	bodyStart;
 	unsigned int	offSet;
@@ -129,7 +129,7 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	if (this->_currentChunkSize == 0)
 	{
 		this->_uploadedFile.close();
-		this->uploadDone = true;
+		uploadDone = true;
 		std::cout << "DONE WRITTING TO THE FIEL" << std::endl;
 		return ;
 	}
@@ -145,11 +145,11 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	this->_writtenBytes = i;
 }	
 
-void	ChunkedPostRequest:: handleRecv( SOCKET &clientSocket)
+void	ChunkedPostRequest:: handleRecv( SOCKET &clientSocket, bool &uploadDone)
 {
 	if (this->_writtenBytes == this->_currentChunkSize)
 	{
-		this->_receiveNextChunkBeginning(clientSocket);
+		this->_receiveNextChunkBeginning(clientSocket, uploadDone);
 	}
 	else 
 	{

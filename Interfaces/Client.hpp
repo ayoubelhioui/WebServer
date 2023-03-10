@@ -17,6 +17,7 @@ class GETMethod;
 class ClientInfo {
     public:
 		ClientInfo ( void );
+		ClientInfo ( ServerConfiguration & );
 		~ClientInfo ( void );
 		PostMethod			*postRequest;
 		GETMethod 			*getRequest;
@@ -36,6 +37,8 @@ class ClientInfo {
 		bool 			_isLocationSupportsCurrentMethod( ClientInfo *, std::string );
 		void	        postErrorsHandling( ServerConfiguration & );
 		void            postLocationAbsence( ServerConfiguration & );
+		void 			preparingMovingTempFile(ClientInfo *client);
+		void 			writeToUploadedFile(ClientInfo *client);
         ParsingRequest parsedRequest;
         std::string headerToBeSent;
         bool isSendingHeader;
@@ -78,6 +81,12 @@ class ClientInfo {
 	std::string												  cgiStatus;
 	bool													  isDefaultError;
 	bool													  isChunk;
+	std::ifstream sourceFile;
+	std::ofstream destinationFile;
+	int totalTempFileSize;
+	int toWrite;
+	ServerConfiguration										  serverConfig;
+	bool													  isChunkUploadDone;
 	// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
 	// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 	// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);

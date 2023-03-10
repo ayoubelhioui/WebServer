@@ -24,8 +24,8 @@ const char *get_mime_format(const char *type){
         return "application/octet-stream";
 }
 
-const char *get_real_format(const char *mime_type){
-//        if (strcmp(mime_type, "application/x-www-form-urlencoded") == 0) return ".php";
+const char *get_real_format(const char *mime_type)
+{
         if (strcmp(mime_type, "text/css") == 0) return ".css";
         if (strcmp(mime_type, "text/csv") == 0) return ".csv";
         if (strcmp(mime_type, "image/gif") == 0) return ".gif";
@@ -42,6 +42,7 @@ const char *get_real_format(const char *mime_type){
         if (strcmp(mime_type, "text/plain") == 0) return ".txt";
         if (strcmp(mime_type, "video/mp4") == 0) return ".mp4";
         if (strcmp(mime_type, "text/php") == 0) return ".php";
+        if (strcmp(mime_type, "application/x-httpd-php") == 0) return ".php";
         if (strcmp(mime_type, "application/x-www-form-urlencoded") == 0) return ".php";
         return "";
 }
