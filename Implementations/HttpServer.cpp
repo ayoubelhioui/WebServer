@@ -115,9 +115,7 @@ void	HttpServer::_acceptNewConnection( void )
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
 		fcntl(newClient->socket, F_SETFL, O_NONBLOCK);
 		if(newClient->socket == -1)
-		{ 
             throw std::runtime_error("accept has blocked and did not accept any new connection");
-		}
         _maxSocket = std::max(_maxSocket, newClient->socket);
         if (newClient->socket < 0)
 			std::cerr << "accept function failed\n";
