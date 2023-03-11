@@ -145,7 +145,7 @@ void	HttpServer::_serveClients( void )
 			{
 				try
 				{
-					(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket);
+					(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket, (*ClientInfoIt)->recvError);
 					(*ClientInfoIt)->parsedRequest.parse();
 					if ((*ClientInfoIt)->parsedRequest.checkHost(this->_serverConfiguration) == 0)
 					{
@@ -154,9 +154,17 @@ void	HttpServer::_serveClients( void )
 						ClientInfoIt++;
 						continue;
 					}
+					if((*ClientInfoIt)->isValidMethod())
+                    {
+						(*ClientInfoIt)->isDefaultError = false;
+                        (*ClientInfoIt)->isErrorOccured = true;
+                        error_405((*ClientInfoIt), this->_serverConfiguration.errorInfo["405"]);
+                        throw std::runtime_error("Method not allowed");
+                    }
 					(*ClientInfoIt)->parseQueryString();
 					if(isUriTooLong((*ClientInfoIt)->parsedRequest.requestDataMap["path"]))
 					{
+						(*ClientInfoIt)->isDefaultError = false;
 						error_414(*ClientInfoIt, this->_serverConfiguration.errorInfo["414"]);
 						(*ClientInfoIt)->isErrorOccured = true;
 						ClientInfoIt++;
@@ -166,8 +174,14 @@ void	HttpServer::_serveClients( void )
 				catch (std::exception &e)
 				{
                     std::cout << e.what() << std::endl;
-					error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
-					dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+					if((*ClientInfoIt)->recvError == true)
+					{
+						this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+						continue;
+					}
+					if ((*ClientInfoIt)->isDefaultError == true)
+						error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
+                    ClientInfoIt++;
 					continue;
 				}
 				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "GET")
@@ -232,7 +246,6 @@ void	HttpServer::_serveClients( void )
                     }
 					catch (const std::exception& e)
 					{
-												std::cout << "HERE" << std::endl;
                         std::cout << e.what() << std::endl;
 						if((*ClientInfoIt)->isDefaultError == true)
                             error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
@@ -246,7 +259,6 @@ void	HttpServer::_serveClients( void )
 						try
 						{
 							(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
-
 							(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
 															, (*ClientInfoIt)->parsedRequest, (*ClientInfoIt)->isChunkUploadDone);
 							if((*ClientInfoIt)->_currentLocation.UploadDirectoryPath == "")
@@ -306,6 +318,11 @@ void	HttpServer::_serveClients( void )
                     {
 						std::cout << e.what() << std::endl;
 						(*ClientInfoIt)->isErrorOccured = true;
+						if((*ClientInfoIt)->recvError == true)
+						{
+							this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+							continue;
+						}
 						error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 						ClientInfoIt++;
 						continue;
@@ -316,7 +333,7 @@ void	HttpServer::_serveClients( void )
 				{
 					try
 					{
-						(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket, (*ClientInfoIt)->isChunkUploadDone);
+						(*ClientInfoIt)->chunkedRequest->handleRecv((*ClientInfoIt)->socket, (*ClientInfoIt)->isChunkUploadDone, (*ClientInfoIt)->recvError );
 						if ((*ClientInfoIt)->isChunkUploadDone == true)
 							(*ClientInfoIt)->preparingMovingTempFile(*ClientInfoIt);
 					}
@@ -324,6 +341,11 @@ void	HttpServer::_serveClients( void )
 					{
 						(*ClientInfoIt)->isErrorOccured = true;
 						std::cerr << e.what() << std::endl;
+						if((*ClientInfoIt)->recvError == true)
+						{
+							this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+							continue;
+						}
                         error_500((*ClientInfoIt), this->_serverConfiguration.errorInfo["500"]);
 						ClientInfoIt++;
 						continue;
@@ -429,8 +451,6 @@ void	HttpServer::_serveClients( void )
 									ClientInfoIt++;
 									continue;
                                 }
-								std::cout << "buffer is " << buffer << std::endl;
-								exit(1);
 								(*ClientInfoIt)->cgiBodyLength -= n;
 								buffer[n] = 0;
 								if(n >= 0)
@@ -565,39 +585,11 @@ void	HttpServer::_serveClients( void )
 					{
 						try
 						{
-                            if ((*ClientInfoIt)->isSendingHeader == true)
-                            {
-                                if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1
-								|| (*ClientInfoIt)->isCreated == -1)
-                                {
-                                    throw std::runtime_error("send function has failed or blocked");
-                                }
-								if((*ClientInfoIt)->isRedirect == true)
-								{
-									this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-									continue;
-								}
-                                (*ClientInfoIt)->isSendingHeader = false;
-                            }
-                            else
-                            {
-                                char *s = new char[1025]();
-                                (*ClientInfoIt)->served.read(s, 1024);
-                                int r = (*ClientInfoIt)->served.gcount();
-                                if (send((*ClientInfoIt)->socket, s, r, 0) == -1
-                                || (*ClientInfoIt)->isCreated == -1)
-                                    throw std::runtime_error("send function has failed or blocked");
-                                delete[] s;
-                                if (r < 1024)
-                                {
-                                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-                                    continue;
-                                }
-                            }
+							(*ClientInfoIt)->sendResponse();
 						}
 						catch (std::exception &e)
 						{
-							std::cerr << e.what() << std::endl;
+//							std::cerr << e.what() << std::endl;
 							dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 							continue;
 						}
@@ -608,44 +600,28 @@ void	HttpServer::_serveClients( void )
 				{
 					try
 					{
-                        if ((*ClientInfoIt)->isSendingHeader == true)
-                        {
-                            if ((send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1)
-							|| ((*ClientInfoIt)->isCreated == -1))
-                                throw std::runtime_error("send function has failed or blocked");
-							if((*ClientInfoIt)->isRedirect == true)
-							{
-								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-                                continue;
-							}
-                            (*ClientInfoIt)->isSendingHeader = false;
-                        }
-                        else
-                        {
-                            if ((*ClientInfoIt)->inReadCgiOut == false)
-                            {
-                                char *s = new char[1025]();
-                                (*ClientInfoIt)->served.read(s, 1024);
-                                int r = (*ClientInfoIt)->served.gcount();
-								if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
-                                    throw std::runtime_error("send function has failed or blocked");
-                                delete[] s;
-                                if (r < 1024)
-                                {
-									(*ClientInfoIt)->served.close();
-                                    this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
-                                    continue;
-                                }
-                            }
-                        }
+                        (*ClientInfoIt)->sendResponse();
 					}
 					catch (std::exception &e)
 					{
-						std::cerr << e.what() << std::endl;
+//						std::cerr << e.what() << std::endl;
 						dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 						continue;
 					}
 				}
+                else
+                {
+                    try
+                    {
+                        (*ClientInfoIt)->sendResponse();
+                    }
+                    catch (std::exception &e)
+                    {
+//							std::cerr << e.what() << std::endl;
+                        dropClient((*ClientInfoIt)->socket, ClientInfoIt);
+                        continue;
+                    }
+                }
 		}
 		ClientInfoIt++;
 	}

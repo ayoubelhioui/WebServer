@@ -98,8 +98,12 @@ void PostMethod::_writeInTempFile(ClientInfo *client) {
 
 void PostMethod::_receiveFromClient(ClientInfo *client){
     client->parsedRequest.bytesToReceive = (client->parsedRequest.received + MAX_REQUEST_SIZE < client->parsedRequest.contentLength) ? MAX_REQUEST_SIZE : client->parsedRequest.contentLength - client->parsedRequest.received;
-    if ((client->parsedRequest.receivedBytes = recv(client->socket, client->parsedRequest.requestHeader, client->parsedRequest.bytesToReceive, 0)) == -1)
+    client->parsedRequest.receivedBytes = recv(client->socket, client->parsedRequest.requestHeader, client->parsedRequest.bytesToReceive, 0);
+    if (client->parsedRequest.receivedBytes == -1 or client->parsedRequest.receivedBytes == 0)
+    {
+        client->recvError = true;
         throw (std::runtime_error("Error Occurred In ReceiveFromClient"));
+    }
     client->parsedRequest.received += client->parsedRequest.receivedBytes;
     client->parsedRequest.requestHeader[client->parsedRequest.receivedBytes] = 0;
 }

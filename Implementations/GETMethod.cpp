@@ -29,7 +29,8 @@ std::string GETMethod::format_date(time_t t) {
     return std::string(buf);
 }
 
-void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig) {
+void    GETMethod::callGET(ClientInfo *client, ServerConfiguration &serverConfig) 
+{
     client->checkPathValidation(client, serverConfig, client->parsedRequest.requestDataMap["path"]);
     if(client->_currentLocation.Location.length() && !client->_isLocationSupportsCurrentMethod(client, "GET"))
     {

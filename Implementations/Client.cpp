@@ -3,7 +3,7 @@
 ClientInfo::ClientInfo( ServerConfiguration &server ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
 , stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0)
 , cgiBodyLength(0), readFromCgi(0), cgiStatus("200 OK"), isDefaultError(1), isChunk(0)
-, totalTempFileSize(0), toWrite(0), serverConfig(server), isChunkUploadDone(0)
+, totalTempFileSize(0), toWrite(0), serverConfig(server), isChunkUploadDone(0), recvError(0)
 {
 	this->getRequest = nullptr;
 	this->postRequest = nullptr;
@@ -30,10 +30,17 @@ ClientInfo::~ClientInfo( void ){
 }
 
 
+bool    ClientInfo::isValidMethod( void )
+{
+    std::string enteredMethod = this->parsedRequest.requestDataMap["method"];
+    return ((enteredMethod != DELETE) and (enteredMethod != POST) and (enteredMethod != GET));
+}
+
 bool    ClientInfo::_isLocationSupportsCurrentMethod(ClientInfo *client, std::string method) 
 {
     std::list<std::string>::iterator it = client->_currentLocation.allowedMethods.begin();
-    while (it != client->_currentLocation.allowedMethods.end()){
+    while (it != client->_currentLocation.allowedMethods.end())
+    {
         if (*it == method)
             return (true);
         it++;
@@ -67,7 +74,31 @@ ClientInfo::ClientInfo ( const ClientInfo &obj )
 	// *this = obj;
 }
 
-void ClientInfo::preparingMovingTempFile(ClientInfo *client) 
+void    ClientInfo::sendResponse( void )
+{
+    if (this->isSendingHeader == true)
+    {
+        if (send(this->socket, this->headerToBeSent.c_str(), this->headerToBeSent.length(), 0) == -1
+        || this->isCreated == -1)
+            throw std::runtime_error("send function has failed or blocked");
+        if(this->isRedirect == true)
+            throw std::runtime_error("Client Was Served Successfully");
+        this->isSendingHeader = false;
+    }
+    else
+    {
+        char *s = new char[1025]();
+        this->served.read(s, 1024);
+        int r = this->served.gcount();
+        if (send(this->socket, s, r, 0) == -1
+        || this->isCreated == -1)
+            throw std::runtime_error("send function has failed or blocked");
+        delete[] s;
+        if (r < 1024)
+            throw std::runtime_error("Client Was Served Successfully");
+    }
+}
+void    ClientInfo::preparingMovingTempFile(ClientInfo *client)
 {
     if(client->isChunk)
     {
@@ -458,96 +489,9 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         return ;
                     }
                 }
-
             }
         }
         locationSplit(currentPath, pathOffset);
-        //	std::string path = client->parsedRequest.requestDataMap["path"];
-//	for (std::list<LocationBlockParse>::iterator beg = serverConfig.Locations.begin(); beg != serverConfig.Locations.end(); beg++){
-//		LocationBlockParse loc = *beg;
-//		std::string res = loc.Location;
-//		int len = path.length() - 1;
-//		int	index_last = len;
-//		if(path[len] == '/')
-//			len--;
-//		bool is_file_last = 0, point = 0;
-//		for(; len >= 0; len--){
-//			if(path[len] == '.')
-//				point = 1;
-//			if(path[len] == '/' && point){
-//				is_file_last = 1;
-//				index_last = len;
-//				break;
-//			}
-//			else if (path[len] == '/' && !point) break;
-//		}
-//		if(res[res.length() - 1] != '/') res += '/';
-//		std::string full_path = path.substr(0, index_last + 1);
-//		if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
-//		if(full_path != res) continue;
-//		if(loc.isDirectoryListingOn && !is_file_last){
-//            std::string root = loc.Root;
-//            if(root[root.length() - 1] != '/') root += '/';
-//            if(root[0] != '.') root = '.' + root;
-//            if(full_path[0] != '.') full_path = '.' + full_path;
-//            client->servedFileName = directoryListing(root, full_path, client);
-//            return ;
-//        }
-//        else{
-//		    std::string file = path.substr(index_last + 1);
-//		    if(!is_file_last && full_path[full_path.length() - 1] != '/') full_path += '/';
-//		    if(is_file_last && file[file.length() - 1] == '/') file.erase(file.length() - 1);
-//		    std::string root = loc.Root;
-//		    if(root[root.length() - 1] != '/') root += '/';
-//		    if(file == ""){
-//		    	for(std::list<std::string>::iterator index_it = loc.indexFiles.begin(); index_it != loc.indexFiles.end(); index_it++)
-//		    	{
-//		    		std::string final_path = root + (*index_it);
-//		    		if(final_path[0] == '/') final_path = '.' + final_path;
-//		    		std::ifstream check_file(final_path, std::ios::binary);
-//		    		if(check_file){
-//					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-//					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
-//                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
-//                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-//                            client->cgiContentLength =  "0";
-//                            client->cgiContentType = "";
-//                            client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
-//                            return ;
-//                        }
-//                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
-//                            // python cgi
-//                        }
-//                    }
-//                    client->servedFileName = final_path;
-//					return ;
-//				}
-//		    	else ;
-//		    	}
-//		    }
-//		    else{
-//		    	std::string final_path = root + file;
-//		    	if(final_path[0] == '/') final_path = '.' + final_path;
-//		    	std::ifstream check_file(final_path, std::ios::binary);
-//		    	if(check_file){
-//					const char *cgi_format = strrchr(final_path.c_str(), '.') + 1;
-//					std::list<std::pair<std::string, std::string> >::iterator CGIit = loc.CGI.begin();
-//                    for( ; CGIit != loc.CGI.end(); CGIit++ ){
-//                        if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "php")){
-//                            client->CGIexecutedFile(final_path, client, serverConfig, CGIit);
-//                            return ;
-//                        }
-//                        else if(!strcmp(CGIit->first.c_str(), cgi_format) && !strcmp(cgi_format, "py")){
-//                            // python cgi
-//                        }
-//                    }
-//                    client->servedFileName = final_path;
-//					return ;
-//				}
-//		    	else ;
-//		    }
-//        }
-//	}
     }
 }
 

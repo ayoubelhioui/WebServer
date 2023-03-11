@@ -66,10 +66,13 @@ void	ParsingRequest::parse(){
 bool    ParsingRequest::checkHost( ServerConfiguration &server )
 {
     size_t  splitComma = this->requestDataMap["Host:"].find(':');
-    std::string ip = this->requestDataMap["Host:"].substr(0, splitComma);
-    std::string port = this->requestDataMap["Host:"].substr(splitComma + 1);
-    if(ip == server.serverHost && port == server.serverPort)
-        return 1;
+    if(splitComma != std::string::npos)
+    {
+        std::string ip = this->requestDataMap["Host:"].substr(0, splitComma);
+        std::string port = this->requestDataMap["Host:"].substr(splitComma + 1);
+        if(ip == server.serverHost && port == server.serverPort)
+            return 1;
+    }
     std::list<std::string>::iterator server_names = server.serverName.begin();
     for(; server_names != server.serverName.end(); server_names++)
     {
@@ -79,10 +82,13 @@ bool    ParsingRequest::checkHost( ServerConfiguration &server )
     return 0;
 }
 
-void    ParsingRequest::receiveFirstTime(int socket){
+void    ParsingRequest::receiveFirstTime(int socket, bool &recvError){
     this->receivedBytes = recv(socket, this->requestHeader, MAX_REQUEST_SIZE, 0);
-    if(this->receivedBytes == -1)
+    if(this->receivedBytes == -1 or this->receivedBytes == 0)
+    {
+        recvError = true;
         throw std::runtime_error("recv did not receive anything or has blocked");
+    }
     this->requestHeader[this->receivedBytes] = 0;
     this->received += this->receivedBytes;
     this->bodyIndex = retIndex(this->requestHeader);

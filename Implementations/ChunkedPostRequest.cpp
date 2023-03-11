@@ -64,7 +64,7 @@ void	ChunkedPostRequest::_retrieveChunkSize( char *buffer )
 	this->_chunkContent = &buffer[this->_hexLength + CRLF];
 }
 
-void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
+void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket, bool &recvError )
 {
 	unsigned int	bufferSize;
 	unsigned int	i;
@@ -73,8 +73,9 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 	bufferSize = (this->_currentChunkSize - this->_writtenBytes) <  BUFFER_SIZE ? (this->_currentChunkSize - this->_writtenBytes) : BUFFER_SIZE;
 	buffer = new char[bufferSize]();
 	this->_receivedBytes = recv(clientSocket, buffer, bufferSize, 0);
-	if (this->_receivedBytes == -1)
+	if (this->_receivedBytes == -1 or this->_receivedBytes == 0)
 	{
+        recvError = true;
 		delete [] buffer;
 		throw std::runtime_error("recv has failed or blocked");
 	}
@@ -88,8 +89,7 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 	delete [] buffer;
 }
 
-
-void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket, bool &uploadDone )
+void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket, bool &uploadDone, bool &recvError )
 {
 	// char		*buffer;
 	unsigned int i;
@@ -97,14 +97,16 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket, bool
 	this->_writtenBytes = 0;
 	char buffer[BUFFER_SIZE];
 	this->_receivedBytes = recv(clientSocket, buffer, BUFFER_SIZE, 0);
-	if (this->_receivedBytes == -1)
-		throw std::runtime_error("recv has failed or blocked");
+	if (this->_receivedBytes == -1 or this->_receivedBytes == 0)
+    {
+        recvError = true;
+        throw std::runtime_error("recv has failed or blocked");
+    }
 	this->_retrieveChunkSize(buffer + CRLF);
 	if (this->_currentChunkSize == 0)
 	{
 		this->_uploadedFile.close();
 		uploadDone = true;
-		std::cout << "DONE WRITTING TO THE FILE" << std::endl;
 	}
 	i = 0;
 	while (i < this->_receivedBytes - this->_hexLength - DOUBLE_CRLF)
@@ -149,14 +151,14 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	this->_writtenBytes = i;
 }	
 
-void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket, bool &uploadDone)
+void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket, bool &uploadDone, bool &recvError)
 {
 	if (this->_writtenBytes == this->_currentChunkSize)
 	{
-		this->_receiveNextChunkBeginning(clientSocket, uploadDone);
+		this->_receiveNextChunkBeginning(clientSocket, uploadDone, recvError);
 	}
 	else 
 	{
-		this->_receiveRestOfChunk(clientSocket);
+		this->_receiveRestOfChunk(clientSocket, recvError);
 	}
 }
