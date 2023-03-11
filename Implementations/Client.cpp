@@ -92,7 +92,10 @@ void    ClientInfo::sendResponse( void )
         int r = this->served.gcount();
         if (send(this->socket, s, r, 0) == -1
         || this->isCreated == -1)
+        {
+            delete [] s;
             throw std::runtime_error("send function has failed or blocked");
+        }
         delete[] s;
         if (r < 1024)
             throw std::runtime_error("Client Was Served Successfully");
@@ -340,6 +343,7 @@ void    ClientInfo::searchForCgi(ClientInfo *client, std::list<LocationBlockPars
         }
     }
     client->servedFileName = currentPath;
+
 }
 
 bool isCgi(std::pair<std::string, std::string> cgi)
@@ -469,6 +473,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         {
                             std::string final_path = currentPath + '/' + (*index_it);
                             std::ifstream check_file(final_path, std::ios::binary);
+                            std::cout << "final path is " << final_path  << std::endl;
                             if (check_file)
                             {
                                 if ((*beg).Redirection.length())
@@ -479,7 +484,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                                     return ;
                                 }
                                 if(client->parsedRequest.requestDataMap["method"] != "DELETE")
-                                    this->searchForCgi(client, beg, currentPath);
+                                    this->searchForCgi(client, beg, final_path);
                                 else
                                     client->servedFileName = currentPath;
                                 return ;

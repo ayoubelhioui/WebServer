@@ -39,9 +39,9 @@ DeleteMethod::DeleteMethod ( const DeleteMethod &obj )
 
 void	DeleteMethod::deleteTargetedResource ( void )
 {
-	std::cout << "path is : " << _pathToResource << std::endl;
 	if(client->_currentLocation.Location.length() && !client->_isLocationSupportsCurrentMethod(client, "DELETE"))
     {
+		std::cout << "DELETE NOT ALLOWED" << std::endl;
         client->isDefaultError = false;
         error_405(client, serverConfig.errorInfo["405"]);
         throw std::runtime_error("Method not allowed");

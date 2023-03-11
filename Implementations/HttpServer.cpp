@@ -59,16 +59,25 @@ void	HttpServer::_setUpListeningSocket( void )
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
 	fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
 	if (_listeningSocket < 0)
+	{
+		std::cout << "socket function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
+	}
 	// //std::cout << "Socket Created Successfully" << std::endl;
 	optval = 1;
     setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 	if (bind(_listeningSocket, bindAddress->ai_addr, bindAddress->ai_addrlen))
+	{
+		std::cout << "bind function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
+	}
 	// //std::cout << "Binded Successfully" << std::endl;
 	freeaddrinfo(bindAddress);
 	if (listen(_listeningSocket, MAXQUEUESIZE) < 0)
+	{
+		std::cout << "listen function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
+	}
 	// //std::cout << "Set Up for LISTENING Successfully" << std::endl;
 }
 
@@ -226,9 +235,6 @@ void	HttpServer::_serveClients( void )
                 }
 				else if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
-					std::cout << "req header is " << std::endl;
-					std::cout << (*ClientInfoIt)->parsedRequest.requestHeader << std::endl;
-					exit(1);
 					try
 					{
 						(*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
@@ -537,6 +543,12 @@ void	HttpServer::_serveClients( void )
                                         throw std::runtime_error("executed path was not found");
                                     }
 									std::ifstream actionPathFile((*ClientInfoIt)->actionPath);
+									if(!actionPathFile.is_open())
+									{
+										(*ClientInfoIt)->isDefaultError = false;
+                                        error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
+                                        throw std::runtime_error("executed path was not found");
+									}
                                     actionPathFile.seekg(0, std::ios::end);
     								int file_size = actionPathFile.tellg();
     								actionPathFile.seekg(0, std::ios::beg);
