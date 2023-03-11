@@ -338,7 +338,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 if (currentPath.front() != '.')
                     currentPath = '.' + currentPath;
                 std::ifstream fileCheck(currentPath);
-                std::cout << "Current path is " << currentPath << std::endl;
                 if (fileCheck)
                 {
                     if ((*beg).Redirection.length())
@@ -389,7 +388,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 if (isThereFileLast(currentPath, is_file_last, rootLength))
                 {
                     std::ifstream fileCheck(currentPath);
-                    std::cout << "Current path is " << currentPath << std::endl;
                     if (fileCheck)
                     {
                         if ((*beg).Redirection.length())

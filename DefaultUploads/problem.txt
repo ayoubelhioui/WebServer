@@ -1,0 +1,10 @@
+PATH IS /script.php
++++++++++++++++++++++++++++++++++++++++
+IS HANDLING FIRST READ
+Post Method is not supported !!
+-------END IN POST -----
++++++++++++++++++++++++++++++++++++++++
+PATH IS /favicon.ico
++++++++++++++++++++++++++++++++++++++++
+------END IN GET------
+

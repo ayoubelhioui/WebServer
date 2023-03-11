@@ -160,6 +160,7 @@ void	HttpServer::_serveClients( void )
 				}
 				catch (std::exception &e)
 				{
+                    std::cout << e.what() << std::endl;
 					error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
 					dropClient((*ClientInfoIt)->socket, ClientInfoIt);
 					continue;
@@ -313,6 +314,7 @@ void	HttpServer::_serveClients( void )
 					}
 					catch(const std::exception& e)
 					{
+						(*ClientInfoIt)->isErrorOccured = true;
 						std::cerr << e.what() << std::endl;
                         error_500((*ClientInfoIt), this->_serverConfiguration.errorInfo["500"]);
 						ClientInfoIt++;
@@ -462,7 +464,7 @@ void	HttpServer::_serveClients( void )
 		}
 		else if(FD_ISSET((*ClientInfoIt)->socket, &(this->_writeFds))) 
 		{
-				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST") 
+				if ((*ClientInfoIt)->parsedRequest.requestDataMap["method"] == "POST")
 				{
 					if (((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength
 					|| (*ClientInfoIt)->isChunkUploadDone)
@@ -549,17 +551,16 @@ void	HttpServer::_serveClients( void )
 					}
 					else if ((((*ClientInfoIt)->isErrorOccured == true) or ((*ClientInfoIt)->isServing == true))
 							   or
-							   ((*ClientInfoIt)->inReadCgiOut == false and (*ClientInfoIt)->PostFinishedCgi == true))
+							   (((*ClientInfoIt)->inReadCgiOut == false) and (*ClientInfoIt)->PostFinishedCgi == true))
 					{
 						try
 						{
-
                             if ((*ClientInfoIt)->isSendingHeader == true)
                             {
                                 if (send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1
 								|| (*ClientInfoIt)->isCreated == -1)
                                 {
-                                    throw std::runtime_error("1send function has failed or blocked");
+                                    throw std::runtime_error("send function has failed or blocked");
                                 }
 								if((*ClientInfoIt)->isRedirect == true)
 								{
@@ -575,10 +576,7 @@ void	HttpServer::_serveClients( void )
                                 int r = (*ClientInfoIt)->served.gcount();
                                 if (send((*ClientInfoIt)->socket, s, r, 0) == -1
                                 || (*ClientInfoIt)->isCreated == -1)
-                                {
-                                    throw std::runtime_error("2send function has failed or blocked");
-                                    continue;
-                                }
+                                    throw std::runtime_error("send function has failed or blocked");
                                 delete[] s;
                                 if (r < 1024)
                                 {
@@ -604,7 +602,7 @@ void	HttpServer::_serveClients( void )
                         {
                             if ((send((*ClientInfoIt)->socket, (*ClientInfoIt)->headerToBeSent.c_str(), (*ClientInfoIt)->headerToBeSent.length(), 0) == -1)
 							|| ((*ClientInfoIt)->isCreated == -1))
-                                throw std::runtime_error("3send function has failed or blocked");
+                                throw std::runtime_error("send function has failed or blocked");
 							if((*ClientInfoIt)->isRedirect == true)
 							{
 								this->dropClient((*ClientInfoIt)->socket, ClientInfoIt);
@@ -620,10 +618,7 @@ void	HttpServer::_serveClients( void )
                                 (*ClientInfoIt)->served.read(s, 1024);
                                 int r = (*ClientInfoIt)->served.gcount();
 								if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
-                                {
-                                    throw std::runtime_error("4send function has failed or blocked");
-                                    continue;
-                                }
+                                    throw std::runtime_error("send function has failed or blocked");
                                 delete[] s;
                                 if (r < 1024)
                                 {

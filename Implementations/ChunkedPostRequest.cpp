@@ -104,7 +104,7 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket, bool
 	{
 		this->_uploadedFile.close();
 		uploadDone = true;
-		std::cout << "DONE WRITTING TO THE FIEL" << std::endl;
+		std::cout << "DONE WRITTING TO THE FILE" << std::endl;
 	}
 	i = 0;
 	while (i < this->_receivedBytes - this->_hexLength - DOUBLE_CRLF)
@@ -149,7 +149,7 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	this->_writtenBytes = i;
 }	
 
-void	ChunkedPostRequest:: handleRecv( SOCKET &clientSocket, bool &uploadDone)
+void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket, bool &uploadDone)
 {
 	if (this->_writtenBytes == this->_currentChunkSize)
 	{

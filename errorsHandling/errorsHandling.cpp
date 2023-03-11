@@ -202,6 +202,4 @@ void    error_404(ClientInfo *client, std::string &error_page)
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
     client->isSendingHeader = true;
-//    if (send(client->socket, client->headerToBeSent.c_str(), client->headerToBeSent.length(), 0) == -1)
-//        throw std::runtime_error("send function has failed or blocked");
 }
