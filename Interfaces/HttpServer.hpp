@@ -45,9 +45,6 @@ private:
 		void	_serveClients ( void );
 
 };
-/*
-	A server listen for new connections at a publish address
-*/
 #endif
 
 

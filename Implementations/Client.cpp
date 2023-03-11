@@ -5,6 +5,10 @@ ClientInfo::ClientInfo( ServerConfiguration &server ) : isSendingHeader(false), 
 , cgiBodyLength(0), readFromCgi(0), cgiStatus("200 OK"), isDefaultError(1), isChunk(0)
 , totalTempFileSize(0), toWrite(0), serverConfig(server), isChunkUploadDone(0)
 {
+	this->getRequest = nullptr;
+	this->postRequest = nullptr;
+	this->chunkedRequest = nullptr;
+	this->DeleteRequest = nullptr;
     this->servedFilesFolder = "FilesForServing/";
     this->isCreated = 0;
     struct stat st;
@@ -14,7 +18,16 @@ ClientInfo::ClientInfo( ServerConfiguration &server ) : isSendingHeader(false), 
     }
 }
 
-ClientInfo::~ClientInfo( void ){ }
+ClientInfo::~ClientInfo( void ){ 
+	if (this->getRequest)
+		delete this->getRequest;
+	if (this->postRequest)
+		delete this->postRequest;
+	if (this->DeleteRequest)
+		delete this->DeleteRequest;
+	if (this->chunkedRequest)
+		delete	this->chunkedRequest;
+}
 
 
 bool    ClientInfo::_isLocationSupportsCurrentMethod(ClientInfo *client, std::string method) 

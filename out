@@ -1,0 +1,288 @@
+i'm in main
+i'm a champion
+is first read 1
+REQUEST : 
+POST / HTTP/1.1
+Transfer-Encoding: chunked
+User-Agent: PostmanRuntime/7.31.0
+Accept: */*
+Postman-Token: 83f56f6b-04da-4253-ab60-c648fc0240a8
+Host: 10.11.2.10:8080
+Accept-Encoding: gzip, deflate, br
+Connection: keep-alive
+Content-Type: text/plain
+
+25b4
+# include <cstring>
+
+const char *get_mime_format(const char *type){
+        const char *last_dot = strrchr(type, '.');
+        if(last_dot == NULL) return NULL;
+        if (strcmp(last_dot, ".css") == 0) return "text/css";
+        if (strcmp(last_dot, ".csv") == 0) return "text/csv";
+        if (strcmp(last_dot, ".gif") == 0) return "image/gif";
+        if (strcmp(last_dot, ".htm") == 0) return "text/html";
+        if (strcmp(last_dot, ".html") == 0) return "text/html";
+        if (strcmp(last_dot, ".ico") == 0) return "image/x-icon";
+        if (strcmp(last_dot, ".jpeg") == 0) return "image/jpeg";
+        if (strcmp(last_dot, ".jpg") == 0) return "image/jpeg";
+        if (strcmp(last_dot, ".js") == 0) return  "application/javascript";
+        if (strcmp(last_dot, ".json") == 0) return "application/json";
+        if (strcmp(last_dot, ".png") == 0) return "image/png";
+        if (strcmp(last_dot, ".pdf") == 0) return "application/pdf";
+        if (strcmp(last_dot, ".svg") == 0) return "image/svg+xml";
+        if (strcmp(last_dot, ".txt") == 0) return "text/plain";
+        if (strcmp(last_dot, ".mp4") == 0) return "video/mp4";
+        if (strcmp(last_dot, ".cpp") == 0) return "text/x-c";
+        return "application/octet-stream";
+}
+25b0
+const char *get_real_format(const char *mime_type){
+        if (strcmp(mime_type, "text/css") == 0) return ".css";
+        if (strcmp(mime_type, "text/csv") == 0) return ".csv";
+        if (strcmp(mime_type, "image/gif") == 0) return ".gif";
+        if (strcmp(mime_type, "text/html") == 0) return ".html";
+        if (strcmp(mime_type, "text/html") == 0) return ".html";
+        if (strcmp(mime_type, "image/x-icon") == 0) return ".x-icon";
+        if (strcmp(mime_type, "image/jpe
+method is 1
+is it post |1|
+is it first 0
+i'm a champion
+------------------- ALREADY READ -------------------
+g") == 0) return ".jpeg";
+        if (strcmp(mime_type, "image/jpeg") == 0) return ".jpeg";
+        if (strcmp(mime_type, "application/javascript") == 0) return ".javascript";
+        if (strcmp(mime_type, "application/json") == 0) return ".json";
+        if (strcmp(mime_type, "image/png") == 0) return ".png";
+        if (strcmp(mime_type, "application/pdf") == 0) return ".pdf";
+        if (strcmp(mime_type, "image/svg+xml") == 0) return ".svg+xml";
+        if (strcmp(mime_type, "text/plain") == 0) return ".plain";
+        if (strcmp(mime_type, "video/mp4") == 0) return ".mp4";
+        return "";
+}
+
+#include "Interfaces/ConfigFileParser.hpp"
+#include "includes/postRequest.hpp"
+
+void searchForBoundary(client_info *client)
+{
+    std::map<std::string, std::string>::iterator content = client->parsedRequest.request_data.find("Content-Type:");
+    std::string boundarySavior = content->second;
+    std::string newString(client->parsedRequest.requestHeader);
+    int newContentIndex = newString.find("filename=");
+    i
+is it post |1|
+is it first 0
+i'm a champion
+------------------- ALREADY READ -------------------
+nt dotPosition = newString.find(".", newContentIndex);
+    int DoubleQuotePosition = newString.find("\"", dotPosition);
+//    std::cout << "the newstring is : " << std::endl;
+    client->parsedRequest.request_data["Content-Type:"] = get_mime_format(newString.substr(dotPosition, DoubleQuotePosition - dotPosition).c_str());
+    std::cout << "*****************" << std::endl;
+    client->uploadFileName = newString.substr(newContentIndex + 10, dotPosition - newContentIndex - 10) + get_real_format(client->parsedRequest.request_data["Content-Type:"].c_str());
+    int newBodyIndex = newString.find("Content-Disposition:");
+    newBodyIndex = client->parsedRequest.retIndex(client->parsedRequest.requestHeader) + 4;
+    client->parsedRequest.bodyIndex = newBodyIndex;
+    client->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
+}
+
+bool ifLocationSupportUpload(locationBlock &location)
+{
+    return !(location.UploadDirectoryPath.empty());
+}
+
+//bool isPostMethodAllowed(postRequestStruct &postRequest)
+//
+is it post |1|
+is it first 0
+i'm a champion
+------------------- ALREADY READ -------------------
+{
+//    std::list<std::string>::iterator allowedMethods = postRequest.configFileData.
+//}
+
+void receiveFromClient(client_info *client, int &received)
+{
+    client->bytesToReceive = (client->received + MAX_REQUEST_SIZE < client->parsedRequest.contentLength) ? MAX_REQUEST_SIZE : client->parsedRequest.contentLength - client->received;
+    received = recv(client->socket, client->parsedRequest.requestHeader, client->bytesToReceive, 0);
+    // std::cout << "i have received : " << received << " and the content length : " << client->contentLength << std::endl;
+    client->received += received;
+    client->parsedRequest.requestHeader[received] = 0;
+}
+
+void isValidPostRequest(postRequestStruct &postRequest)
+{
+    if(isNotValidPostRequest(postRequest.client->parsedRequest.request_data))
+    {
+        error_400(postRequest.clientDataIterator);
+        throw postRequestExceptions("Bad Request Exception");
+    }
+    if(isTransferEncodingNotChunked(postRequest.client->parsedRequest.request_data))
+    {
+        error_501(pos
+is it post |1|
+is it first 0
+i'm a champion
+------------------- ALREADY READ -------------------
+tRequest.clientDataIterator);
+        throw postRequestExceptions("Transfer Encoding Exception");
+    }
+    std::map<std::string, std::string>::iterator content = postRequest.client->parsedRequest.request_data.find("Content-Length:");
+    if(content != postRequest.client->parsedRequest.request_data.end())
+    {
+        int body_size = std::stoi(postRequest.client->parsedRequest.request_data["Content-Length:"]);
+        if(isBodySizeBigger(postRequest.configFileData, body_size, postRequest.client))
+        {
+            error_413(postRequest.clientDataIterator);
+            throw postRequestExceptions("Body Size Exception");
+        }
+    }
+}
+
+void moveFileToUploads(client_info *client)
+{
+    std::ifstream sourceFile("/tmp/." + client->uploadFileName, std::ios::binary);
+    std::ofstream destinationFile("uploads/" + client->uploadFileName, std::ios::binary);
+    if (!destinationFile.is_open() || !sourceFile.is_open())
+    {
+        std::cout << "Couldn't Open " << client->uploadFileName << std::endl;
+        r
+is it post |1|
+is it first 0
+i'm a champion
+------------------- ALREADY READ -------------------
+eturn ;
+    }
+    int totalToWrite = client->received - client->boundarySize - client->parsedRequest.bodyIndex - 4, toWrite = 0;
+    int i = 0;
+    while (totalToWrite > 0)
+    {
+        toWrite = (totalToWrite > 1024) ? 1024 : totalToWrite;
+        char buffer[toWrite + 1];
+        sourceFile.read(buffer, toWrite);
+        buffer[toWrite] = 0;
+        destinationFile.write(buffer, toWrite);
+        totalToWrite -= toWrite;
+    }
+    sourceFile.close();
+    destinationFile.close();
+}
+
+void  successfulPostRequest(std::list<client_info *>::iterator &clientDataIterator, std::list<client_info *> &clientData, client_info *client)
+{
+    client->requestBody.close();
+    moveFileToUploads(client);
+    std::string path = "uploadSuccess.html";
+    std::ifstream served(path);
+    if (!served.is_open())
+    {
+        std::cout << "Couldn't Open UploadSuccess File" << std::endl;
+        return ;
+    }
+    served.seekg(0, std::ios::end);
+    int file_size = served.tellg();
+    served.seekg(0, std::ios::beg);
+    char *buff
+is it post |1|
+is it first 0
+i'm a champion
+------------------- ALREADY READ -------------------
+er = new char[file_size + 1]();
+    sprintf(buffer, "HTTP/1.1 201 Created\r\n");
+    send(client->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "Connection: close\r\n");
+    send(client->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "Content-Length: %d\r\n", file_size);
+    send(client->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
+    send(client->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "\r\n");
+    send(client->socket, buffer, strlen(buffer), 0);
+    served.read(buffer, file_size);
+    send(client->socket, buffer, strlen(buffer), 0);
+    delete [] buffer;
+    dropClient(client->socket, clientDataIterator, clientData);
+}
+// # include "webserver.hpp"
+# include "Interfaces/ConfigFileParser.hpp"
+# include "Interfaces/MultiHttpServer.hpp"
+
+/*
+int _main()
+{
+
+
+
+    
+	std::list<ConfigFileParser> configParse;
+    std::list<std::string> configFileInfo;
+    ConfigFileParser::readingDataFromFile(configFileInfo, configF
+is it post |1|
+is it first 0
+i'm a champion
+------------------- ALREADY READ -------------------
+ilePath);
+    ConfigFileParser::startParsingFile(configFileInfo, configParse);
+    ConfigFileParser::printingParsingData(configParse);
+}
+
+*/
+
+int main ( int ac, char **av, char **env )
+{
+	(void)env;
+	if (ac > 2)
+        errorPrinting("too many arguments.");
+	
+    std::string configFilePath;
+	
+	configFilePath = (ac == 2) ? std::string(av[1]) : DEFAULT_CONFIG_FILE_NAME;
+	ConfigFileParser		ConfigFile(configFilePath);
+ 
+	// MultiHttpServer			MultiServers; 
+	// std::list<ClientInfo>	ClientInfoList;
+	ConfigFile.parseConfigFile();
+
+	
+	MultiHttpServer MultiServers(ConfigFile.listOfServersConfiguration);
+	MultiServers.setUpServers();
+	MultiServers.startServers();
+	return (1);
+}
+#include "Interfaces/ConfigFileParser.hpp"
+
+void    error_405(std::list<client_info *> &clients_list, std::list<client_info *>::iterator &client)
+{
+    std::string path = "htmlErrorPages/error405.html";
+    std::ifstream served(path);
+    served.seekg(0, std::ios::end);
+    int file_size = served.tellg();
+    served.seekg(0, std::ios::beg);
+   
+is it post |1|
+is it first 0
+i'm a champion
+------------------- ALREADY READ -------------------
+ char *buffer = new char[file_size + 1]();
+    sprintf(buffer, "HTTP/1.1 405 Method Not Allowed\r\n");
+    send((*client)->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "Connection: close\r\n");
+    send((*client)->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "Content-Length: %d\r\n", file_size);
+    send((*client)->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "Content-Type: %s\r\n", get_mime_format(path.c_str()));
+    send((*client)->socket, buffer, strlen(buffer), 0);
+    sprintf(buffer, "\r\n");
+    send((*client)->socket, buffer, strlen(buffer), 0);
+    served.read(buffer, file_size);
+    send((*client)->socket, buffer, strlen(buffer), 0);
+    close((*client)->socket);
+    clients_list.erase(client);
+}
+0
+
+
+is it post |1|
+is it first 0
