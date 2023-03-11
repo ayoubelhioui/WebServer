@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <sys/socket.h>
+#include "ServerConfiguration.hpp"
 #define MAX_REQUEST_SIZE 2000
 # define SOCKET int
 
@@ -32,6 +33,7 @@ class ParsingRequest{
 		void 	gettingFileName(std::string &);
 		void	gettingNewBodyIndex(std::string &);
 		int		retIndex(char *);
+		bool	checkHost( ServerConfiguration & );
 };
 #endif
 

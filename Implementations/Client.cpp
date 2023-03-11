@@ -351,7 +351,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 if (currentPath.front() != '.')
                     currentPath = '.' + currentPath;
                 std::ifstream fileCheck(currentPath);
-                std::cout << "Current path is " << currentPath << std::endl;
                 if (fileCheck)
                 {
                     if ((*beg).Redirection.length())
@@ -359,17 +358,13 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         client->_currentLocation = *beg;
                         client->cgiIterator = client->_currentLocation.CGI.end();
                         client->isRedirect = true;
-                        std::cout << "im here" << std::endl;
+                        fileCheck.close();
                         return ;
                     }
                     if(client->parsedRequest.requestDataMap["method"] != "DELETE")
                         this->searchForCgi(client, beg, currentPath);
                     else
-                    {
-                        
                         client->servedFileName = currentPath;
-                    }
-                    
                 }
                 fileCheck.close();
                 return ;
@@ -391,9 +386,8 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         return ;
                     }
                     client->servedFileName = currentPath;
-                    if(client->servedFileName.back() != '/') {
+                    if(client->servedFileName.back() != '/') 
                         client->servedFileName += '/';
-                    }
                     client->_currentLocation = *beg;
                     client->cgiIterator = std::find_if(client->_currentLocation.CGI.begin(), client->_currentLocation.CGI.end(), isCgi);
                     return ;
@@ -402,7 +396,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                 if (isThereFileLast(currentPath, is_file_last, rootLength))
                 {
                     std::ifstream fileCheck(currentPath);
-                    std::cout << "Current path is " << currentPath << std::endl;
                     if (fileCheck)
                     {
                         if ((*beg).Redirection.length())
@@ -410,6 +403,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                             client->_currentLocation = *beg;
                             client->cgiIterator = client->_currentLocation.CGI.end();
                             client->isRedirect = true;
+                            fileCheck.close();
                             return ;
                         }
                         if(client->parsedRequest.requestDataMap["method"] != "DELETE")
@@ -427,6 +421,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         std::ifstream fileCheck(currentPath);
                         if(fileCheck)
                             client->servedFileName = currentPath;
+                        fileCheck.close();
                         return ;
                     }
                     if((*beg).isDirectoryListingOn)

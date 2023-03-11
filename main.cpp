@@ -33,7 +33,6 @@ int main ( int ac, char **av, char **env )
 	// std::list<ClientInfo>	ClientInfoList;
 	ConfigFile.parseConfigFile();
 
-	
 	MultiHttpServer MultiServers(ConfigFile.listOfServersConfiguration);
 	MultiServers.setUpServers();
 	MultiServers.startServers();

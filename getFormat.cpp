@@ -2,7 +2,8 @@
 
 const char *get_mime_format(const char *type){
         const char *last_dot = strrchr(type, '.');
-        if(last_dot == NULL) return NULL;
+        if(last_dot == NULL) 
+                return "";
         if (strcmp(last_dot, ".css") == 0) return "text/css";
         if (strcmp(last_dot, ".csv") == 0) return "text/csv";
         if (strcmp(last_dot, ".gif") == 0) return "image/gif";

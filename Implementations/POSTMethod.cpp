@@ -71,17 +71,11 @@ void   PostMethod::startPostRequest(ClientInfo *client, bool isNotUpload)
 }
 void    PostMethod::handleFirstRead(ClientInfo *client) {
     if(this->_isLocationSupportsUpload(client))
-    {
-        std::cout << "upload true" << std::endl;
         startPostRequest(client, 0);
-    } 
     else
     {
-        std::cout << "upload false" << std::endl;
         startPostRequest(client, 1);
-        std::cout << "BEF client is not upload " << client->isNotUpload << std::endl;
         client->postLocationAbsence(this->_serverConfiguration);
-        std::cout << "AFTER client is not upload " << client->isNotUpload << std::endl;
     }
 }
 
@@ -99,16 +93,13 @@ void PostMethod::_preparingPostRequest(ClientInfo *client)
 void PostMethod::_writeInTempFile(ClientInfo *client) {
     client->requestBody.write(client->parsedRequest.requestHeader, client->parsedRequest.receivedBytes);
     if (client->requestBody.fail())
-        throw (std::runtime_error("Error Occurred In writeIntTempFile\n"));
+        throw (std::runtime_error("Error Occurred In writeIntTempFile"));
 }
 
 void PostMethod::_receiveFromClient(ClientInfo *client){
     client->parsedRequest.bytesToReceive = (client->parsedRequest.received + MAX_REQUEST_SIZE < client->parsedRequest.contentLength) ? MAX_REQUEST_SIZE : client->parsedRequest.contentLength - client->parsedRequest.received;
     if ((client->parsedRequest.receivedBytes = recv(client->socket, client->parsedRequest.requestHeader, client->parsedRequest.bytesToReceive, 0)) == -1)
-    {
-        throw (std::runtime_error("Error Occurred In ReceiveFromClient\n"));
-    }
-//    std::cout << "i have received : " << client->parsedRequest.bytesToReceive << std::endl;
+        throw (std::runtime_error("Error Occurred In ReceiveFromClient"));
     client->parsedRequest.received += client->parsedRequest.receivedBytes;
     client->parsedRequest.requestHeader[client->parsedRequest.receivedBytes] = 0;
 }

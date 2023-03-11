@@ -31,12 +31,12 @@ bool isUriTooLong(std::string &Uri)
 void    error_414(ClientInfo *client, std::string &error_page)
 {
     std::string path = error_page;
-    if(client->served.is_open()) client->served.close();
+    if(client->served.is_open()) 
+        client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
 
     client->headerToBeSent += "HTTP/1.1 414 Request-URI Too Long\r\n"
     + std::string("Connection: close\r\n")
@@ -202,6 +202,4 @@ void    error_404(ClientInfo *client, std::string &error_page)
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
     client->isSendingHeader = true;
-//    if (send(client->socket, client->headerToBeSent.c_str(), client->headerToBeSent.length(), 0) == -1)
-//        throw std::runtime_error("send function has failed or blocked");
 }
