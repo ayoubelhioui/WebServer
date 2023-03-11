@@ -399,7 +399,20 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     if(client->parsedRequest.requestDataMap["method"] != "DELETE")
                         this->searchForCgi(client, beg, currentPath);
                     else
+                    {
+                        std::cout << "HERE DELETE" << std::endl;
+                        if ((*beg).Redirection.length())
+                        {
+                            client->_currentLocation = *beg;
+                            client->cgiIterator = client->_currentLocation.CGI.end();
+                            client->isRedirect = true;
+                            return ;
+                        }
                         client->servedFileName = currentPath;
+                        client->_currentLocation = *beg;
+                        client->cgiIterator = std::find_if(client->_currentLocation.CGI.begin(), client->_currentLocation.CGI.end(), isCgi);
+                        return ;
+                    }
                 }
                 fileCheck.close();
                 return ;
@@ -426,7 +439,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     client->_currentLocation = *beg;
                     client->cgiIterator = std::find_if(client->_currentLocation.CGI.begin(), client->_currentLocation.CGI.end(), isCgi);
                     return ;
-            }
+                }
                 int rootLength = currentPath.length() - 1;
                 if (isThereFileLast(currentPath, is_file_last, rootLength))
                 {
@@ -444,7 +457,20 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         if(client->parsedRequest.requestDataMap["method"] != "DELETE")
                             this->searchForCgi(client, beg, currentPath);
                         else
+                        {
+                            if ((*beg).Redirection.length())
+                            {
+                                client->_currentLocation = *beg;
+                                client->cgiIterator = client->_currentLocation.CGI.end();
+                                client->isRedirect = true;
+                                return ;
+                            }
                             client->servedFileName = currentPath;
+                            client->_currentLocation = *beg;
+                            client->cgiIterator = std::find_if(client->_currentLocation.CGI.begin(), client->_currentLocation.CGI.end(), isCgi);
+                            return ;
+
+                        }
                     }
                     fileCheck.close();
                     return ;
@@ -455,7 +481,21 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                     {
                         std::ifstream fileCheck(currentPath);
                         if(fileCheck)
+                        {
+                            if ((*beg).Redirection.length())
+                            {
+                                client->_currentLocation = *beg;
+                                client->cgiIterator = client->_currentLocation.CGI.end();
+                                client->isRedirect = true;
+                                return ;
+                            }
                             client->servedFileName = currentPath;
+                            if(client->servedFileName.back() != '/') 
+                                client->servedFileName += '/';
+                            client->_currentLocation = *beg;
+                            client->cgiIterator = std::find_if(client->_currentLocation.CGI.begin(), client->_currentLocation.CGI.end(), isCgi);
+                            return ;
+                        }
                         fileCheck.close();
                         return ;
                     }

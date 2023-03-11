@@ -130,6 +130,7 @@ void	DeleteMethod::_removeRecursively ( const char *path )
 			}
 			if (remove(file_path.c_str()) == -1)
 			{
+				std::cout << "HERE ERROR !1" << std::endl;
 				client->isDefaultError = false;
 				error_500(this->client, this->serverConfig.errorInfo["500"]);
 				throw std::runtime_error("Cannot delete the directory or file ");
@@ -146,6 +147,7 @@ void	DeleteMethod::_removeRecursively ( const char *path )
 	}
 	if (rmdir(path) != 0) 
 	{
+		std::cout << "HERE ERROR !2" << std::endl;
 		client->isDefaultError = false;
 		error_500(this->client, this->serverConfig.errorInfo["500"]);
 		throw std::runtime_error("Cannot delete the directory or file");
