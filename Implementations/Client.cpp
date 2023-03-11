@@ -3,7 +3,7 @@
 ClientInfo::ClientInfo( ServerConfiguration &server ) : isSendingHeader(false), isFirstRead(true) , addressLength(sizeof(this->address)), inReadCgiOut(0), isErrorOccured(false), isServing(false)
 , stillWaiting(0), isFirstCgiRead(0), PostFinishedCgi(0), isNotUpload(0), isRedirect(0)
 , cgiBodyLength(0), readFromCgi(0), cgiStatus("200 OK"), isDefaultError(1), isChunk(0)
-, totalTempFileSize(0), toWrite(0), serverConfig(server), isChunkUploadDone(0)
+, totalTempFileSize(0), toWrite(0), serverConfig(server), isChunkUploadDone(0), recvError(0)
 {
     this->servedFilesFolder = "FilesForServing/";
     this->isCreated = 0;
@@ -17,10 +17,17 @@ ClientInfo::ClientInfo( ServerConfiguration &server ) : isSendingHeader(false), 
 ClientInfo::~ClientInfo( void ){ }
 
 
+bool    ClientInfo::isValidMethod( void )
+{
+    std::string enteredMethod = this->parsedRequest.requestDataMap["method"];
+    return ((enteredMethod != DELETE) and (enteredMethod != POST) and (enteredMethod != GET));
+}
+
 bool    ClientInfo::_isLocationSupportsCurrentMethod(ClientInfo *client, std::string method) 
 {
     std::list<std::string>::iterator it = client->_currentLocation.allowedMethods.begin();
-    while (it != client->_currentLocation.allowedMethods.end()){
+    while (it != client->_currentLocation.allowedMethods.end())
+    {
         if (*it == method)
             return (true);
         it++;
@@ -54,7 +61,31 @@ ClientInfo::ClientInfo ( const ClientInfo &obj )
 	// *this = obj;
 }
 
-void ClientInfo::preparingMovingTempFile(ClientInfo *client) 
+void    ClientInfo::sendResponse( void )
+{
+    if (this->isSendingHeader == true)
+    {
+        if (send(this->socket, this->headerToBeSent.c_str(), this->headerToBeSent.length(), 0) == -1
+        || this->isCreated == -1)
+            throw std::runtime_error("send function has failed or blocked");
+        if(this->isRedirect == true)
+            throw std::runtime_error("Client Was Served Successfully");
+        this->isSendingHeader = false;
+    }
+    else
+    {
+        char *s = new char[1025]();
+        this->served.read(s, 1024);
+        int r = this->served.gcount();
+        if (send(this->socket, s, r, 0) == -1
+        || this->isCreated == -1)
+            throw std::runtime_error("send function has failed or blocked");
+        delete[] s;
+        if (r < 1024)
+            throw std::runtime_error("Client Was Served Successfully");
+    }
+}
+void    ClientInfo::preparingMovingTempFile(ClientInfo *client)
 {
     if(client->isChunk)
     {

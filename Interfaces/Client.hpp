@@ -12,7 +12,11 @@
 # include  "../errorsHandling/errorsHandling.hpp"
 # include  "../Interfaces/DeleteMethod.hpp"
 
-#include  <sys/ioctl.h>
+# include  <sys/ioctl.h>
+
+# define POST "POST"
+# define DELETE "DELETE"
+# define GET "GET"
 class PostMethod;
 class GETMethod;
 class DeleteMethod;
@@ -43,6 +47,8 @@ class ClientInfo {
 		void            postLocationAbsence( ServerConfiguration & );
 		void 			preparingMovingTempFile(ClientInfo *client);
 		void 			writeToUploadedFile(ClientInfo *client);
+		void			sendResponse( void );
+		bool			isValidMethod( void );
         ParsingRequest parsedRequest;
         std::string headerToBeSent;
         bool isSendingHeader;
@@ -91,6 +97,7 @@ class ClientInfo {
 		int toWrite;
 		ServerConfiguration										  serverConfig;
 		bool													  isChunkUploadDone;
+		bool													   recvError;
 	// static void	checkingClientListenning(int, std::list<ClientInfo> &, fd_set &, fd_set &);
 	// static void	clients_Setup(int , std::list<ClientInfo>, fd_set &reads, fd_set &writes);
 	// static ClientInfo *get_client(int socket, std::list<ClientInfo> &data_list);

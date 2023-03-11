@@ -184,7 +184,6 @@ void    error_413(ClientInfo *client, std::string &error_page)
 
 void    error_404(ClientInfo *client, std::string &error_page)
 {
-    std::cout << "the string is :" << error_page << std::endl;
     std::string path = error_page;
     if(client->served.is_open()) client->served.close();
     client->served.open(path);

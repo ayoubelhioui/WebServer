@@ -20,7 +20,7 @@ class ChunkedPostRequest {
 		~ChunkedPostRequest ( void );
 		ChunkedPostRequest ( const ChunkedPostRequest & );
 		ChunkedPostRequest	&operator= ( const ChunkedPostRequest & );
-		void	handleRecv( SOCKET &, bool & );
+		void	handleRecv( SOCKET &, bool &, bool & );
 		void	handleFirstRecv ( const char *, ParsingRequest &, bool & );
 		unsigned int	_fileSize;
 		std::string		fileName;
@@ -35,8 +35,8 @@ class ChunkedPostRequest {
 		int				_numberOfRecChunk;
 		int				_entered;
 		void			_createUploadedFile( const char * );
-		void			_receiveRestOfChunk ( SOCKET & );
-		void			_receiveNextChunkBeginning ( SOCKET &, bool & );
+		void			_receiveRestOfChunk ( SOCKET &, bool & );
+		void			_receiveNextChunkBeginning ( SOCKET &, bool &, bool & );
 		void			_writeToUploadedFile( void );
 		void			_retrieveChunkSize ( char * );
 };
