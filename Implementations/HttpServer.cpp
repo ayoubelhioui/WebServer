@@ -224,7 +224,6 @@ void	HttpServer::_serveClients( void )
                     }
 					catch (const std::exception& e)
 					{
-												std::cout << "HERE" << std::endl;
                         std::cout << e.what() << std::endl;
 						if((*ClientInfoIt)->isDefaultError == true)
                             error_500(*ClientInfoIt, this->_serverConfiguration.errorInfo["500"]);
@@ -238,7 +237,6 @@ void	HttpServer::_serveClients( void )
 						try
 						{
 							(*ClientInfoIt)->chunkedRequest = new ChunkedPostRequest;
-
 							(*ClientInfoIt)->chunkedRequest->handleFirstRecv(((*ClientInfoIt)->parsedRequest.requestDataMap["Content-Type:"]).c_str()
 															, (*ClientInfoIt)->parsedRequest, (*ClientInfoIt)->isChunkUploadDone);
 							if((*ClientInfoIt)->_currentLocation.UploadDirectoryPath == "")

@@ -88,7 +88,6 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 	delete [] buffer;
 }
 
-
 void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket, bool &uploadDone )
 {
 	// char		*buffer;
