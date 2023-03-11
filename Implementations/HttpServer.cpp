@@ -576,6 +576,7 @@ void	HttpServer::_serveClients( void )
                                 if (send((*ClientInfoIt)->socket, s, r, 0) == -1
                                 || (*ClientInfoIt)->isCreated == -1)
                                 {
+									delete [] s;
                                     throw std::runtime_error("2send function has failed or blocked");
                                     continue;
                                 }
@@ -621,6 +622,8 @@ void	HttpServer::_serveClients( void )
                                 int r = (*ClientInfoIt)->served.gcount();
 								if (send((*ClientInfoIt)->socket, s, r, 0) == -1)
                                 {
+									delete[] s;
+									std::cout << "FREED BEFORE " << std::endl;
                                     throw std::runtime_error("4send function has failed or blocked");
                                     continue;
                                 }
