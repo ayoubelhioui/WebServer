@@ -389,6 +389,7 @@ void	HttpServer::_serveClients( void )
 								int bef_header = (*ClientInfoIt)->parsedRequest.retIndex(buffer);
 								if(bef_header == -1)
 								{
+
 									error_400((*ClientInfoIt), this->_serverConfiguration.errorInfo["400"]);
 									(*ClientInfoIt)->isErrorOccured = true;
 									(*ClientInfoIt)->inReadCgiOut = false;

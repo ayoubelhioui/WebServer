@@ -27,12 +27,6 @@ void ServerConfiguration::fillingDataFirstPart(std::string &data){
     std::vector<std::string> vec;
     while (str >> word)
         vec.push_back(word);
-    if (vec[0] == "#" || vec[0][0] == '#')
-    {
-        if ((vec[0] == "#" && vec[1] == SERVER_KEYWORD) || vec[0] == "#server")
-            errorPrinting(LISTEN_ERROR_MSG);
-        return ;
-    }
     if (vec[0] == LISTEN_KEYWORD)
         listenKeywordFound(vec);
     else if (vec[0] == SERVER_KEYWORD){
@@ -80,22 +74,6 @@ void ServerConfiguration::errorPageKeywordFound(std::vector<std::string> &vec){
     else
         this->errorInfo[vec[1]] = vec[2];
 }
-
-// ServerConfiguration	&ServerConfiguration::operator= ( const ServerConfiguration &obj )
-// {
-// 	if (this == &obj)
-// 		return (*this);
-// 	this->serverHost = obj.serverHost;
-// 	this->serverPort = obj.serverPort;
-// 	this->clientBodyLimit = obj.clientBodyLimit;
-
-// 	return (*this);
-// }
-
-// ServerConfiguration::ServerConfiguration ( const ServerConfiguration &obj )
-// {
-// 	*this = obj;
-// }
 
 void	ServerConfiguration::printServerConfiguration ( void )
 {
