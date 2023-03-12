@@ -192,6 +192,7 @@ void	HttpServer::_serveClients( void )
 					try
 					{
 						(*ClientInfoIt)->getRequest->callGET(*ClientInfoIt, this->_serverConfiguration);
+						std::cout << "served is " << (*ClientInfoIt)->servedFileName << std::endl;
 						if((*ClientInfoIt)->cgiIterator != (*ClientInfoIt)->_currentLocation.CGI.end())
                         {
                             (*ClientInfoIt)->cgiContentType = "";
@@ -233,8 +234,8 @@ void	HttpServer::_serveClients( void )
 						(*ClientInfoIt)->tempPathForLocation = (*ClientInfoIt)->parsedRequest.requestDataMap["path"];
 						(*ClientInfoIt)->returnPathWithoutFile((*ClientInfoIt)->tempPathForLocation);
 						(*ClientInfoIt)->checkPathValidation(*ClientInfoIt, this->_serverConfiguration, (*ClientInfoIt)->tempPathForLocation);
-						(*ClientInfoIt)->postErrorsHandling(this->_serverConfiguration);
-						if ((*ClientInfoIt)->isRedirect)
+                        (*ClientInfoIt)->postErrorsHandling(this->_serverConfiguration);
+                        if ((*ClientInfoIt)->isRedirect)
 						{
 							(*ClientInfoIt)->headerToBeSent += "HTTP/1.1 301 Moved Permanently\r\n"
 								+ std::string("Location: ")
@@ -282,6 +283,7 @@ void	HttpServer::_serveClients( void )
 					{
 					 	try
 					 	{
+                             
 							(*ClientInfoIt)->postRequest = new PostMethod(this->_serverConfiguration);
                             (*ClientInfoIt)->postRequest->handleFirstRead(*ClientInfoIt);
                             if ((*ClientInfoIt)->parsedRequest.received == (*ClientInfoIt)->parsedRequest.contentLength)
@@ -356,7 +358,10 @@ void	HttpServer::_serveClients( void )
 					{
 						if((*ClientInfoIt)->stillWaiting)
 						{
+							static int a = 0;
 							int retWait = waitpid((*ClientInfoIt)->cgiPid, NULL, WNOHANG);
+							std::cout << "ret WAAAAAAAIT " << a << std::endl;
+							a++;
 							if(retWait == 0)
 							{
 								ClientInfoIt++;
@@ -548,7 +553,7 @@ void	HttpServer::_serveClients( void )
     								actionPathFile.seekg(0, std::ios::beg);
 									actionPathFile.close();
 									(*ClientInfoIt)->cgiContentType = foundPhp != std::string::npos ? "text/php" : "text/x-perl-script";
-									(*ClientInfoIt)->cgiContentType = "";
+//									(*ClientInfoIt)->cgiContentType = "";
 									(*ClientInfoIt)->cgiContentLength = std::to_string(file_size);
 									(*ClientInfoIt)->CGIexecutedFile((*ClientInfoIt), this->_serverConfiguration);
 								}
@@ -569,7 +574,6 @@ void	HttpServer::_serveClients( void )
 								}
 								else
 								{
-
 									(*ClientInfoIt)->postRequest->successfulPostRequest(*ClientInfoIt);
 									(*ClientInfoIt)->isServing = true;
 								}

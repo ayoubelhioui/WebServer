@@ -1,0 +1,17 @@
+env[0] is REQUEST_METHOD=POST
+env[1] is SCRIPT_NAME=./CGIS/php-cgi
+env[2] is QUERY_STRING=
+env[3] is SERVER_NAME=10.11.2.5
+env[4] is SERVER_PORT=8080
+env[5] is PATH_INFO=/Users/ael-hiou/Desktop/NewWebServer/uuuu/script.php
+env[6] is CONTENT_LENGTH=20
+env[7] is CONTENT_TYPE=text/php
+env[8] is REDIRECT_STATUS=200
+env[9] is PATH_TRANSLATED=/Users/ael-hiou/Desktop/NewWebServer/uuuu/script.php
+env[11] is GATEWAY_INTERFACE=CGI/1.1
+env[12] is SERVER_PROTOCOL=HTTP/1.1
+env[13] is HTTP_ACCEPT=text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8
+env[14] is ACCEPT-ENCODING=gzip, deflate
+env[15] is REMOTE_ADDR=10.11.2.5
+env[16] is HTTP_USER_AGENT=Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:109.0) Gecko/20100101 Firefox/110.0
+
