@@ -84,6 +84,7 @@ bool    ParsingRequest::checkHost( ServerConfiguration &server )
 
 void    ParsingRequest::receiveFirstTime(int socket, bool &recvError){
     this->receivedBytes = recv(socket, this->requestHeader, MAX_REQUEST_SIZE, 0);
+    std::cout << "received is " << this->receivedBytes << std::endl;
     if(this->receivedBytes == -1 or this->receivedBytes == 0)
     {
         recvError = true;

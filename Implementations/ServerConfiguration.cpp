@@ -29,7 +29,8 @@ void ServerConfiguration::fillingDataFirstPart(std::string &data){
         vec.push_back(word);
     if (vec[0] == LISTEN_KEYWORD)
         listenKeywordFound(vec);
-    else if (vec[0] == SERVER_KEYWORD){
+    else if (vec[0] == SERVER_KEYWORD)
+    {
         if (vec.size() != 2 || vec[0] != SERVER_KEYWORD || vec[1] != "{") {
             errorPrinting(SERVER_KEYWORD_MSG);
         }
@@ -48,8 +49,8 @@ void ServerConfiguration::listenKeywordFound(std::vector<std::string> &vec){
     std::string port;
     if (vec.size() != 2)
         errorPrinting(LISTEN_ERROR_MSG);
-    int index = vec[1].find(':');
-    if (index == 0)
+    size_t index = vec[1].find(':');
+    if (index == std::string::npos)
         errorPrinting(LISTEN_ERROR_MSG);
     port = vec[1].substr(index + 1, vec[1].length());
     this->serverHost = vec[1].substr(0, index);

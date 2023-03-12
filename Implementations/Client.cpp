@@ -416,7 +416,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         this->searchForCgi(client, beg, currentPath);
                     else
                     {
-                        std::cout << "HERE DELETE" << std::endl;
                         if ((*beg).Redirection.length())
                         {
                             client->_currentLocation = *beg;
@@ -515,6 +514,28 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         fileCheck.close();
                         return ;
                     }
+                    for (std::list<std::string>::iterator index_it = (*beg).indexFiles.begin();
+                            index_it != (*beg).indexFiles.end(); index_it++)
+                    {
+                        std::string final_path = currentPath + '/' + (*index_it);
+                        std::ifstream check_file(final_path, std::ios::binary);
+                        if (check_file)
+                        {
+                            if ((*beg).Redirection.length())
+                            {
+                                client->_currentLocation = *beg;
+                                client->cgiIterator = client->_currentLocation.CGI.end();
+                                client->isRedirect = true;
+                                return ;
+                            }
+                            if(client->parsedRequest.requestDataMap["method"] != "DELETE")
+                                this->searchForCgi(client, beg, final_path);
+                            else
+                                client->servedFileName = currentPath;
+                            return ;
+                        }
+                        check_file.close();
+                    }
                     if((*beg).isDirectoryListingOn)
                     {
                         client->_currentLocation = *beg;
@@ -522,33 +543,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         client->servedFileName = client->getRequest->directoryListing((*beg).Root, (*beg).Location, client, serverConfig);
                         return ;
                     }
-                    else
-                    {
-                        for (std::list<std::string>::iterator index_it = (*beg).indexFiles.begin();
-                             index_it != (*beg).indexFiles.end(); index_it++)
-                        {
-                            std::string final_path = currentPath + '/' + (*index_it);
-                            std::ifstream check_file(final_path, std::ios::binary);
-                            std::cout << "final path is " << final_path  << std::endl;
-                            if (check_file)
-                            {
-                                if ((*beg).Redirection.length())
-                                {
-                                    client->_currentLocation = *beg;
-                                    client->cgiIterator = client->_currentLocation.CGI.end();
-                                    client->isRedirect = true;
-                                    return ;
-                                }
-                                if(client->parsedRequest.requestDataMap["method"] != "DELETE")
-                                    this->searchForCgi(client, beg, final_path);
-                                else
-                                    client->servedFileName = currentPath;
-                                return ;
-                            }
-                            check_file.close();
-                        }
-                        return ;
-                    }
+                    return ;
                 }
             }
         }

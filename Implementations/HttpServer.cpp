@@ -67,7 +67,7 @@ void	HttpServer::_setUpListeningSocket( void )
         exit (EXIT_FAILURE); // to be replaced by sth else
 	}
 	freeaddrinfo(bindAddress);
-	if (listen(_listeningSocket, MAXQUEUESIZE) < 0)
+	if (listen(_listeningSocket, 2) < 0)
 	{
 		std::cout << "listen function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
@@ -95,18 +95,6 @@ void	HttpServer::_selectClients ( void )
 	if (select(_maxSocket + 1, &_readFds, &_writeFds, NULL, &tv) == 0)
 		throw std::runtime_error("select has failed or may have no clients at the moment");
 }
-
-void	HttpServer::setClientInfoList ( std::list<ClientInfo> & )
-{
-
-}
-
-// void	HttpServer::_addClient ( SOCKET	clientSocket )
-// {
-// 	ClientInfo	(*ClientInfoIt);
-
-// 	this->_cli
-// }
 
 void	HttpServer::_acceptNewConnection( void )
 {
@@ -149,7 +137,8 @@ void	HttpServer::_serveClients( void )
 				{
 					(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket, (*ClientInfoIt)->recvError);
 					(*ClientInfoIt)->parsedRequest.parse();
-					if ((*ClientInfoIt)->parsedRequest.checkHost(this->_serverConfiguration) == 0)
+					if ((*ClientInfoIt)->parsedRequest.checkHost(this->_serverConfiguration) == 0
+					|| (*ClientInfoIt)->parsedRequest.requestDataMap["httpVersion"] != "HTTP/1.1")
 					{
 						error_400(*ClientInfoIt, this->_serverConfiguration.errorInfo["400"]);
 						(*ClientInfoIt)->isErrorOccured = true;
