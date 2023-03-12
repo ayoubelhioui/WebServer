@@ -48,28 +48,23 @@ void	HttpServer::_setUpListeningSocket( void )
 	int				optval; // ???
 
 	memset(&_serverHints, 0, sizeof(_serverHints));
-	_serverHints.ai_family = AF_INET;
-	_serverHints.ai_socktype = SOCK_STREAM;
-	_serverHints.ai_flags = AI_PASSIVE;
-	// //std::cout << "_serverConfig host is " << _serverConfiguration.serverHost << std::endl;
+	_serverHints.ai_family = AF_INET; // this for IPv4 only.
+	_serverHints.ai_socktype = SOCK_STREAM; // this for TCP socket.
+	_serverHints.ai_flags = AI_PASSIVE; // this for a server socket.
 	getaddrinfo(_serverConfiguration.serverHost.c_str(),
 				_serverConfiguration.serverPort.c_str(),
 				&_serverHints, &bindAddress);
-
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
 	fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
 	if (_listeningSocket < 0)
         exit (EXIT_FAILURE); // to be replaced by sth else
-	// //std::cout << "Socket Created Successfully" << std::endl;
 	optval = 1;
     setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 	if (bind(_listeningSocket, bindAddress->ai_addr, bindAddress->ai_addrlen))
         exit (EXIT_FAILURE); // to be replaced by sth else
-	// //std::cout << "Binded Successfully" << std::endl;
 	freeaddrinfo(bindAddress);
 	if (listen(_listeningSocket, MAXQUEUESIZE) < 0)
         exit (EXIT_FAILURE); // to be replaced by sth else
-	// //std::cout << "Set Up for LISTENING Successfully" << std::endl;
 }
 
 void	HttpServer::_selectClients ( void )
@@ -529,6 +524,16 @@ void	HttpServer::_serveClients( void )
                                         throw std::runtime_error("executed path was not found");
                                     }
 									std::ifstream actionPathFile((*ClientInfoIt)->actionPath);
+                                    std::cout << "action path is " << (*ClientInfoIt)->actionPath << std::endl;
+                                    
+                                    if(!actionPathFile.is_open())
+                                    {
+                                        std::cout << "HERE not opened" << std::endl;
+                                        
+                                        (*ClientInfoIt)->isDefaultError = false;
+                                        error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
+                                        throw std::runtime_error("executed path was not found");
+                                    }
                                     actionPathFile.seekg(0, std::ios::end);
     								int file_size = actionPathFile.tellg();
     								actionPathFile.seekg(0, std::ios::beg);

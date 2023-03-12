@@ -5,6 +5,10 @@ ClientInfo::ClientInfo( ServerConfiguration &server ) : isSendingHeader(false), 
 , cgiBodyLength(0), readFromCgi(0), cgiStatus("200 OK"), isDefaultError(1), isChunk(0)
 , totalTempFileSize(0), toWrite(0), serverConfig(server), isChunkUploadDone(0), recvError(0)
 {
+	this->getRequest = nullptr;
+	this->postRequest = nullptr;
+	this->chunkedRequest = nullptr;
+	this->DeleteRequest = nullptr;
     this->servedFilesFolder = "FilesForServing/";
     this->isCreated = 0;
     struct stat st;
@@ -14,7 +18,16 @@ ClientInfo::ClientInfo( ServerConfiguration &server ) : isSendingHeader(false), 
     }
 }
 
-ClientInfo::~ClientInfo( void ){ }
+ClientInfo::~ClientInfo( void ){ 
+	if (this->getRequest)
+		delete this->getRequest;
+	if (this->postRequest)
+		delete this->postRequest;
+	if (this->DeleteRequest)
+		delete this->DeleteRequest;
+	if (this->chunkedRequest)
+		delete	this->chunkedRequest;
+}
 
 
 bool    ClientInfo::isValidMethod( void )
@@ -156,6 +169,13 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
             this->actionPath = this->actionPath.c_str();
             return ;
         }
+        else
+        {
+            this->isDefaultError = false;
+            this->isErrorOccured = true;
+            error_404(this, serverConfig.errorInfo["404"]);
+            throw std::runtime_error("the path in the action is not exist");
+        }
         fileFound.close();
     }
     else
@@ -174,6 +194,13 @@ void            ClientInfo::postLocationAbsence(ServerConfiguration &serverConfi
                 inFile.close();
                 return ;
             }
+        }
+        if(!this->isNotUpload)
+        {
+            this->isDefaultError = false;
+            this->isErrorOccured = true;
+            error_404(this, serverConfig.errorInfo["404"]);
+            throw std::runtime_error("the path in the action is not exist");
         }
     }
 }
@@ -469,7 +496,7 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                                     return ;
                                 }
                                 if(client->parsedRequest.requestDataMap["method"] != "DELETE")
-                                    this->searchForCgi(client, beg, currentPath);
+                                    this->searchForCgi(client, beg, final_path);
                                 else
                                     client->servedFileName = currentPath;
                                 return ;

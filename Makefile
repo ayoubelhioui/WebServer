@@ -1,7 +1,7 @@
 NAME=webserv
 CC=c++
 CPPFLAGS= -Wall -Wextra -Werror -std=c++98
-FS= -fsanitize=address -g3
+# FS= -fsanitize=address -g3
 RM=rm -rf
 
 HEADERS = Interfaces/ConfigFileParser.hpp \
@@ -32,6 +32,9 @@ $(NAME) : $(OBJECTS)
 	$(CC) $(CPPFLAGS) $(FS) $(OBJECTS) -o $(NAME)
 
 $(OBJECTS) : $(HEADERS)
+
+leaks:
+	./leaks.sh
 
 clean:
 	$(RM) $(OBJECTS)
