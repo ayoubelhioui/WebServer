@@ -67,12 +67,12 @@ void	ConfigFileParser::_startParsingFile( void )
         if (*configFileLinesIt == "}")
             configFileLinesIt++;
         if (configFileLinesIt == _configFileLines.end())
-            return ;
+            break ;
         while (*configFileLinesIt == "")
         {
             configFileLinesIt++;
             if (configFileLinesIt == _configFileLines.end())
-                return ;
+                break ;
         }
     }
 }

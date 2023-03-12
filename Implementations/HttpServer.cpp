@@ -3,9 +3,7 @@
 # include "../Interfaces/ChunkedPostRequest.hpp"
 # include "../Interfaces/DeleteMethod.hpp"
 # include <algorithm>
-//# define RECEIVING_FINISHED (received, contentLength) (received == contentLength) ? (true) : (false);
-// # include "../parsing/parsing.hpp"
-// //std::cout
+
 /* ----------------------------------------------------- */
 /* ------------------ CANONICAL FORM ------------------- */
 /* ----------------------------------------------------- */
@@ -48,13 +46,12 @@ void	HttpServer::_setUpListeningSocket( void )
 	int				optval; // ???
 
 	memset(&_serverHints, 0, sizeof(_serverHints));
-	_serverHints.ai_family = AF_INET;
-	_serverHints.ai_socktype = SOCK_STREAM;
-	_serverHints.ai_flags = AI_PASSIVE;
+	_serverHints.ai_family = AF_INET; // this for IPv4 only.
+	_serverHints.ai_socktype = SOCK_STREAM; // this for TCP socket.
+	_serverHints.ai_flags = AI_PASSIVE; // this for a server socket.
 	getaddrinfo(_serverConfiguration.serverHost.c_str(),
 				_serverConfiguration.serverPort.c_str(),
 				&_serverHints, &bindAddress);
-
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
 	fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
 	if (_listeningSocket < 0)
@@ -62,7 +59,6 @@ void	HttpServer::_setUpListeningSocket( void )
 		std::cout << "socket function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
 	}
-	// //std::cout << "Socket Created Successfully" << std::endl;
 	optval = 1;
     setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 	if (bind(_listeningSocket, bindAddress->ai_addr, bindAddress->ai_addrlen))
@@ -70,14 +66,12 @@ void	HttpServer::_setUpListeningSocket( void )
 		std::cout << "bind function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
 	}
-	// //std::cout << "Binded Successfully" << std::endl;
 	freeaddrinfo(bindAddress);
-	if (listen(_listeningSocket, MAXQUEUESIZE) < 0)
+	if (listen(_listeningSocket, 2) < 0)
 	{
 		std::cout << "listen function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
 	}
-	// //std::cout << "Set Up for LISTENING Successfully" << std::endl;
 }
 
 void	HttpServer::_selectClients ( void )
