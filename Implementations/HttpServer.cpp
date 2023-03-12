@@ -347,10 +347,7 @@ void	HttpServer::_serveClients( void )
 					{
 						if((*ClientInfoIt)->stillWaiting)
 						{
-							static int a = 0;
 							int retWait = waitpid((*ClientInfoIt)->cgiPid, NULL, WNOHANG);
-							std::cout << "ret WAAAAAAAIT " << a << std::endl;
-							a++;
 							if(retWait == 0)
 							{
 								ClientInfoIt++;

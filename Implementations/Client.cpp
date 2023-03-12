@@ -78,7 +78,8 @@ void    ClientInfo::sendResponse( void )
 {
     if (this->isSendingHeader == true)
     {
-        if (send(this->socket, this->headerToBeSent.c_str(), this->headerToBeSent.length(), 0) == -1
+        int sendRet = send(this->socket, this->headerToBeSent.c_str(), this->headerToBeSent.length(), 0);
+        if (sendRet == -1 || sendRet == 0
         || this->isCreated == -1)
             throw std::runtime_error("send function has failed or blocked");
         if(this->isRedirect == true)
@@ -90,7 +91,8 @@ void    ClientInfo::sendResponse( void )
         char *s = new char[1025]();
         this->served.read(s, 1024);
         int r = this->served.gcount();
-        if (send(this->socket, s, r, 0) == -1
+        int sendRet = send(this->socket, s, r, 0);
+        if (sendRet == -1 || sendRet == 0
         || this->isCreated == -1)
         {
             delete [] s;
@@ -484,7 +486,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                             client->_currentLocation = *beg;
                             client->cgiIterator = std::find_if(client->_currentLocation.CGI.begin(), client->_currentLocation.CGI.end(), isCgi);
                             return ;
-
                         }
                     }
                     fileCheck.close();
@@ -625,7 +626,3 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
     client->cgiPid = pid;
 
 }
-
-/*
- *
- */
