@@ -26,7 +26,6 @@ class ServerConfiguration {
         std::string serverHost;
         std::string serverPort;
         unsigned int clientBodyLimit;
-        bool isClosed;
         std::list<std::string> serverName;
         std::map<std::string, std::string > errorInfo;
         std::list<LocationBlockParse> Locations;

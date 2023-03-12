@@ -1,7 +1,7 @@
 #include "../Interfaces/LocationBlockParse.hpp"
-
+// isDirectoryListingOn(false)
 LocationBlockParse::LocationBlockParse( void ) 
-	: isDirectoryListingOn(false)
+	: Root("./public"), isDirectoryListingOn(false)
 {}
 
 void	LocationBlockParse::getPath(std::vector<std::string> &vec)

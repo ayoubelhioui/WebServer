@@ -1,6 +1,6 @@
 #include "../Interfaces/ServerConfiguration.hpp"
 
-ServerConfiguration::ServerConfiguration() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false)
+ServerConfiguration::ServerConfiguration() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX)
 {
     this->errorInfo["400"] = "./public/htmlErrorPages/error400.html";
     this->errorInfo["500"] = "./public/htmlErrorPages/error500.html";

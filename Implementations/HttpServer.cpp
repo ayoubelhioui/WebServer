@@ -3,9 +3,7 @@
 # include "../Interfaces/ChunkedPostRequest.hpp"
 # include "../Interfaces/DeleteMethod.hpp"
 # include <algorithm>
-//# define RECEIVING_FINISHED (received, contentLength) (received == contentLength) ? (true) : (false);
-// # include "../parsing/parsing.hpp"
-// //std::cout
+
 /* ----------------------------------------------------- */
 /* ------------------ CANONICAL FORM ------------------- */
 /* ----------------------------------------------------- */
@@ -57,14 +55,23 @@ void	HttpServer::_setUpListeningSocket( void )
 	_listeningSocket = socket(bindAddress->ai_family, bindAddress->ai_socktype, bindAddress->ai_protocol);
 	fcntl(_listeningSocket, F_SETFL, O_NONBLOCK);
 	if (_listeningSocket < 0)
+	{
+		std::cout << "socket function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
+	}
 	optval = 1;
     setsockopt(_listeningSocket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
 	if (bind(_listeningSocket, bindAddress->ai_addr, bindAddress->ai_addrlen))
+	{
+		std::cout << "bind function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
+	}
 	freeaddrinfo(bindAddress);
 	if (listen(_listeningSocket, MAXQUEUESIZE) < 0)
+	{
+		std::cout << "listen function failed" << std::endl;
         exit (EXIT_FAILURE); // to be replaced by sth else
+	}
 }
 
 void	HttpServer::_selectClients ( void )
@@ -110,9 +117,7 @@ void	HttpServer::_acceptNewConnection( void )
         newClient->socket = accept(this->_listeningSocket, (struct sockaddr *) &(newClient->address), &(newClient->addressLength));
 		fcntl(newClient->socket, F_SETFL, O_NONBLOCK);
 		if(newClient->socket == -1)
-		{ 
             throw std::runtime_error("accept has blocked and did not accept any new connection");
-		}
         _maxSocket = std::max(_maxSocket, newClient->socket);
         if (newClient->socket < 0)
 			std::cerr << "accept function failed\n";
@@ -144,7 +149,14 @@ void	HttpServer::_serveClients( void )
 				{
 					(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket, (*ClientInfoIt)->recvError);
 					(*ClientInfoIt)->parsedRequest.parse();
-                    if((*ClientInfoIt)->isValidMethod())
+					if ((*ClientInfoIt)->parsedRequest.checkHost(this->_serverConfiguration) == 0)
+					{
+						error_400(*ClientInfoIt, this->_serverConfiguration.errorInfo["400"]);
+						(*ClientInfoIt)->isErrorOccured = true;
+						ClientInfoIt++;
+						continue;
+					}
+					if((*ClientInfoIt)->isValidMethod())
                     {
 						(*ClientInfoIt)->isDefaultError = false;
                         (*ClientInfoIt)->isErrorOccured = true;
@@ -524,16 +536,12 @@ void	HttpServer::_serveClients( void )
                                         throw std::runtime_error("executed path was not found");
                                     }
 									std::ifstream actionPathFile((*ClientInfoIt)->actionPath);
-                                    std::cout << "action path is " << (*ClientInfoIt)->actionPath << std::endl;
-                                    
-                                    if(!actionPathFile.is_open())
-                                    {
-                                        std::cout << "HERE not opened" << std::endl;
-                                        
-                                        (*ClientInfoIt)->isDefaultError = false;
+									if(!actionPathFile.is_open())
+									{
+										(*ClientInfoIt)->isDefaultError = false;
                                         error_404(*ClientInfoIt, this->_serverConfiguration.errorInfo["404"]);
                                         throw std::runtime_error("executed path was not found");
-                                    }
+									}
                                     actionPathFile.seekg(0, std::ios::end);
     								int file_size = actionPathFile.tellg();
     								actionPathFile.seekg(0, std::ios::beg);

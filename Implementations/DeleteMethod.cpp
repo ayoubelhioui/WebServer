@@ -39,9 +39,9 @@ DeleteMethod::DeleteMethod ( const DeleteMethod &obj )
 
 void	DeleteMethod::deleteTargetedResource ( void )
 {
-	std::cout << "path is : " << _pathToResource << std::endl;
 	if(client->_currentLocation.Location.length() && !client->_isLocationSupportsCurrentMethod(client, "DELETE"))
     {
+		std::cout << "DELETE NOT ALLOWED" << std::endl;
         client->isDefaultError = false;
         error_405(client, serverConfig.errorInfo["405"]);
         throw std::runtime_error("Method not allowed");
@@ -130,6 +130,7 @@ void	DeleteMethod::_removeRecursively ( const char *path )
 			}
 			if (remove(file_path.c_str()) == -1)
 			{
+				std::cout << "HERE ERROR !1" << std::endl;
 				client->isDefaultError = false;
 				error_500(this->client, this->serverConfig.errorInfo["500"]);
 				throw std::runtime_error("Cannot delete the directory or file ");
@@ -146,6 +147,7 @@ void	DeleteMethod::_removeRecursively ( const char *path )
 	}
 	if (rmdir(path) != 0) 
 	{
+		std::cout << "HERE ERROR !2" << std::endl;
 		client->isDefaultError = false;
 		error_500(this->client, this->serverConfig.errorInfo["500"]);
 		throw std::runtime_error("Cannot delete the directory or file");

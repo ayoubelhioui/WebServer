@@ -31,12 +31,12 @@ bool isUriTooLong(std::string &Uri)
 void    error_414(ClientInfo *client, std::string &error_page)
 {
     std::string path = error_page;
-    if(client->served.is_open()) client->served.close();
+    if(client->served.is_open()) 
+        client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
 
     client->headerToBeSent += "HTTP/1.1 414 Request-URI Too Long\r\n"
     + std::string("Connection: close\r\n")

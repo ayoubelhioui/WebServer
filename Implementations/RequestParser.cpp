@@ -49,11 +49,11 @@ void	ParsingRequest::parse(){
       line = headerPart.substr(0, found);
       if (i == 0)
       {
-          parsingRequestFirstLine(line);
-          i++;
+        parsingRequestFirstLine(line);
+        i++;
       }
       else
-          parsingRequest(line);
+        parsingRequest(line);
       headerPart = headerPart.substr(found + 2);
       found = headerPart.find("\r\n");
     }
@@ -61,6 +61,25 @@ void	ParsingRequest::parse(){
     found = headerPart.find("\r\n");
     line = headerPart.substr(0, found);
     parsingRequest(line);
+}
+
+bool    ParsingRequest::checkHost( ServerConfiguration &server )
+{
+    size_t  splitComma = this->requestDataMap["Host:"].find(':');
+    if(splitComma != std::string::npos)
+    {
+        std::string ip = this->requestDataMap["Host:"].substr(0, splitComma);
+        std::string port = this->requestDataMap["Host:"].substr(splitComma + 1);
+        if(ip == server.serverHost && port == server.serverPort)
+            return 1;
+    }
+    std::list<std::string>::iterator server_names = server.serverName.begin();
+    for(; server_names != server.serverName.end(); server_names++)
+    {
+        if(*server_names == this->requestDataMap["Host:"])
+            return 1;
+    }
+    return 0;
 }
 
 void    ParsingRequest::receiveFirstTime(int socket, bool &recvError){

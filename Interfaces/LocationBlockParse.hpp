@@ -19,7 +19,6 @@ class LocationBlockParse{
         std::string Root;
         std::string UploadDirectoryPath;
         std::string Path_Info;
-        std::string answerFileForDirectory;
         bool    isDirectoryListingOn;
         void	locationParse(std::list<std::string>::iterator &);
         void	getPath(std::vector<std::string> &);
