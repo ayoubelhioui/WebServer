@@ -51,7 +51,6 @@ void	HttpServer::_setUpListeningSocket( void )
 	_serverHints.ai_family = AF_INET;
 	_serverHints.ai_socktype = SOCK_STREAM;
 	_serverHints.ai_flags = AI_PASSIVE;
-	// //std::cout << "_serverConfig host is " << _serverConfiguration.serverHost << std::endl;
 	getaddrinfo(_serverConfiguration.serverHost.c_str(),
 				_serverConfiguration.serverPort.c_str(),
 				&_serverHints, &bindAddress);
@@ -103,18 +102,6 @@ void	HttpServer::_selectClients ( void )
 		throw std::runtime_error("select has failed or may have no clients at the moment");
 }
 
-void	HttpServer::setClientInfoList ( std::list<ClientInfo> & )
-{
-
-}
-
-// void	HttpServer::_addClient ( SOCKET	clientSocket )
-// {
-// 	ClientInfo	(*ClientInfoIt);
-
-// 	this->_cli
-// }
-
 void	HttpServer::_acceptNewConnection( void )
 {
 	
@@ -156,7 +143,8 @@ void	HttpServer::_serveClients( void )
 				{
 					(*ClientInfoIt)->parsedRequest.receiveFirstTime((*ClientInfoIt)->socket, (*ClientInfoIt)->recvError);
 					(*ClientInfoIt)->parsedRequest.parse();
-					if ((*ClientInfoIt)->parsedRequest.checkHost(this->_serverConfiguration) == 0)
+					if ((*ClientInfoIt)->parsedRequest.checkHost(this->_serverConfiguration) == 0
+					|| (*ClientInfoIt)->parsedRequest.requestDataMap["httpVersion"] != "HTTP/1.1")
 					{
 						error_400(*ClientInfoIt, this->_serverConfiguration.errorInfo["400"]);
 						(*ClientInfoIt)->isErrorOccured = true;

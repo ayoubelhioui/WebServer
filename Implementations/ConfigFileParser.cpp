@@ -48,6 +48,13 @@ void	ConfigFileParser::_startParsingFile( void )
         ServerConfiguration newParseNode;
         while ((*configFileLinesIt).find("location") == std::string::npos)
             newParseNode.fillingDataFirstPart(*configFileLinesIt++);
+        std::set<std::string>::iterator it = this->visitedPorts.find(newParseNode.serverPort);
+        if(it !=  this->visitedPorts.end())
+        {
+            std::cout << "port already used" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        this->visitedPorts.insert(newParseNode.serverPort);
         while((*configFileLinesIt).find("location") != std::string::npos)
         {
             LocationBlockParse newLocationNode;

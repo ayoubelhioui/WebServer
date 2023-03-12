@@ -53,6 +53,7 @@ class ConfigFileParser {
 	private:
 			std::list<std::string> 					_configFileLines;
 			std::string								_configFilePath;
+			std::set<std::string>         visitedPorts;
 			void     _startParsingFile( void );
 			void     _readingDataFromFile( void );
 };
