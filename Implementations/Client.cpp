@@ -104,9 +104,7 @@ void    ClientInfo::sendResponse( void )
 void    ClientInfo::preparingMovingTempFile(ClientInfo *client)
 {
     if(client->isChunk)
-    {
         this->totalTempFileSize = client->chunkedRequest->_fileSize;
-    }
     else
         this->totalTempFileSize = client->parsedRequest.received - client->parsedRequest.boundarySize - client->parsedRequest.newBodyIndex;
     if (!client->isChunk && client->parsedRequest.isBoundaryExist == true)
@@ -117,9 +115,8 @@ void    ClientInfo::preparingMovingTempFile(ClientInfo *client)
     struct stat st;
     if (client->_currentLocation.UploadDirectoryPath.empty())
         client->_currentLocation.UploadDirectoryPath = DEFAULT_UPLOAD_FOLDER;
-    if (!(stat(client->_currentLocation.UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode))) {
+    if (!(stat(client->_currentLocation.UploadDirectoryPath.c_str(), &st) == 0 && S_ISDIR(st.st_mode)))
         client->isCreated = mkdir(client->_currentLocation.UploadDirectoryPath.c_str(), O_CREAT | S_IRWXU | S_IRWXU | S_IRWXO);
-    }
     if(client->isChunk)
         client->parsedRequest.uploadFileName = client->chunkedRequest->fileName;
     this->sourceFile.open(TMP_FOLDER_PATH + client->parsedRequest.uploadFileName, std::ios::binary);
@@ -534,7 +531,6 @@ void    ClientInfo::checkPathValidation(ClientInfo *client, ServerConfiguration 
                         }
                         check_file.close();
                     }
-                    std::cout << "is checked" << std::endl;
                     if((*beg).isDirectoryListingOn)
                     {
                         client->_currentLocation = *beg;
@@ -574,26 +570,76 @@ void			ClientInfo::returnPathWithoutFile(std::string &TempPath)
 
 void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &server )
 {
+    /*
+     * SERVER_SOFTWARE => Hayat_V1
+        GATEWAY_INTERFACE => CGI/1.1
+        SERVER_PROTOCOL => HTTP/1.1
+        SERVER_NAME => 127.0.0.1
+        SERVER_PORT => 9000
+        REQUEST_METHOD => GET
+        REMOTE_ADDR => 127.0.0.1
+        REMOTE_PORT => 50792
+        CONTENT_TYPE =>
+        TRANSFER-ENCODING =>
+        ACCEPT-ENCODING => gzip, deflate, br
+        HTTP_USER_AGENT => Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:109.0) Gecko/20100101 Firefox/110.0
+        PATH_INFO => /Users/yojoundi/Desktop/webserv-1337/var/www/myphp
+        PATH_TRANSLATED => /Users/yojoundi/Desktop/webserv-1337/var/www/myphp
+        SCRIPT_NAME => /cgi/myphp/env.php
+        SCRIPT_FILENAME => /Users/yojoundi/Desktop/webserv-1337/var/www/myphp/env.php
+        QUERY_STRING => wr
+        REDIRECT_STATUS => 200
+        CONTENT_LENGTH =>
+        HTTP_COOKIE =>
+        __CF_USER_TEXT_ENCODING => 0xFEE:0x0:0x0
+     */
     int     pid = 0;
-    
-    const char * request_method = client->parsedRequest.requestDataMap["method"].c_str(); // POST or GET
-    const char * script_name = client->cgiIterator->second.c_str(); // php cgi inside location
-    const char * query_string = client->parsedRequest.queryString.length() == 0 ? "" : client->parsedRequest.queryString.c_str();
-    const char * server_host = server.serverHost.c_str();
-    const char * server_port = server.serverPort.c_str();
-    const char * path_info = client->parsedRequest.requestDataMap["path"].c_str();
-    const char * content_length = client->cgiContentLength.c_str();
-    const char *content_type = client->cgiContentType.c_str();
-    setenv("REQUEST_METHOD", request_method, 1);
-    setenv("QUERY_STRING", query_string, 1);
-    setenv("SCRIPT_NAME", script_name, 1);
-    setenv("SERVER_NAME", server_host, 1);
-    setenv("SERVER_PORT", server_port, 1);
-    setenv("REDIRECT_STATUS", "200", 1);
-    setenv("PATH_INFO", path_info, 1);
-    setenv("CONTENT_LENGTH", content_length, 1);
-    setenv("CONTENT_TYPE", content_type, 1);
-    
+//    SERVER_SOFTWARE => Hayat_V1
+//GATEWAY_INTERFACE => CGI/1.1
+//SERVER_PROTOCOL => HTTP/1.1
+    std::string  request_method = "REQUEST_METHOD=" + client->parsedRequest.requestDataMap["method"]; // POST or GET
+    std::string  script_name = client->cgiIterator->second; // php cgi inside location
+    char *fileName = NULL;
+    struct stat st;
+    if (stat(client->parsedRequest.requestDataMap["path"].c_str(), &st) == 0) {
+        fileName = realpath(client->parsedRequest.requestDataMap["path"].c_str(), nullptr);
+    }
+    std::string strFileName(fileName);
+    std::string fullscript_name = "SCRIPT_NAME=" + script_name;
+    std::string  query_string = "QUERY_STRING=" + (client->parsedRequest.queryString.length() == 0 ? "" : client->parsedRequest.queryString);
+    std::string  server_host = "SERVER_NAME=" + server.serverHost;
+    std::string  server_port = "SERVER_PORT=" + server.serverPort;
+    std::string  path_info = "PATH_INFO=" + strFileName;
+    std::string  path_translated = "PATH_TRANSLATED=" + strFileName;
+    std::string  content_length = "CONTENT_LENGTH=" + client->cgiContentLength;
+    std::string   content_type = "CONTENT_TYPE=" + client->cgiContentType;
+    std::string  redirect_status = "REDIRECT_STATUS=200";
+    std::string   script = "CONTENT_TYPE=" + client->cgiContentType;
+    std::string scriptFileName(fileName);
+//    scriptFileName.insert(0, "SCRIPT_FILENAME=");
+    char  *env[11];
+    env[0] = const_cast<char *> (request_method.c_str());
+    env[1] = const_cast<char *> (fullscript_name.c_str());
+    env[2] = const_cast<char *> (query_string.c_str());
+    env[3] = const_cast<char *> (server_host.c_str());
+    env[4] = const_cast<char *> (server_port.c_str());
+    env[5] = const_cast<char *> (path_info.c_str());
+    env[6] = const_cast<char *> (content_length.c_str());
+    env[7] = const_cast<char *> (content_type.c_str());
+    env[8] = const_cast<char *> (redirect_status.c_str());
+    env[9] = const_cast<char *> (path_translated.c_str());
+    env[10] = NULL;
+    std::cout << "env is " << "|" << env[0] << "|" << std::endl;
+    std::cout << "env is " << "|" << env[1] << "|" << std::endl;
+    std::cout << "env is " << "|" << env[2] << "|" << std::endl;
+    std::cout << "env is " << "|" << env[3] << "|" << std::endl;
+    std::cout << "env is " << "|" << env[4] << "|" << std::endl;
+    std::cout << "env is " << "|" << env[5] << "|" << std::endl;
+    std::cout << "env is " << "|" << env[7] << "|" << std::endl;
+    std::cout << "env is " << "|" << env[6] << "|" << std::endl;
+    std::cout << "env is " << "|" << env[8] << "|" << std::endl;
+    std::cout << "env is " << "|" << env[9] << "|" << std::endl;
+//    std::cout << "env is " << "|" << env[9] << "|" << std::endl;
     int fdup = 0;
     if(client->isNotUpload)
         fdup = open(client->servedFileName.c_str(), O_RDONLY);
@@ -612,14 +658,18 @@ void    ClientInfo::CGIexecutedFile( ClientInfo *client, ServerConfiguration &se
         }
         close(fd[0]);
         close(fd[1]);
-        args[0] = (char *) script_name;
+        args[0] = (char *) script_name.c_str();
         if(client->actionPath.length())
             args[1] = (char *) client->actionPath.c_str();
         else
             args[1] = (char *) client->servedFileName.c_str();
         args[2] = NULL;
-        if (execve(script_name, args, NULL) == -1)
+        std::cout << "script name is " << script_name << std::endl;
+        if (execve(args[0], args, env) == -1)
+        {
+
             exit(1);
+        }
     }
     if(fdup > 0)
         close(fdup);

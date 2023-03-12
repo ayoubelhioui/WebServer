@@ -35,17 +35,11 @@ void	LocationBlockParse::setDirlisting(std::vector<std::string> &vec){
 void	LocationBlockParse::setRoot(std::vector<std::string> &vec){
     if(vec.size() > 2) errorPrinting("error : too many roots for this location block");
     if(vec[1].length() > 1 && vec[1][0] == '/')
-    {
         vec[1] = '.' + vec[1];
-    }
     if(vec[1].length() > 1 && vec[1][0] != '/' && vec[1][0] != '.')
-    {
         vec[1] = "./" + vec[1];
-    }
     if(vec[1].length() > 2 && vec[1][0] == '.' && vec[1][1] != '/')
-    {
         vec[1].insert(1, "/");
-    }
     this->Root = vec[1];
 }
 
@@ -64,12 +58,6 @@ void	LocationBlockParse::setCgi(std::vector<std::string> &vec){
 
 void	LocationBlockParse::setUploadFolder(std::vector<std::string> &vec){
     if(vec.size() > 2) errorPrinting("only the upload file is allowed as argument");
-    //  if(vec[1].length() > 1 && vec[1][0] == '/')
-    //     vec[1] = '.' + vec[1];
-    // if(vec[1].length() > 1 && vec[1][0] != '/' && vec[1][0] != '.')
-    //     vec[1] = "./" + vec[1];
-    // if(vec[1].length() > 2 && vec[1][0] == '.' && vec[1][1] != '/')
-    //     vec[1].insert(1, "/");
     this->UploadDirectoryPath = vec[1];
 }
 
@@ -104,12 +92,6 @@ void	LocationBlockParse::locationParse( std::list<std::string>::iterator &it)
         std::vector <std::string> vec;
         while (line >> word)
             vec.push_back(word);
-        if (vec[0] == "#" || vec[0][0] == '#')
-        {
-//            if ((vec[0] == "#" && vec[1] == "location") || vec[0] == "#location")
-//                errorPrinting("error in location keyword");
-            continue ;
-        }
         if (vec[0].compare("location") == 0)
             getPath(vec);
         else if (vec[0].compare("allow_methods") == 0)
