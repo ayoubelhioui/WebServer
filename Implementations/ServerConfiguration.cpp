@@ -1,6 +1,16 @@
 #include "../Interfaces/ServerConfiguration.hpp"
 
-ServerConfiguration::ServerConfiguration() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX), isClosed(false){}
+ServerConfiguration::ServerConfiguration() : serverHost("0.0.0.0"), serverPort("80"), clientBodyLimit(UINT_MAX)
+{
+    this->errorInfo["400"] = "./public/htmlErrorPages/error400.html";
+    this->errorInfo["500"] = "./public/htmlErrorPages/error500.html";
+    this->errorInfo["405"] = "./public/htmlErrorPages/error405.html";
+    this->errorInfo["501"] = "./public/htmlErrorPages/error501.html";
+    this->errorInfo["413"] = "./public/htmlErrorPages/error413.html";
+    this->errorInfo["404"] = "./public/htmlErrorPages/error404.html";
+    this->errorInfo["414"] = "./public/htmlErrorPages/error414.html";
+    this->errorInfo["403"] = "./public/htmlErrorPages/error403.html";
+}
 
 
 void ServerConfiguration::clientBodySizeKeywordFound(std::vector<std::string> &vec){
@@ -17,15 +27,10 @@ void ServerConfiguration::fillingDataFirstPart(std::string &data){
     std::vector<std::string> vec;
     while (str >> word)
         vec.push_back(word);
-    if (vec[0] == "#" || vec[0][0] == '#')
-    {
-        if ((vec[0] == "#" && vec[1] == SERVER_KEYWORD) || vec[0] == "#server")
-            errorPrinting(LISTEN_ERROR_MSG);
-        return ;
-    }
     if (vec[0] == LISTEN_KEYWORD)
         listenKeywordFound(vec);
-    else if (vec[0] == SERVER_KEYWORD){
+    else if (vec[0] == SERVER_KEYWORD)
+    {
         if (vec.size() != 2 || vec[0] != SERVER_KEYWORD || vec[1] != "{") {
             errorPrinting(SERVER_KEYWORD_MSG);
         }
@@ -44,8 +49,8 @@ void ServerConfiguration::listenKeywordFound(std::vector<std::string> &vec){
     std::string port;
     if (vec.size() != 2)
         errorPrinting(LISTEN_ERROR_MSG);
-    int index = vec[1].find(':');
-    if (index == 0)
+    size_t index = vec[1].find(':');
+    if (index == std::string::npos)
         errorPrinting(LISTEN_ERROR_MSG);
     port = vec[1].substr(index + 1, vec[1].length());
     this->serverHost = vec[1].substr(0, index);
@@ -66,25 +71,10 @@ void ServerConfiguration::errorPageKeywordFound(std::vector<std::string> &vec){
         errorPrinting(ERROR_PAGE_ERROR_MSG);
     std::ifstream errorPageFile(vec[2]);
     if (!errorPageFile.is_open())
-        errorPrinting(ERROR_PAGE_FILE_NOT_FOUND);
-    this->errorInfo.push_back(std::make_pair(atoi(vec[1].c_str()), vec[2].c_str()));
+        return ;
+    else
+        this->errorInfo[vec[1]] = vec[2];
 }
-
-// ServerConfiguration	&ServerConfiguration::operator= ( const ServerConfiguration &obj )
-// {
-// 	if (this == &obj)
-// 		return (*this);
-// 	this->serverHost = obj.serverHost;
-// 	this->serverPort = obj.serverPort;
-// 	this->clientBodyLimit = obj.clientBodyLimit;
-
-// 	return (*this);
-// }
-
-// ServerConfiguration::ServerConfiguration ( const ServerConfiguration &obj )
-// {
-// 	*this = obj;
-// }
 
 void	ServerConfiguration::printServerConfiguration ( void )
 {
@@ -97,7 +87,7 @@ void	ServerConfiguration::printServerConfiguration ( void )
             std::cout << *it1 << " ";
         std::cout << std::endl;
         std::cout << "SERVER ERROR PAGES : ";
-        for (std::list<std::pair<int, std::string > >::iterator it2 = this->errorInfo.begin(); it2 != this->errorInfo.end(); it2++)
+        for (std::map<std::string, std::string>::iterator it2 = this->errorInfo.begin(); it2 != this->errorInfo.end(); it2++)
             std::cout << (*it2).first << " " << (*it2).second << std::endl;
         for (std::list<LocationBlockParse>::iterator it4 = this->Locations.begin(); it4 != this->Locations.end(); it4++)
         {

@@ -28,17 +28,17 @@ bool isUriTooLong(std::string &Uri)
 }
 
 
-void    error_414(ClientInfo *client)
+void    error_414(ClientInfo *client, std::string &error_page)
 {
-    std::string path = "htmlErrorPages/error414.html";
-    if(client->served.is_open()) client->served.close();
+    std::string path = error_page;
+    if(client->served.is_open()) 
+        client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
 
-    error_header += "HTTP/1.1 414 Request-URI Too Long\r\n" 
+    client->headerToBeSent += "HTTP/1.1 414 Request-URI Too Long\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size) 
@@ -46,20 +46,19 @@ void    error_414(ClientInfo *client)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    send(client->socket, error_header.c_str(), error_header.length(), 0);
+    client->isSendingHeader = true;
 }
 
-void    error_501(ClientInfo *client)
+void    error_501(ClientInfo *client, std::string &error_page)
 {
-    std::string path = "htmlErrorPages/error501.html";
+    std::string path = error_page;
     if(client->served.is_open()) client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
 
-    error_header += "HTTP/1.1 501 Not Implemented\r\n" 
+    client->headerToBeSent += "HTTP/1.1 501 Not Implemented\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size) 
@@ -67,21 +66,20 @@ void    error_501(ClientInfo *client)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    send(client->socket, error_header.c_str(), error_header.length(), 0);
+    client->isSendingHeader = true;
 }
 
-void    error_500(ClientInfo *client)
+void    error_500(ClientInfo *client, std::string &error_page)
 {
-    std::string path = "htmlErrorPages/error500.html";
+    std::string path = error_page;
     if(client->served.is_open())
         client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
 
-    error_header += "HTTP/1.1 500 Internal Server Error\r\n"
+    client->headerToBeSent += "HTTP/1.1 500 Internal Server Error\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size)
@@ -89,28 +87,67 @@ void    error_500(ClientInfo *client)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n";
-    send(client->socket, error_header.c_str(), error_header.length(), 0);
+    client->isSendingHeader = true;
 }
 
-void    error_400(ClientInfo *client)
+void    error_400(ClientInfo *client, std::string &error_page)
 {
-    std::string path = "htmlErrorPages/error400.html";
+    std::string path = error_page;
     if(client->served.is_open()) client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
 
-    error_header += "HTTP/1.1 400 Bad Request\r\n"
+    client->headerToBeSent += "HTTP/1.1 400 Bad Request\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
-    + std::to_string(file_size) 
+    + std::to_string(file_size)
     + "\r\n"
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    send(client->socket, error_header.c_str(), error_header.length(), 0);
+    client->isSendingHeader = true;
+}
+
+void    error_405(ClientInfo *client, std::string &error_page)
+{
+    std::string path = error_page;
+    if(client->served.is_open()) 
+        client->served.close();
+    client->served.open(path);
+    client->served.seekg(0, std::ios::end);
+    int file_size = client->served.tellg();
+    client->served.seekg(0, std::ios::beg);
+    client->headerToBeSent += "HTTP/1.1 405 Method Not Allowed\r\n"
+    + std::string("Connection: close\r\n")
+    + std::string("Content-Length: ")
+    + std::to_string(file_size)
+    + "\r\n"
+    +  std::string("Content-Type: ")
+    +  get_mime_format(path.c_str())
+    + "\r\n\r\n" ;
+    client->isSendingHeader = true;
+}
+
+void    error_403(ClientInfo *client, std::string &error_page)
+{
+    std::string path = error_page;
+    if(client->served.is_open()) 
+        client->served.close();
+    client->served.open(path);
+    client->served.seekg(0, std::ios::end);
+    int file_size = client->served.tellg();
+    client->served.seekg(0, std::ios::beg);
+    client->headerToBeSent += "HTTP/1.1 403 Forbidden\r\n"
+    + std::string("Connection: close\r\n")
+    + std::string("Content-Length: ")
+    + std::to_string(file_size)
+    + "\r\n"
+    +  std::string("Content-Type: ")
+    +  get_mime_format(path.c_str())
+    + "\r\n\r\n" ;
+    client->isSendingHeader = true;
 }
 
 void errorPrinting(const char *errorMessage){
@@ -124,18 +161,17 @@ bool isValidNumber(std::string &data){
             return (false);
     return (true);
 }
-void    error_413(ClientInfo *client)
+void    error_413(ClientInfo *client, std::string &error_page)
 {
     
-    std::string path = "htmlErrorPages/error413.html";
+    std::string path = error_page;
     if(client->served.is_open()) client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
 
-    error_header += "HTTP/1.1 413 Request Entity Too Large\r\n"
+    client->headerToBeSent += "HTTP/1.1 413 Request Entity Too Large\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size) 
@@ -143,22 +179,21 @@ void    error_413(ClientInfo *client)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    send(client->socket, error_header.c_str(), error_header.length(), 0);
+    client->isSendingHeader = true;
 }
 
-void    error_404(ClientInfo *client)
+void    error_404(ClientInfo *client, std::string &error_page)
 {
-    std::cout << "path is " << client->parsedRequest.requestDataMap["path"] << std::endl;
-    std::cout << "404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 404 " << std::endl;
-    std::string path = "htmlErrorPages/error404.html";
+    std::string path = error_page;
     if(client->served.is_open()) client->served.close();
     client->served.open(path);
     client->served.seekg(0, std::ios::end);
     int file_size = client->served.tellg();
     client->served.seekg(0, std::ios::beg);
-    std::string error_header = "";
-
-    error_header += "HTTP/1.1 404 Not Found\r\n"
+//    std::string error_header = "";
+//
+//    error_header += "HTTP/1.1 404 Not Found\r\n"
+    client->headerToBeSent += "HTTP/1.1 404 Not Found\r\n"
     + std::string("Connection: close\r\n")
     + std::string("Content-Length: ")
     + std::to_string(file_size)  
@@ -166,5 +201,5 @@ void    error_404(ClientInfo *client)
     +  std::string("Content-Type: ")
     +  get_mime_format(path.c_str())
     + "\r\n\r\n" ;
-    send(client->socket, error_header.c_str(), error_header.length(), 0);
+    client->isSendingHeader = true;
 }

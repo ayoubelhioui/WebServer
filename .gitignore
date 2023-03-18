@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 *.dSYM/
 post.html
 webserv
@@ -64,5 +63,5 @@ file.conf
  cmake-build-debug/
  out
  php-cgi
-
->>>>>>> f99dd6235d02e0ef60a5342edcad9b1a55685ade
+public/html/*
+public/global-master/*

@@ -26,9 +26,8 @@ class ServerConfiguration {
         std::string serverHost;
         std::string serverPort;
         unsigned int clientBodyLimit;
-        bool isClosed;
         std::list<std::string> serverName;
-        std::list<std::pair<int, std::string> > errorInfo;
+        std::map<std::string, std::string > errorInfo;
         std::list<LocationBlockParse> Locations;
         void fillingDataFirstPart(std::string &);
         void listenKeywordFound(std::vector<std::string> &);

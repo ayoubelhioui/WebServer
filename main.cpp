@@ -32,8 +32,7 @@ int main ( int ac, char **av, char **env )
 	// MultiHttpServer			MultiServers; 
 	// std::list<ClientInfo>	ClientInfoList;
 	ConfigFile.parseConfigFile();
-
-	
+	// std::cout << "HERE EXIST" << std::endl;
 	MultiHttpServer MultiServers(ConfigFile.listOfServersConfiguration);
 	MultiServers.setUpServers();
 	MultiServers.startServers();

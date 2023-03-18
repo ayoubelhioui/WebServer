@@ -12,7 +12,7 @@
 # define TRANSFER_ENCODING_EXCEPTION "Transfer Encoding Exception"
 # define BAD_REQUEST_EXCEPTION "Bad Request Exception"
 # define TMP_FOLDER_PATH "/tmp/."
-# define UPLOADS_FOLDER_PATH "uploads/"
+# define DEFAULT_UPLOAD_FOLDER "./DefaultUploads"
 # define TMP_FOLDER_COULDNT_OPEN "Couldn't Open /Tmp Folder"
 # define UPLOAD_FOLDER_COULDNT_OPEN "Couldn't Open Uploads Folder"
 
@@ -23,24 +23,17 @@ class PostMethod{
     private :
         void _searchingForUploadFolder( ClientInfo* );
         void _preparingPostRequest( ClientInfo* );
-        void _isValidPostRequest( ClientInfo* );
         void _writeInTempFile( ClientInfo* );
         void _receiveFromClient( ClientInfo* );
         void _searchForCurrentLocation(ClientInfo *);
-        bool _isLocationSupportsPost( void );
-        bool _isLocationSupportsUpload( void );
+        bool _isLocationSupportsUpload( ClientInfo * );
+        void startPostRequest( ClientInfo *, bool );
         ServerConfiguration _serverConfiguration;
-        std::list<LocationBlockParse>::iterator _currentLocation;
     public :
-        std::ifstream sourceFile;
-        std::ofstream destinationFile;
-        int totalTempFileSize;
-        int toWrite;
+        int cgiContentLength;
         PostMethod(ServerConfiguration &);
-        void writeToUploadedFile( void );
         void receiveTheBody( ClientInfo* );
         void successfulPostRequest( ClientInfo* );
-        void preparingMovingTempFile( ClientInfo* );
         void handleFirstRead( ClientInfo* );
 };
 

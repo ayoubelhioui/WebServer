@@ -49,11 +49,11 @@ void	ParsingRequest::parse(){
       line = headerPart.substr(0, found);
       if (i == 0)
       {
-          parsingRequestFirstLine(line);
-          i++;
+        parsingRequestFirstLine(line);
+        i++;
       }
       else
-          parsingRequest(line);
+        parsingRequest(line);
       headerPart = headerPart.substr(found + 2);
       found = headerPart.find("\r\n");
     }
@@ -63,15 +63,39 @@ void	ParsingRequest::parse(){
     parsingRequest(line);
 }
 
-void    ParsingRequest::receiveFirstTime(int socket){
+bool    ParsingRequest::checkHost( ServerConfiguration &server )
+{
+    size_t  splitComma = this->requestDataMap["Host:"].find(':');
+    if(splitComma != std::string::npos)
+    {
+        std::string ip = this->requestDataMap["Host:"].substr(0, splitComma);
+        std::string port = this->requestDataMap["Host:"].substr(splitComma + 1);
+        if(ip == server.serverHost && port == server.serverPort)
+            return 1;
+    }
+    std::list<std::string>::iterator server_names = server.serverName.begin();
+    for(; server_names != server.serverName.end(); server_names++)
+    {
+        if(*server_names == this->requestDataMap["Host:"])
+            return 1;
+    }
+    return 0;
+}
+
+void    ParsingRequest::receiveFirstTime(int socket, bool &recvError){
     this->receivedBytes = recv(socket, this->requestHeader, MAX_REQUEST_SIZE, 0);
+    if(this->receivedBytes == -1 or this->receivedBytes == 0)
+    {
+        recvError = true;
+        throw std::runtime_error("recv did not receive anything or has blocked");
+    }
     this->requestHeader[this->receivedBytes] = 0;
     this->received += this->receivedBytes;
     this->bodyIndex = retIndex(this->requestHeader);
     this->received -= (this->bodyIndex + 4);
     std::string header(requestHeader);
     header = header.substr(0, this->bodyIndex);
-    size_t  foundBoundaryWord = header.find("boundary=");
+    size_t  foundBoundaryWord = header.find("multipart/form-data");
     if(foundBoundaryWord != std::string::npos)
         isBoundaryExist = true;
 }
@@ -92,13 +116,11 @@ void ParsingRequest::gettingNewBodyIndex(std::string &boundarySavior)
     this->boundarySize = boundarySavior.length() - boundarySavior.find("=") + 3;
 }
 
-void ParsingRequest::gettingFileName(std::string &newString)
-{
+void ParsingRequest::gettingFileName(std::string &newString) {
     int newContentIndex = newString.find("filename=");
     int DoubleQuotePosition = newString.find("\"", newContentIndex + 11);
     uploadFileName = newString.substr(newContentIndex + 10, DoubleQuotePosition - newContentIndex - 10);
 }
-
 
 void ParsingRequest::_parsingMiniHeader( void )
 {

@@ -5,16 +5,15 @@
 /* ----------------------------------------------------- */
 
 ChunkedPostRequest::ChunkedPostRequest ( void )
-	: uploadDone(false),
-	  _receivedBytes(0),
-	  _currentChunkSize(0),
-	  _hexLength(0),
-	  _fileSize(0),
-	  _writtenBytes(0),
-	  _chunkContent(nullptr),
-	  _numberOfRecChunk(0),
-	  _entered(0)
-{}
+	: 
+		_receivedBytes(0),
+		_currentChunkSize(0),
+		_hexLength(0),
+		_writtenBytes(0),
+		_chunkContent(nullptr),
+		_numberOfRecChunk(0),
+		_entered(0)
+{ _fileSize = 0;}
 
 ChunkedPostRequest::~ChunkedPostRequest ( void )
 {
@@ -38,13 +37,13 @@ ChunkedPostRequest::ChunkedPostRequest ( const ChunkedPostRequest &obj )
 
 void	ChunkedPostRequest::_createUploadedFile ( const char *mimeType )
 {
-	std::string	fileName;
-
-	fileName = "/tmp/" + generateRandString() + std::string(get_real_format(mimeType));
+	this->fileName = generateRandString() + std::string(get_real_format(mimeType));
 	// fileName = "~/Desktop/" + generateRandString() + std::string(get_real_format(mimeType));
-	this->_uploadedFile.open(fileName, std::ios::binary);
-	if (this->_uploadedFile.is_open())
-		std::cout << fileName << " is created!!" << std::endl;
+	this->_uploadedFile.open("/tmp/." + fileName, std::ios::binary);
+	if (!this->_uploadedFile.is_open())
+	{
+		throw std::runtime_error("cannot open chunked folder");
+	}
 
 }
 
@@ -55,23 +54,17 @@ void	ChunkedPostRequest::_retrieveChunkSize( char *buffer )
 	char	*str;
 
 	str = strstr(buffer, "\r\n");
-	printf("str: %p\n", str);
-	if (!str) 
-		exit(0); // * To be removed
+	if (!str)
+		throw std::runtime_error("Error in chunked");
 	crlfPosition = str - buffer;
 	hexString = std::string(buffer, buffer + crlfPosition);
-	try {
-		this->_currentChunkSize = std::stoi(hexString, 0, 16);
-	}
-	catch ( const std::exception& excep) {
-		std::cerr << excep.what() << std::endl;
-	}
+	this->_currentChunkSize = std::stoi(hexString, 0, 16);
 	this->_hexLength = hexString.size();
 	this->_fileSize += this->_currentChunkSize;
 	this->_chunkContent = &buffer[this->_hexLength + CRLF];
 }
 
-void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
+void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket, bool &recvError )
 {
 	unsigned int	bufferSize;
 	unsigned int	i;
@@ -80,8 +73,12 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 	bufferSize = (this->_currentChunkSize - this->_writtenBytes) <  BUFFER_SIZE ? (this->_currentChunkSize - this->_writtenBytes) : BUFFER_SIZE;
 	buffer = new char[bufferSize]();
 	this->_receivedBytes = recv(clientSocket, buffer, bufferSize, 0);
-	if (this->_receivedBytes == -1)
-		std::cerr << "SOCKET " << clientSocket << " NOT READY TO BE READ!!" << std::endl;
+	if (this->_receivedBytes == -1 or this->_receivedBytes == 0)
+	{
+        recvError = true;
+		delete [] buffer;
+		throw std::runtime_error("recv has failed or blocked");
+	}
 	i = 0;
 	while (i < this->_receivedBytes)
 	{
@@ -92,17 +89,24 @@ void	ChunkedPostRequest::_receiveRestOfChunk( SOCKET &clientSocket )
 	delete [] buffer;
 }
 
-
-void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
+void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket, bool &uploadDone, bool &recvError )
 {
 	unsigned int i;
 
 	this->_writtenBytes = 0;
 	char buffer[BUFFER_SIZE];
 	this->_receivedBytes = recv(clientSocket, buffer, BUFFER_SIZE, 0);
+	if (this->_receivedBytes == -1 or this->_receivedBytes == 0)
+    {
+        recvError = true;
+        throw std::runtime_error("recv has failed or blocked");
+    }
 	this->_retrieveChunkSize(buffer + CRLF);
 	if (this->_currentChunkSize == 0)
-		this->_finishServing();
+	{
+		this->_uploadedFile.close();
+		uploadDone = true;
+	}
 	i = 0;
 	while (i < this->_receivedBytes - this->_hexLength - DOUBLE_CRLF)
 	{
@@ -111,14 +115,14 @@ void	ChunkedPostRequest::_receiveNextChunkBeginning ( SOCKET &clientSocket )
 		i++;
 	}
 }
-/*------------------------------------------------------------------------*/
+
 void	ChunkedPostRequest::_finishServing ( void )
 {
 	this->uploadDone = true;
 	this->_uploadedFile.close();
 }
 
-void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingRequest &request )
+void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingRequest &request, bool &uploadDone )
 {
 	unsigned int	bodyStart;
 	unsigned int	offSet;
@@ -127,9 +131,13 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	this->_createUploadedFile(contentType);
 	bodyStart = request.retIndex(request.requestHeader) + DOUBLE_CRLF;
 	this->_retrieveChunkSize(&request.requestHeader[bodyStart]);
-	offSet = bodyStart + this->_hexLength + CRLF;
 	if (this->_currentChunkSize == 0)
-		this->_finishServing();
+	{
+		this->_uploadedFile.close();
+		uploadDone = true;
+		return ;
+	}
+	offSet = bodyStart + this->_hexLength + CRLF;
 	i = 0;
 	while (i < MAX_REQUEST_SIZE - offSet)
 	{
@@ -141,14 +149,14 @@ void	ChunkedPostRequest::handleFirstRecv ( const char *contentType, ParsingReque
 	this->_writtenBytes = i;
 }
 
-void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket )
+void	ChunkedPostRequest::handleRecv( SOCKET &clientSocket, bool &uploadDone, bool &recvError)
 {
 	if (this->_writtenBytes == this->_currentChunkSize)
 	{
-		this->_receiveNextChunkBeginning(clientSocket);
+		this->_receiveNextChunkBeginning(clientSocket, uploadDone, recvError);
 	}
 	else 
 	{
-		this->_receiveRestOfChunk(clientSocket);
+		this->_receiveRestOfChunk(clientSocket, recvError);
 	}
 }
